@@ -2,4 +2,4 @@
 // As posições e dimensões usam os pixels internos do Canvas (960 × 540).
 // A atualização será chamada pelo ciclo com ações e deltaTime em segundos.
 
-//inicio
+//inicializa o player
