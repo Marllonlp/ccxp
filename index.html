@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Base do jogo</title>
-    <link rel="stylesheet" href="./styles/main.css" />
-    <script type="module" src="./src/main.js"></script>
-  </head>
-  <body>
-    <main class="game-shell">
-      <header class="page-header">
-        <h1>Base do jogo</h1>
-        <p id="game-status" role="status">Carregando a área de teste…</p>
-      </header>
 
-      <section class="game-area" aria-label="Área de teste do jogo">
-        <canvas
-          id="game-canvas"
-          width="960"
-          height="540"
-          role="img"
-          aria-label="Área de teste com um retângulo vermelho"
-        >
-          Seu navegador não oferece suporte ao Canvas.
-        </canvas>
-      </section>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base do jogo</title>
+  <link rel="stylesheet" href="./styles/main.css" />
+  <script type="module" src="./src/main.js"></script>
+  <script type="module" src="./src/input.js"></script>
+  <script type="module" src="./src/player.js"></script>
+</head>
 
-      <section class="mobile-controls" aria-labelledby="controls-title">
-        <h2 id="controls-title">Controles de celular</h2>
-        <div class="controls-layout">
-          <div class="movement-controls">
-            <button type="button" data-action="esquerda" aria-label="Mover para esquerda" disabled>←</button>
-            <button type="button" data-action="direita" aria-label="Mover para direita" disabled>→</button>
-          </div>
-          <div class="action-controls">
-            <button type="button" data-action="pulo" disabled>↑ Pular</button>
-            <button type="button" data-action="agachamento" disabled>↓ Agachar</button>
-          </div>
+<body>
+  <main class="game-shell">
+    <header class="page-header">
+      <h1>Base do jogo</h1>
+      <p id="game-status" role="status">Carregando a área de teste…</p>
+    </header>
+
+    <section class="game-area" aria-label="Área de teste do jogo">
+      <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Área de teste com um retângulo vermelho">
+        Seu navegador não oferece suporte ao Canvas.
+      </canvas>
+    </section>
+
+    <section class="mobile-controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">Controles de celular</h2>
+      <div class="controls-layout">
+        <div class="movement-controls">
+          <button type="button" data-action="esquerda" aria-label="Mover para esquerda">←</button>
+          <button type="button" data-action="direita" aria-label="Mover para direita">→</button>
         </div>
-        <p class="controls-note">Área reservada. Os controles serão conectados na integração da equipe.</p>
-      </section>
+        <div class="action-controls">
+          <button type="button" data-action="pulo">↑ Pular</button>
+          <button type="button" data-action="agachamento">↓ Agachar</button>
+        </div>
+      </div>
+      <p class="controls-note">Área reservada. Os controles serão conectados na integração da equipe.</p>
+    </section>
 
-      <noscript>Ative o JavaScript no navegador para executar o jogo.</noscript>
-    </main>
-  </body>
+    <noscript>Ative o JavaScript no navegador para executar o jogo.</noscript>
+  </main>
+</body>
+
 </html>
