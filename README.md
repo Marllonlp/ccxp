@@ -1,257 +1,191 @@
-# Base do jogo — primeira sprint
+# Base do jogo — parte do Marlon
 
-Projeto de jogo de plataforma educativo, feito com HTML, CSS e JavaScript. A primeira sprint prepara uma fase de teste antes da integração dos desafios de programação.
+Esta é a entrega local de estrutura e integração da primeira sprint. O objetivo é disponibilizar uma página executável, com Canvas, ciclo central e desenho de teste, pronta para receber os módulos da equipe.
 
-Este repositório contém a **base de estrutura e integração do Marlon**: página responsiva, Canvas, inicialização, ciclo central, retângulo de teste e pontos de conexão para os demais módulos.
+## 1. O que está implementado nesta entrega
 
-## 1. Como executar
+| Entrega do Marlon | Onde está |
+| --- | --- |
+| Estrutura inicial de arquivos e pastas | `src`, `styles` e `assets` |
+| Página, Canvas e espaço para controles móveis | `index.html` |
+| Apresentação adaptável à tela | `styles/main.css` |
+| Inicialização do Canvas e contexto 2D | `src/main.js` |
+| Ciclo do jogo e tempo entre quadros | `src/game.js` |
+| Retângulo de teste | Desenho padrão de `src/game.js` |
+| Pontos para integrar os módulos | Funções recebidas por `startGame` |
+| Instruções para executar e conferir | Este README |
 
-Você precisa de um navegador com suporte a módulos JavaScript e de Python 3 para o servidor de desenvolvimento. O jogo não utiliza bibliotecas externas e não exige instalação de pacotes.
+A base exibe um retângulo vermelho parado. O ciclo limpa e redesenha a superfície a cada quadro. Os botões reservados estão desativados, aguardando o módulo de entradas.
 
-Se você ainda não possui o projeto:
+## 2. Como executar no computador
 
-```bash
-git clone https://github.com/Marllonlp/ccxp.git
-cd ccxp
-```
+Abra o terminal na pasta `ccxp`. É necessário Python 3 para servir os arquivos e um navegador com suporte a módulos JavaScript. O projeto não utiliza bibliotecas externas nem exige instalação de pacotes.
 
-O repositório é privado: o proprietário precisa conceder acesso aos integrantes. Se o projeto já está no seu computador, abra o terminal na pasta `ccxp`.
-
-Inicie o servidor:
+Execute:
 
 ```bash
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-No Windows, caso o comando `python3` não exista, utilize:
+No Windows, se `python3` não estiver disponível, tente:
 
 ```bash
 py -m http.server 8000 --bind 127.0.0.1
 ```
 
-Abra **http://localhost:8000** no navegador. Mantenha o terminal aberto e use `Ctrl+C` para encerrar o servidor.
+Abra **http://localhost:8000**. Mantenha o terminal aberto durante o uso; `Ctrl+C` encerra o servidor.
 
-### Por que um servidor local?
+O servidor é necessário porque `main.js` utiliza `import` para carregar `game.js`. Abrir o HTML diretamente como arquivo pode bloquear o carregamento dos módulos.
 
-O HTML carrega `main.js` como um módulo. Ele utiliza `import` para buscar `game.js`. Por isso, execute a página por HTTP: abrir o arquivo diretamente com `file://` pode bloquear o carregamento dos módulos.
+Se a porta 8000 estiver ocupada, encerre o servidor anterior ou utilize outra porta, como 8001, no comando e no endereço do navegador.
 
-### Resultado esperado
+### Conferir no celular
 
-- A mensagem “Base carregada. Retângulo de teste em exibição.” aparece.
-- Um retângulo vermelho é desenhado sobre o Canvas azul.
-- A área dos controles aparece fora do Canvas.
-- Os botões estão desativados: eles reservam espaço para a entrega de teclado e toque do Pedro.
-- O retângulo permanece parado; o ciclo o redesenha a cada quadro.
-
-Captura da base no computador:
-
-![Canvas e espaço reservado para controles](docs/imagens/base-desktop.png)
-
-### Abrir no celular pela rede local
-
-Coloque computador e celular na mesma rede Wi-Fi. No computador, encerre o servidor anterior e execute:
+Coloque computador e celular na mesma rede Wi-Fi. Encerre o servidor anterior e execute:
 
 ```bash
 python3 -m http.server 8000 --bind 0.0.0.0
 ```
 
-Descubra o IP local do computador. No Linux, você pode consultar `hostname -I`; no Windows, `ipconfig`. No celular, abra `http://IP_DO_COMPUTADOR:8000`, substituindo `IP_DO_COMPUTADOR` pelo endereço encontrado, por exemplo `192.168.1.20`.
+Descubra o IP local do computador, por exemplo com `hostname -I` no Linux ou `ipconfig` no Windows. No celular, abra `http://IP_DO_COMPUTADOR:8000`, substituindo o nome pelo endereço encontrado.
 
-`localhost` no celular aponta para o próprio celular; use o IP do computador que executa o servidor.
+No celular, `localhost` aponta para o próprio celular. É preciso usar o IP do computador que está executando o servidor.
 
-## 2. Estrutura e responsabilidades
+## 3. Estrutura preparada
 
 ```text
 ccxp/
-├── index.html                 Página, Canvas e espaço dos controles — Marlon
+├── index.html
+├── README.md
 ├── styles/
-│   └── main.css               Apresentação responsiva — Marlon; controles com Pedro
+│   └── main.css
 ├── src/
-│   ├── main.js                Inicialização e ligação dos módulos — Marlon
-│   ├── game.js                Ciclo, tempo e ordem das chamadas — Marlon
-│   ├── input.js               Teclado e toque — Pedro
-│   ├── player.js              Estado e movimentação — Pedro
-│   ├── level.js               Dados do cenário — Dudu
-│   └── collisions.js          Detecção e resolução dos contatos — Dudu
-├── assets/
-│   ├── characters/            Imagens do personagem — Kelvis
-│   ├── tiles/                 Chão, plataformas e paredes — Kelvis
-│   └── ui/                    Imagens dos controles — Kelvis
-├── docs/
-│   └── guia-marlon.md          Explicação detalhada da base
-└── README.md                  Execução e acordos de integração — Marlon
+│   ├── main.js
+│   ├── game.js
+│   ├── input.js
+│   ├── player.js
+│   ├── level.js
+│   └── collisions.js
+└── assets/
+    ├── characters/
+    ├── tiles/
+    └── ui/
 ```
 
-Os arquivos dos demais integrantes possuem somente comentários de orientação. As pastas de imagens contêm `.gitkeep` porque o Git não registra pastas vazias. Esses arquivos podem ser removidos quando as imagens forem adicionadas.
+O código da base está em `index.html`, `styles/main.css`, `src/main.js` e `src/game.js`.
 
-## 3. Resolução e coordenadas
+`input.js` e `player.js` ficam reservados para Pedro; `level.js` e `collisions.js`, para Dudu. Atualmente possuem somente comentários de orientação. As pastas de imagens ficam reservadas para Kelvis. Criar esses espaços faz parte da preparação da estrutura comum.
 
-O Canvas tem resolução interna fixa de **960 × 540**. Essa é a superfície usada pelos cálculos e desenhos.
+## 4. Página e apresentação
 
-- `(0, 0)` é o canto superior esquerdo.
+`index.html` monta três áreas: cabeçalho com estado da inicialização, Canvas e painel reservado para controles móveis.
+
+O Canvas é identificado por `id="game-canvas"`. Os atributos `width="960"` e `height="540"` definem sua resolução interna. O texto dentro do elemento serve como alternativa se o navegador não oferecer suporte ao Canvas.
+
+O script usa `type="module"` para permitir `import` e `export`. Módulos aguardam a leitura do HTML antes de executar.
+
+O painel dos controles fica fora do Canvas. Seus botões possuem `data-action` com os nomes combinados: `esquerda`, `direita`, `pulo` e `agachamento`. Esses atributos são identificações para a futura integração; a base não captura os comandos.
+
+O CSS acompanha a largura disponível, mantendo `height: auto` no Canvas para preservar a proporção 16:9. Em telas baixas na horizontal, o painel fica ao lado; nas demais, fica abaixo. A aparência atual serve de referência para receber o design da equipe.
+
+### Coordenadas internas
+
+- A origem `(0, 0)` fica no canto superior esquerdo.
 - `x` aumenta para a direita.
 - `y` aumenta para baixo.
-- Posições, velocidades e dimensões devem usar o espaço interno do jogo.
-- O CSS ajusta a exibição à tela mantendo a proporção 16:9.
-- Não altere `canvas.width` e `canvas.height` ao redimensionar a janela: isso mudaria as coordenadas e apagaria o desenho.
+- Posições e dimensões usam os pixels internos de 960 × 540.
 
-Em telas baixas na horizontal, o painel de controles fica ao lado. Nas demais, fica abaixo. A composição atual é uma referência de integração para receber o design do Kelvis.
+Se o Canvas aparecer com 480 × 270 na tela, seus desenhos continuam sendo calculados em 960 × 540. A redução é visual. O JavaScript não altera `canvas.width` e `canvas.height` ao redimensionar a janela.
 
-## 4. Como o ciclo funciona
+## 5. Inicialização em main.js
 
-```mermaid
-flowchart TD
-    A[Próximo quadro] --> B[Calcular deltaTime]
-    B --> C[Ler ações]
-    C --> D[Atualizar personagem]
-    D --> E[Resolver colisões]
-    E --> F[Limpar Canvas]
-    F --> G[Desenhar estado final]
-    G --> A
-```
-
-`requestAnimationFrame` chama o ciclo quando o navegador prepara o próximo quadro. A cada chamada, `game.js` calcula:
+`main.js` importa `startGame`, encontra o Canvas e solicita o contexto 2D:
 
 ```js
-deltaTime = (tempoAtual - tempoAnterior) / 1000;
-```
-
-Dividimos por 1000 porque o navegador informa milissegundos e a movimentação deve trabalhar em segundos. Exemplo: uma velocidade de 100 pixels por segundo, durante `0.016` segundo, corresponde a `1.6` pixel de deslocamento.
-
-O primeiro quadro usa `deltaTime = 0`. O intervalo é limitado a `0.05` segundo para impedir que uma interrupção produza um deslocamento muito grande. Após uma mudança de visibilidade da página, o relógio é reiniciado.
-
-O ciclo expõe `start()`, `stop()` e `destroy()` para controlar sua execução técnica. `start()` evita iniciar duas repetições simultâneas; `stop()` cancela o próximo quadro; `destroy()` também remove o observador de visibilidade. As regras e a interface de pausa da fase serão desenvolvidas na etapa de RF07.
-
-## 5. Pontos de integração da equipe
-
-`startGame` recebe o Canvas, o contexto e, opcionalmente, um objeto com quatro funções:
-
-| Função | Argumentos recebidos | Função na integração |
-| --- | --- | --- |
-| `readActions` | Nenhum | Lê as ações fornecidas por `input.js`. |
-| `updatePlayer` | `actions`, `deltaTime` | Chama a movimentação de `player.js`. |
-| `resolveCollisions` | `deltaTime` | Ajusta o personagem com os obstáculos de Dudu. |
-| `drawScene` | `context`, `canvas` | Desenha o estado resultante, usando as imagens quando disponíveis. |
-
-Essa ordem já está implementada. Enquanto as funções não forem fornecidas, as ações ficam desligadas, as atualizações não alteram o estado e o desenho usa o retângulo de teste.
-
-### Ações combinadas
-
-```js
-{
-  esquerda: false,
-  direita: false,
-  pulo: false,
-  agachamento: false
-}
-```
-
-Os botões reservados no HTML possuem `data-action` com esses mesmos nomes. O módulo de Pedro deve habilitar os botões quando estiver integrado. Teclado e toque precisam alimentar as mesmas ações. Pedro define com a equipe como sinalizar um novo acionamento de pulo, evitando repetir o salto enquanto o botão estiver segurado.
-
-### Dados compartilhados
-
-Personagem e obstáculos precisam compartilhar pelo menos `x`, `y`, `width` e `height`, em pixels internos. Velocidades, contato com o chão, posição anterior e estado de agachamento são acordados por Pedro e Dudu conforme a resolução das colisões.
-
-Marlon conecta as funções em `main.js`. O estado do personagem e do cenário pode ser compartilhado pelas funções de integração, como no exemplo abaixo.
-
-### Exemplo para quando os módulos estiverem prontos
-
-Os nomes `createInput`, `createPlayer`, `updatePlayer`, `createLevel` e `resolveCollisions` abaixo são uma **proposta de acordo**, não funções já implementadas. Confirme as assinaturas com os responsáveis antes de aplicar este exemplo.
-
-```js
-import { startGame } from './game.js';
-import { createInput } from './input.js';
-import { createPlayer, updatePlayer } from './player.js';
-import { createLevel } from './level.js';
-import { resolveCollisions } from './collisions.js';
-
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
-const input = createInput(document.querySelector('.mobile-controls'));
-const player = createPlayer();
-const level = createLevel();
-
-startGame(canvas, context, {
-  readActions: () => input.getActions(),
-  updatePlayer: (actions, deltaTime) => updatePlayer(player, actions, deltaTime),
-  resolveCollisions: (deltaTime) => resolveCollisions(player, level.obstacles, deltaTime),
-  drawScene: (context) => {
-    context.fillStyle = '#475569';
-    for (const obstacle of level.obstacles) {
-      context.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-    }
-    context.fillStyle = '#e63946';
-    context.fillRect(player.x, player.y, player.width, player.height);
-  },
-});
 ```
 
-O exemplo mostra a ligação dos módulos. O agachamento e a verificação de espaço para levantar também precisam ser conectados entre Pedro e Dudu. A ordem e os dados necessários para resolver cada eixo da colisão devem ser combinados antes da integração.
+O contexto oferece as ferramentas para desenhar formas, textos e imagens. O código verifica se o elemento e o contexto estão disponíveis e inicia o ciclo com `startGame(canvas, context)`.
 
-## 6. Colaboração no repositório
+Se a inicialização funciona, a mensagem da página muda para “Base carregada. Retângulo de teste em exibição.” Se falha, o usuário recebe uma orientação e o console registra o detalhe.
 
-O remoto configurado é `git@github.com:Marllonlp/ccxp.git`. O repositório é privado. Pedro, Dudu e Kelvis precisam receber acesso pelos seus nomes de usuário do GitHub e aceitar eventuais convites.
+Os eventos `pagehide` e `pageshow` interrompem o trabalho ao sair da página e retomam se o navegador a restaurar. A função de início evita criar um segundo ciclo quando o primeiro já está ativo.
 
-Cada integrante deve criar uma branch para sua tarefa. Exemplo para uma tarefa do personagem:
+## 6. Ciclo central em game.js
 
-```bash
-git switch main
-git pull --ff-only
-git switch -c feat/personagem-controles
+Cada chamada do ciclo segue esta ordem:
+
+1. Calcula o tempo desde o quadro anterior.
+2. Lê as ações por meio do ponto de integração.
+3. Chama a atualização do personagem.
+4. Chama a resolução das colisões.
+5. Limpa o Canvas.
+6. Chama o desenho do estado resultante.
+7. Agenda o próximo quadro com `requestAnimationFrame`.
+
+`requestAnimationFrame` agenda a função para a próxima atualização da tela. A primeira chamada acontece ao iniciar o jogo; as seguintes são agendadas no fim do ciclo.
+
+### Tempo entre quadros
+
+O navegador informa o tempo em milissegundos. A diferença entre os horários é convertida para segundos:
+
+```js
+(currentTime - previousTime) / 1000
 ```
 
-Depois da implementação, registre somente os arquivos da tarefa, faça o commit e publique a branch:
+Uma diferença de 16 milissegundos corresponde a `0.016` segundo. Os módulos de movimentação poderão utilizar esse intervalo para calcular deslocamentos a partir de velocidades em pixels por segundo.
 
-```bash
-git add src/player.js src/input.js
-git commit -m "feat: implementar personagem e controles"
-git push -u origin feat/personagem-controles
+O primeiro quadro usa intervalo zero. O valor é limitado a `0.05` segundo para evitar uma atualização muito grande após uma interrupção. Uma mudança de visibilidade reinicia o relógio, e o primeiro quadro seguinte usa zero.
+
+### Desenho de teste
+
+O contexto é limpo com `clearRect` antes de cada desenho. O padrão de teste é:
+
+```js
+context.fillStyle = '#e63946';
+context.fillRect(100, 100, 50, 80);
 ```
 
-Abra um pull request e peça revisão de outro integrante. Marlon integra pequenas entregas, mantendo uma versão executável.
+O retângulo começa em `(100, 100)`, possui 50 pixels de largura e 80 de altura. O fundo azul vem do CSS e reaparece nas regiões limpas.
 
-## 7. Condição de conclusão da parte do Marlon
+### Controle da execução técnica
 
-| Entrega | Situação técnica |
-| --- | --- |
-| Estrutura de arquivos e pastas | Preparada, com espaços reservados para os módulos e imagens. |
-| Canvas e área dos controles | Implementados e adaptáveis à tela. |
-| Inicialização do contexto 2D | Implementada, com mensagem em caso de falha. |
-| Ciclo e tempo entre quadros | Implementados. |
-| Retângulo de teste | Implementado. |
-| Ordem e pontos de integração | Implementados e documentados. |
-| Instruções de execução | Documentadas para computador e celular. |
-| Acesso dos integrantes | Depende da identificação e confirmação dos usuários do GitHub. |
-| Execução pelos quatro integrantes | Precisa ser confirmada por cada pessoa no próprio dispositivo. |
-| Integração da fase jogável | Depende das entregas de personagem, controles, cenário, colisões e imagens. |
+`startGame` retorna um objeto com:
 
-### Conferência de execução da equipe
+- `start()`: inicia a execução; se já estiver ativa, não cria outra repetição.
+- `stop()`: interrompe o ciclo e cancela o quadro pendente.
+- `destroy()`: também remove o observador de visibilidade e encerra definitivamente a instância.
 
-Cada integrante deve confirmar que consegue obter o projeto, iniciar o servidor e visualizar a base. Atualize esta tabela somente após a confirmação real:
+Essas funções organizam a execução da base. A interface e as regras de pausa da fase pertencem à etapa posterior do plano.
 
-| Integrante | Obteve o projeto | Executou no dispositivo |
+## 7. Pontos de integração
+
+O terceiro argumento de `startGame` é opcional e recebe quatro funções:
+
+| Função | Argumentos | Papel no ciclo |
 | --- | --- | --- |
-| Marlon | A confirmar pelo integrante | A confirmar pelo integrante |
-| Pedro | Pendente | Pendente |
-| Dudu | Pendente | Pendente |
-| Kelvis | Pendente | Pendente |
+| `readActions` | Nenhum | Retorna as ações do módulo de entradas. |
+| `updatePlayer` | `actions`, `deltaTime` | Chama o módulo de movimentação. |
+| `resolveCollisions` | `deltaTime` | Chama o módulo de colisões após o movimento. |
+| `drawScene` | `context`, `canvas` | Desenha o estado atualizado. |
 
-### Conferência da base
+Os módulos serão ligados em `main.js` quando suas entregas estiverem prontas. As funções podem compartilhar as referências do personagem e do cenário criadas nesse arquivo.
 
-- Abra a página pelo servidor e confira o retângulo e a mensagem de inicialização.
-- Reduza a largura e confirme que o Canvas mantém a proporção.
-- Confira a área reservada em celular na vertical e na horizontal.
-- Mude de aba e retorne; a base deve continuar desenhando.
-- Confira o console do navegador para erros de inicialização ou importação.
+Por enquanto, a leitura retorna as quatro ações desligadas; movimentação e colisões utilizam funções vazias; o desenho utiliza o retângulo de teste. `EMPTY_ACTIONS` é um objeto reutilizado e protegido contra alterações acidentais.
 
-Para a fase jogável, aplique os testes do plano da sprint após a integração dos módulos: movimentação, parada, salto, pouso, paredes, teto, agachamento e toque simultâneo.
+Os nomes dessas funções são pontos de conexão do ciclo. Eles não implementam a movimentação, a captura de teclado/toque ou os contatos com obstáculos.
 
-## 8. Explicação detalhada
+Antes de conectar cada entrega, combine com seu responsável a assinatura das funções e os dados compartilhados. O ciclo fornece a sequência e o tempo entre quadros.
 
-Leia [o guia da parte do Marlon](docs/guia-marlon.md) para entender cada arquivo, o ciclo, a matemática do tempo e os pontos de integração.
+## 8. Conferência da sua entrega
 
-Consulte também [o registro das verificações realizadas](docs/verificacoes.md), com os tamanhos de tela conferidos e as limitações da validação.
+- Abrir pelo servidor e visualizar o retângulo vermelho e a mensagem de inicialização.
+- Redimensionar a página e confirmar a proporção 16:9.
+- Confirmar que a resolução interna permanece 960 × 540.
+- Conferir a área reservada de controles na vertical e na horizontal.
+- Verificar o cálculo do tempo e a ordem dos pontos de integração.
+- Mudar de aba e retornar, conferindo a continuidade do desenho.
+- Conferir o console para erros de inicialização ou importação.
 
-## 9. Etapas posteriores
-
-O plano deixa pausa/reinício e checkpoints para depois da validação da base. PWA, armazenamento de progresso e desafios de programação fazem parte do projeto completo e terão implementação e divisão de responsáveis próprias. A execução local desta base não implementa instalação PWA nem funcionamento offline após fechar o servidor.
+A confirmação de execução nos aparelhos de cada integrante deve ser feita pela própria pessoa. A fase jogável será validada após a integração das entregas da equipe.
