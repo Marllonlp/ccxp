@@ -1,12 +1,13 @@
 // src/main.js
 import { startGame } from './game.js';
 import { Player } from './player.js';
-import { inputState, setInput, configurarControlesToque } from './input.js';
+import { inputState, setInput, configurarControlesToque, limparAcoes } from './input.js';
 import {
   LIMITE_QUEDA,
   obterPosicaoInicial,
   obterPontoSeguro,
   verificarCheckpoints,
+  limparCheckpoints,
   desenharFase,
 } from './level.js';
 import { resolverColisoes, verificarEspaco } from './collisions.js';
@@ -18,6 +19,8 @@ const menuPausa = document.getElementById('menu-pausa');
 const botaoRetomar = document.getElementById('botao-retomar');
 const menuVidasEsgotadas = document.getElementById('menu-vidas-esgotadas');
 const tituloVidasEsgotadas = document.getElementById('titulo-vidas-esgotadas');
+const botaoReiniciar = document.getElementById('botao-reiniciar');
+const botaoReiniciarVidas = document.getElementById('botao-reiniciar-vidas');
 
 configurarControlesToque();
 
@@ -26,24 +29,36 @@ const player = new Player(inicio.x, inicio.y);
 
 const status = document.getElementById('game-status');
 if (status) {
-  status.textContent = 'Setas ou A/D para andar, W/espaço para pular, S para agachar. Use o botão Pausar para abrir o menu.';
+  status.textContent = 'Setas ou A/D para andar, W/espaço para pular, S para agachar. P para pausar, R para reiniciar. Use o botão Pausar para abrir o menu.';
 }
 
-// --- Integração provisória (pertence ao Marlon e ao Pedro) -------------------
-// O retorno abaixo ainda é provisório e será conectado às vidas (RF04).
+// --- Integração (vidas, queda e reinício) -------------------
 let mensagem = '';
 let mensagemAte = 0;
 // Estados da partida: jogando, pausado e aguardandoEscolha.
 let estadoDaPartida = 'jogando';
 
 function reposicionar(ponto) {
-  player.x = ponto.x;
-  player.y = ponto.y;
-  player.vx = 0;
-  player.vy = 0;
-  player.agachado = false;
-  player.altura = player.alturaNormal;
-  player.noChao = false;
+  player.retornar(ponto.x, ponto.y);
+}
+
+function reiniciarJogo() {
+  limparCheckpoints();
+  const pontoInicial = obterPosicaoInicial();
+  player.vidas = 3;
+  player.retornar(pontoInicial.x, pontoInicial.y);
+  limparAcoes();
+  mensagem = 'Fase reiniciada';
+  mensagemAte = performance.now() + 1500;
+
+  if (estadoDaPartida !== 'jogando') {
+    estadoDaPartida = 'jogando';
+    menuPausa.hidden = true;
+    menuVidasEsgotadas.hidden = true;
+    botaoPausar.hidden = false;
+    controleDoJogo.start();
+    botaoPausar.focus({ preventScroll: true });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -52,7 +67,12 @@ const dependenciasDoJogo = {
   readActions: () => inputState,
 
   updatePlayer: (actions, deltaTime) => {
-    player.atualizar(deltaTime, verificarEspaco);
+    if (actions.pausa) {
+      actions.pausa = false;
+      pausarPartida();
+      return;
+    }
+    player.atualizar(deltaTime, verificarEspaco, LIMITE_QUEDA, aguardarEscolhaDoJogador);
   },
 
   resolveCollisions: (deltaTime) => {
@@ -84,11 +104,6 @@ const dependenciasDoJogo = {
 };
 
 const controleDoJogo = startGame(canvas, context, dependenciasDoJogo);
-
-function limparAcoes() {
-  // Usa a rotina de Pedro para liberar também o controle de um novo salto.
-  for (const acao of Object.keys(inputState)) setInput(acao, false);
-}
 
 // Será chamada na integração quando Pedro informar que as vidas acabaram.
 function aguardarEscolhaDoJogador() {
@@ -128,3 +143,27 @@ function retomarPartida() {
 // O evento click atende tanto ao mouse quanto ao toque nos botões.
 botaoPausar.addEventListener('click', pausarPartida);
 botaoRetomar.addEventListener('click', retomarPartida);
+
+if (botaoReiniciar) {
+  botaoReiniciar.disabled = false;
+  botaoReiniciar.addEventListener('click', reiniciarJogo);
+}
+if (botaoReiniciarVidas) {
+  botaoReiniciarVidas.disabled = false;
+  botaoReiniciarVidas.addEventListener('click', reiniciarJogo);
+}
+
+// Atalhos de teclado: P para pausar/retomar, R para reiniciar
+window.addEventListener('keydown', (evento) => {
+  if (evento.key === 'p' || evento.key === 'P' || evento.key === 'Escape') {
+    if (estadoDaPartida === 'jogando') {
+      pausarPartida();
+    } else if (estadoDaPartida === 'pausado') {
+      retomarPartida();
+    }
+  }
+
+  if (evento.key === 'r' || evento.key === 'R') {
+    reiniciarJogo();
+  }
+});

@@ -7,11 +7,13 @@ export const inputState = {
     esquerda: false,
     direita: false,
     pulo: false,
-    agachamento: false
+    agachamento: false,
+    pausa: false
 };
 
-// Exige um novo acionamento do botão/tecla para cada salto
+// Exige um novo acionamento do botão/tecla para cada salto e pausa
 let puloLiberado = true;
+let pausaLiberada = true;
 
 export function setInput(acao, estado) {
     if (acao === 'pulo') {
@@ -22,9 +24,25 @@ export function setInput(acao, estado) {
             inputState.pulo = false;
             puloLiberado = true;
         }
+    } else if (acao === 'pausa') {
+        if (estado && pausaLiberada) {
+            inputState.pausa = true;
+            pausaLiberada = false;
+        } else if (!estado) {
+            inputState.pausa = false;
+            pausaLiberada = true;
+        }
     } else if (acao) {
         inputState[acao] = estado;
     }
+}
+
+export function limparAcoes() {
+    for (const acao of Object.keys(inputState)) {
+        inputState[acao] = false;
+    }
+    puloLiberado = true;
+    pausaLiberada = true;
 }
 
 // Mapeamento de teclas para ações
@@ -37,7 +55,11 @@ const keyMap = {
     'w': 'pulo',
     ' ': 'pulo',
     'ArrowDown': 'agachamento',
-    's': 'agachamento'
+    's': 'agachamento',
+    'Escape': 'pausa',
+    'p': 'pausa',
+    'P': 'pausa',
+    'Enter': 'pausa'
 };
 
 window.addEventListener('keydown', (e) => {
@@ -51,13 +73,7 @@ window.addEventListener('keyup', (e) => {
 });
 
 // Limpa as ações se a janela do jogo perder o foco
-window.addEventListener('blur', () => {
-    inputState.esquerda = false;
-    inputState.direita = false;
-    inputState.pulo = false;
-    inputState.agachamento = false;
-    puloLiberado = true;
-});
+window.addEventListener('blur', limparAcoes);
 
 // Configuração dinâmica lendo o HTML
 export function configurarControlesToque() {
@@ -80,7 +96,7 @@ export function configurarControlesToque() {
 
         botao.addEventListener('touchcancel', (e) => {
             e.preventDefault();
-            setInput(acao, false);
+            limparAcoes();
         });
     });
 }

@@ -22,49 +22,80 @@ export class Player {
 
     this.noChao = false;
     this.agachado = false;
+
+    this.vidas = 3;
+    this.emQuedaLivre = false;
   }
 
-  atualizar(deltaTime, verificarEspacoTeto) {
-    // 1. Movimento Horizontal
-    if (inputState.esquerda && !inputState.direita) {
-      this.vx = -this.velocidadeMovimento;
-    } else if (inputState.direita && !inputState.esquerda) {
-      this.vx = this.velocidadeMovimento;
-    } else {
-      this.vx = 0;
-    }
-
-    // 2. Lógica de Agachamento
-    if (inputState.agachamento) {
-      if (!this.agachado) {
-        this.agachado = true;
-        this.altura = this.alturaNormal / 2;
-        this.y += this.alturaNormal / 2; // Mantém os pés na mesma posição
+  atualizar(deltaTime, verificarEspacoTeto, limiteFaseY, onGameOver) {
+    // 1. Movimento e Ações (ignorado em queda livre)
+    if (!this.emQuedaLivre) {
+      if (inputState.esquerda && !inputState.direita) {
+        this.vx = -this.velocidadeMovimento;
+      } else if (inputState.direita && !inputState.esquerda) {
+        this.vx = this.velocidadeMovimento;
+      } else {
+        this.vx = 0;
       }
-    } else if (this.agachado) {
-      // Se a função não for passada na integração, assume que tem espaço (fallback temporário)
-      const temEspaco = verificarEspacoTeto
-        ? verificarEspacoTeto(this.x, this.y - (this.alturaNormal / 2), this.largura, this.alturaNormal)
-        : true;
 
-      if (temEspaco) {
-        this.agachado = false;
-        this.y -= this.alturaNormal / 2;
-        this.altura = this.alturaNormal;
+      // 2. Lógica de Agachamento
+      if (inputState.agachamento) {
+        if (!this.agachado) {
+          this.agachado = true;
+          this.altura = this.alturaNormal / 2;
+          this.y += this.alturaNormal / 2; // Mantém os pés na mesma posição
+        }
+      } else if (this.agachado) {
+        // Se a função não for passada na integração, assume que tem espaço (fallback temporário)
+        const temEspaco = verificarEspacoTeto
+          ? verificarEspacoTeto(this.x, this.y - (this.alturaNormal / 2), this.largura, this.alturaNormal)
+          : true;
+
+        if (temEspaco) {
+          this.agachado = false;
+          this.y -= this.alturaNormal / 2;
+          this.altura = this.alturaNormal;
+        }
       }
-    }
 
-    // 3. Lógica de Pulo
-    if (inputState.pulo && this.noChao && !this.agachado) {
-      this.vy = this.forcaPulo;
-      this.noChao = false;
-      inputState.pulo = false;
+      // 3. Lógica de Pulo
+      if (inputState.pulo && this.noChao && !this.agachado) {
+        this.vy = this.forcaPulo;
+        this.noChao = false;
+        inputState.pulo = false;
+      }
     }
 
     // 4. Aplicação da gravidade e atualização da posição teórica
     this.vy += this.gravidade * deltaTime;
     this.x += this.vx * deltaTime;
     this.y += this.vy * deltaTime;
+
+    // 5. Verificação de queda do mapa
+    if (limiteFaseY !== undefined && this.y > limiteFaseY) {
+      if (!this.emQuedaLivre) {
+        this.emQuedaLivre = true;
+        this.vidas -= 1;
+        if (this.vidas <= 0 && typeof onGameOver === 'function') {
+          onGameOver();
+        }
+      }
+    }
+  }
+
+  retornar(x, y) {
+    if (typeof x === 'object' && x !== null) {
+      y = x.y;
+      x = x.x;
+    }
+    this.x = x;
+    this.y = y;
+    this.vx = 0;
+    this.vy = 0;
+    this.emQuedaLivre = false;
+    this.noChao = false;
+    this.agachado = false;
+    this.altura = this.alturaNormal;
   }
 
   desenhar(ctx) {
