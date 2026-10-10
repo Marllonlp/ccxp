@@ -1,6 +1,6 @@
 // src/main.js
 import { startGame } from './game.js';
-import { Player } from './player.js';
+import { Player, desenharVidas } from './player.js';
 import { inputState, setInput, configurarControlesToque, limparAcoes } from './input.js';
 import {
   LIMITE_QUEDA,
@@ -94,11 +94,12 @@ const dependenciasDoJogo = {
   drawScene: (ctx) => {
     desenharFase(ctx);
     player.desenhar(ctx);
+    desenharVidas(ctx, player.vidas);
 
     if (mensagem && performance.now() < mensagemAte) {
       ctx.fillStyle = '#1d3557';
       ctx.font = 'bold 22px sans-serif';
-      ctx.fillText(mensagem, 24, 40);
+      ctx.fillText(mensagem, 24, 80);
     }
   },
 };
