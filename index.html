@@ -22,6 +22,22 @@
       <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Área de teste com um retângulo vermelho">
         Seu navegador não oferece suporte ao Canvas.
       </canvas>
+
+      <button type="button" id="botao-pausar" class="pause-button" aria-controls="menu-pausa">
+        Pausar
+      </button>
+
+      <section id="menu-pausa" class="pause-menu" hidden aria-labelledby="titulo-pausa">
+        <h2 id="titulo-pausa">Jogo pausado</h2>
+        <button type="button" id="botao-retomar">Retomar</button>
+        <button type="button" id="botao-reiniciar" disabled>Reiniciar fase</button>
+      </section>
+
+      <section id="menu-vidas-esgotadas" class="pause-menu" hidden aria-labelledby="titulo-vidas-esgotadas">
+        <h2 id="titulo-vidas-esgotadas" tabindex="-1">Vidas esgotadas</h2>
+        <button type="button" id="botao-continuar" disabled>Continuar</button>
+        <button type="button" id="botao-reiniciar-vidas" disabled>Reiniciar fase</button>
+      </section>
     </section>
 
     <section class="mobile-controls" aria-labelledby="controls-title">

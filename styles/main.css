@@ -34,6 +34,7 @@ body {
 }
 
 .game-area {
+  position: relative;
   width: 100%;
   min-width: 0;
 }
@@ -44,6 +45,58 @@ body {
   width: 100%;
   height: auto;
   background-color: #bde0fe;
+}
+
+.pause-button,
+.pause-menu button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  background-color: #29313d;
+  color: #f9fafb;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.pause-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.pause-menu {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgb(32 36 43 / 90%);
+  text-align: center;
+}
+
+.pause-menu h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.pause-menu button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pause-button:focus-visible,
+.pause-menu button:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 3px;
+}
+
+.pause-button[hidden],
+.pause-menu[hidden] {
+  display: none;
 }
 
 /* Este painel fica fora do Canvas e reserva o espaço dos controles de toque. */
