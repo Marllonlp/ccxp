@@ -68,6 +68,49 @@ export const vaos = [
   { x: 2300, y: SUPERFICIE_CHAO, width: 100, height: 60 },
 ];
 
+// Plantas distribuídas pelo chão, pelas plataformas e pelo bloco suspenso inicial.
+// superficieY é o topo da superfície em que cada planta fica apoiada.
+export const plantas = [
+  { id: 'planta-1', x: 230, superficieY: SUPERFICIE_CHAO },
+  { id: 'planta-2', x: 680, superficieY: 330 },
+  { id: 'planta-4', x: 1820, superficieY: SUPERFICIE_CHAO },
+  { id: 'planta-5', x: 2684, superficieY: 310 },
+  { id: 'planta-6', x: 3120, superficieY: SUPERFICIE_CHAO },
+];
+
+// Campo de patrulha: início e fim delimitam toda a área ocupada pelo robô.
+// Cada campo fica sobre uma superfície contínua, sem invadir paredes ou vãos.
+export const patrulhasSentinelas = [
+  {
+    id: 'sentinela-1',
+    inicioX: 1535,
+    fimX: 1645,
+    superficieY: SUPERFICIE_CHAO,
+    velocidade: 80,
+  },
+  {
+    id: 'sentinela-2',
+    inicioX: 1008,
+    fimX: 1102,
+    superficieY: 390,
+    velocidade: 65,
+  },
+  {
+    id: 'sentinela-3',
+    inicioX: 2508,
+    fimX: 2602,
+    superficieY: 390,
+    velocidade: 75,
+  },
+  {
+    id: 'sentinela-4',
+    inicioX: 2785,
+    fimX: 2870,
+    superficieY: SUPERFICIE_CHAO,
+    velocidade: 90,
+  },
+];
+
 // Checkpoints (RF08) são totens de 32 × 64 em pé sobre o chão (superfície em y=480).
 // A área é apenas de contato: eles não bloqueiam a passagem.
 // posicaoSegura é o canto superior esquerdo do personagem em pé sobre o chão.
