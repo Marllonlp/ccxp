@@ -27,7 +27,17 @@
       <p id="game-status" role="status">Carregando a área de teste…</p>
     </header>
 
-    <section class="game-area" aria-label="Área de teste do jogo">
+    <section id="tela-inicio" aria-label="Tela de início">
+      <img
+        class="personagem-inicio"
+        src="./assets/characters/Imagens_Personagens/01_byte/02_byte_parado.gif"
+        alt="Byte, o personagem do jogo, parado"
+      />
+      <h1>Aventuras do Byte</h1>
+      <button type="button" id="btn-iniciar">Iniciar Jogo</button>
+    </section>
+
+    <section class="game-area escondido" aria-label="Área de teste do jogo">
       <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Área de teste com um retângulo vermelho">
         Seu navegador não oferece suporte ao Canvas.
       </canvas>
@@ -49,7 +59,7 @@
       </section>
     </section>
 
-    <section class="mobile-controls" aria-labelledby="controls-title">
+    <section class="mobile-controls escondido" aria-labelledby="controls-title">
       <h2 id="controls-title">Controles de celular</h2>
       <div class="controls-layout">
         <div class="movement-controls">

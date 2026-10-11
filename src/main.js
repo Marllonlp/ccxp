@@ -12,6 +12,11 @@ import {
 } from './level.js';
 import { resolverColisoes, verificarEspaco } from './collisions.js';
 
+const telaInicio = document.getElementById('tela-inicio');
+const btnIniciar = document.getElementById('btn-iniciar');
+const gameArea = document.querySelector('.game-area');
+const mobileControls = document.querySelector('.mobile-controls');
+
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
 const botaoPausar = document.getElementById('botao-pausar');
@@ -23,7 +28,8 @@ const botaoReiniciar = document.getElementById('botao-reiniciar');
 const botaoReiniciarVidas = document.getElementById('botao-reiniciar-vidas');
 const botaoOrientacao = document.getElementById('botao-orientacao');
 
-configurarControlesToque();
+let controlesToqueConfigurados = false;
+let controleDoJogo;
 
 async function solicitarTelaHorizontal() {
   try {
@@ -121,7 +127,25 @@ const dependenciasDoJogo = {
   },
 };
 
-const controleDoJogo = startGame(canvas, context, dependenciasDoJogo);
+// O ciclo do jogo só começa quando o jogador clica em "Iniciar Jogo".
+btnIniciar.addEventListener('click', () => {
+  telaInicio.classList.add('escondido');
+  gameArea.classList.remove('escondido');
+  mobileControls.classList.remove('escondido');
+
+  if (!controlesToqueConfigurados) {
+    configurarControlesToque();
+    controlesToqueConfigurados = true;
+  }
+
+  if (controleDoJogo) {
+    controleDoJogo.start();
+  } else {
+    controleDoJogo = startGame(canvas, context, dependenciasDoJogo);
+  }
+
+  botaoPausar.focus({ preventScroll: true });
+});
 
 // Será chamada na integração quando Pedro informar que as vidas acabaram.
 function aguardarEscolhaDoJogador() {
