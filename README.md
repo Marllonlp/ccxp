@@ -6,9 +6,15 @@ Protótipo de um jogo de plataforma 2D para navegador, feito com HTML, CSS e Jav
 
 Movimente o personagem pela fase, pule entre as plataformas e sobre o vão no chão. Use o agachamento para atravessar o trecho sob o bloco suspenso.
 
-A fase possui dois checkpoints, ativados ao tocar neles. Quando um checkpoint é salvo, aparece a mensagem **“Checkpoint salvo”**, e seu marcador passa a mostrar um símbolo de confirmação.
+A fase possui checkpoints, ativados ao tocar neles. Quando um checkpoint é salvo, aparece a mensagem **“Checkpoint salvo”**, e seu marcador passa a mostrar um símbolo de confirmação.
 
-Ao cair para fora da fase, o personagem retorna ao último checkpoint ativado. Se nenhum checkpoint tiver sido ativado, retorna à posição inicial. Atualmente, esse retorno não desconta vidas.
+Ao cair para fora da fase, o personagem perde uma vida e retorna ao último checkpoint ativado. Se nenhum checkpoint tiver sido ativado, retorna à posição inicial.
+
+Há **quatro robôs sentinelas** pela fase: dois patrulham plataformas e dois ficam no chão, depois do terceiro checkpoint e no trecho final. Cada um anda entre dois marcos amarelos. Pule sobre os robôs no chão ou passe por baixo das plataformas patrulhadas. Qualquer contato desconta um coração e devolve o personagem ao ponto seguro, com um segundo de invulnerabilidade. Os robôs continuam patrulhando; nesta versão, eles não podem ser derrotados.
+
+Para mudar os campos, edite `patrulhasSentinelas` em `src/level.js`: `inicioX` e `fimX` delimitam a área inteira do robô, `superficieY` indica a altura da superfície de apoio e `velocidade` é medida em pixels por segundo. A patrulha original vai de **1535 a 1645**, sobre o chão em **480**, a **80 px/s**. Mantenha cada área sobre chão ou plataforma contínua, sem paredes ou vãos, e longe das posições de retorno dos checkpoints. Para adicionar outro sentinela, inclua outra configuração na lista.
+
+Há **cinco plantas inimigas**: três no chão (**x = 230, 1820 e 3120**), uma sobre o bloco suspenso inicial (**x = 680**) e uma na plataforma alta do trecho final (**x = 2684**). Elas permanecem no lugar e usam seu GIF animado. Pule sobre elas ou siga por outro nível da fase: o contato desconta um coração e retorna ao ponto seguro, com um segundo de invulnerabilidade. Para mover ou adicionar plantas, edite a lista `plantas` em `src/level.js`, usando `x` e `superficieY`.
 
 Use o botão **Pausar** para interromper a partida e abrir o menu. Enquanto o jogo está pausado, o personagem e a simulação ficam parados. O botão **Retomar** fecha o menu e continua a partida de onde parou.
 
@@ -65,9 +71,9 @@ No celular, `localhost` aponta para o próprio celular; por isso, o endereço pr
 
 Movimentação, pulo, agachamento, colisões, checkpoints, retorno após queda e pausa/retomada estão conectados à partida.
 
-A contagem de vidas ainda não está integrada, então o retorno após quedas não possui limite. A opção **Reiniciar fase** está desativada no menu de pausa.
+A partida começa com três vidas. Quedas e contatos com inimigos descontam um coração. Ao perder todas as vidas, o jogo para e volta à tela inicial.
 
-O menu **Vidas esgotadas** está preparado, mas ainda não é acionado durante o jogo. Seus botões **Continuar** e **Reiniciar fase** também estão desativados.
+**Reiniciar fase** restaura as vidas, os checkpoints, a patrulha dos sentinelas e a animação das plantas. O botão **Jogar** na tela inicial também começa uma nova partida com esses estados restaurados.
 
 ## Estrutura do projeto
 
@@ -79,5 +85,6 @@ O menu **Vidas esgotadas** está preparado, mas ainda não é acionado durante o
 | `src/game.js` | Ciclo de atualização e desenho do jogo. |
 | `src/input.js` | Comandos de teclado e toque. |
 | `src/player.js` | Estado, movimentação e desenho do personagem. |
+| `src/enemies.js` | Movimento, animação, desenho e contatos dos inimigos. |
 | `src/level.js` | Cenário, obstáculos, checkpoints e posições de retorno. |
 | `src/collisions.js` | Colisões com o cenário e verificação de espaço. |

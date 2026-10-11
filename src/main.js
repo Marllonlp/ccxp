@@ -1,6 +1,7 @@
 // src/main.js
 import { startGame } from './game.js';
 import { Player, desenharVidas } from './player.js';
+import { Planta, Sentinela } from './enemies.js';
 import { inputState, setInput, configurarControlesToque, limparAcoes } from './input.js';
 import {
   LIMITE_QUEDA,
@@ -11,6 +12,8 @@ import {
   desenharFase,
   calcularCamera,
   aplicarCameraMundo,
+  patrulhasSentinelas,
+  plantas,
 } from './level.js';
 import { resolverColisoes, verificarEspaco } from './collisions.js';
 import { registrarEfeito, registrarGanhoMusica, removerGanhoMusica, definirVolume } from './audio.js';
@@ -138,6 +141,10 @@ botaoOrientacao?.addEventListener('click', solicitarTelaHorizontal);
 
 const inicio = obterPosicaoInicial();
 const player = new Player(inicio.x, inicio.y);
+const inimigos = [
+  ...patrulhasSentinelas.map((campo) => new Sentinela(campo)),
+  ...plantas.map((posicao) => new Planta(posicao)),
+];
 
 const status = document.getElementById('game-status');
 if (status) {
@@ -161,7 +168,9 @@ function prepararNovaPartida() {
   limparCheckpoints();
   const pontoInicial = obterPosicaoInicial();
   player.vidas = 3;
+  player.tempoInvulneravel = 0;
   player.retornar(pontoInicial.x, pontoInicial.y);
+  inimigos.forEach((inimigo) => inimigo.reiniciar());
   limparAcoes();
 }
 
@@ -209,9 +218,13 @@ const dependenciasDoJogo = {
       return;
     }
     player.atualizar(deltaTime, verificarEspaco, LIMITE_QUEDA, aguardarEscolhaDoJogador);
+    if (estadoDaPartida === 'jogando') {
+      inimigos.forEach((inimigo) => inimigo.atualizar(deltaTime));
+    }
   },
 
   resolveCollisions: (deltaTime) => {
+    if (estadoDaPartida !== 'jogando') return;
     resolverColisoes(player, deltaTime);
 
     const checkpoint = verificarCheckpoints(player);
@@ -224,6 +237,19 @@ const dependenciasDoJogo = {
       reposicionar(obterPontoSeguro());
       mensagem = 'Queda: retorno ao ponto seguro';
       mensagemAte = performance.now() + 1500;
+      return;
+    }
+
+    const inimigoTocado = inimigos.find((inimigo) => inimigo.toca(player));
+    if (inimigoTocado && player.receberDano()) {
+      if (player.vidas <= 0) {
+        aguardarEscolhaDoJogador();
+        return;
+      }
+      reposicionar(obterPontoSeguro());
+      limparAcoes();
+      mensagem = `${inimigoTocado.nome}: perdeu uma vida`;
+      mensagemAte = performance.now() + 1500;
     }
   },
 
@@ -231,9 +257,10 @@ const dependenciasDoJogo = {
     const cameraX = calcularCamera(player.x, player.largura);
     desenharFase(ctx, cameraX);
 
-    // O personagem usa coordenadas do mundo, então é desenhado com a mesma câmera.
+    // Personagem e inimigos usam a mesma câmera, em coordenadas do mundo.
     ctx.save();
     aplicarCameraMundo(ctx, cameraX);
+    inimigos.forEach((inimigo) => inimigo.desenhar(ctx));
     player.desenhar(ctx);
     ctx.restore();
 
