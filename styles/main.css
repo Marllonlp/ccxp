@@ -189,6 +189,12 @@ body {
   z-index: 1;
 }
 
+.terminal-gif {
+  width: min(230px, 60vw);
+  height: auto;
+  image-rendering: pixelated;
+}
+
 .pause-menu {
   position: absolute;
   inset: 0;
@@ -224,6 +230,7 @@ body {
 
 /* Os controles ficam sobre o cenário, sem diminuir a área de jogo. */
 .mobile-controls {
+  display: none;
   position: absolute;
   left: max(12px, env(safe-area-inset-left));
   right: max(12px, env(safe-area-inset-right));
@@ -237,6 +244,7 @@ body {
 .movement-controls,
 .action-controls {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -244,24 +252,87 @@ body {
   justify-content: space-between;
 }
 
-.mobile-controls button {
+/* Botões ilustrados com os sprites do personagem (normal/pressionado). */
+.botao-toque {
   min-width: 56px;
-  min-height: 48px;
-  padding: 10px 12px;
-  border: 1px solid #64748b;
-  border-radius: 6px;
-  background-color: rgb(55 65 81 / 80%);
-  color: #f9fafb;
-  font: inherit;
-  font-weight: 600;
+  min-height: 56px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
   pointer-events: auto;
   touch-action: none;
   user-select: none;
+  cursor: pointer;
 }
 
-.mobile-controls button:disabled {
-  opacity: 1;
+.botao-toque:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
+}
+
+.botao-esquerda {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/04_esquerda_normal.png);
+}
+
+.botao-esquerda:active {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/03_esquerda_pressionado.png);
+}
+
+.botao-direita {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/02_direita_normal.png);
+}
+
+.botao-direita:active {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/01_direita_pressionado.png);
+}
+
+.botao-agachar {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/06_abaixar_normal.png);
+}
+
+.botao-agachar:active {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/05_abaixar_pressionado.png);
+}
+
+/* Reaproveita o sprite de "agachar" espelhado para formar a seta de cima. */
+.botao-cima {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/06_abaixar_normal.png);
+  transform: rotate(180deg);
+}
+
+.botao-cima:active {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/05_abaixar_pressionado.png);
+}
+
+.botao-pulo {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/07_acao_normal_e_pressionado.png);
+}
+
+.botao-pulo:active {
+  transform: scale(0.9);
+}
+
+.botao-terminal {
+  width: 92px;
+  min-width: 92px;
+  height: 56px;
+  min-height: 56px;
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/11_abrir_terminal_normal.png);
+}
+
+.botao-terminal:active {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/12_abrir_terminal_pressionado.png);
+}
+
+.botao-toque:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 3px;
 }
 
 /* Em pé, aproveita o céu livre acima da fase para não cobrir o personagem. */
@@ -283,16 +354,52 @@ body {
   }
 }
 
-/* No computador, o teclado deixa o cenário livre dos controles de toque. */
-@media (hover: hover) and (pointer: fine) {
+/* Em telas pequenas (celular), os controles de toque aparecem. */
+@media (max-width: 768px) {
   .mobile-controls {
-    display: none;
+    display: block;
+  }
+
+  .pause-button {
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    image-rendering: pixelated;
+    background-image: url(../assets/characters/Imagens_Personagens/03_botoes/09_pause_normal.png);
+  }
+
+  .pause-button:active {
+    background-image: url(../assets/characters/Imagens_Personagens/03_botoes/08_pause_pressionado.png);
+  }
+
+  .pause-button-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 }
 
 @media (max-width: 380px) {
-  .mobile-controls button {
-    min-width: 0;
-    padding-inline: 6px;
+  .botao-toque {
+    min-width: 48px;
+    width: 48px;
+    height: 48px;
+    min-height: 48px;
+  }
+
+  .botao-terminal {
+    width: 80px;
+    min-width: 80px;
   }
 }

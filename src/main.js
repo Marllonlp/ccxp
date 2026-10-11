@@ -27,6 +27,9 @@ const tituloVidasEsgotadas = document.getElementById('titulo-vidas-esgotadas');
 const botaoReiniciar = document.getElementById('botao-reiniciar');
 const botaoReiniciarVidas = document.getElementById('botao-reiniciar-vidas');
 const botaoOrientacao = document.getElementById('botao-orientacao');
+const botaoAbrirTerminal = document.getElementById('botao-abrir-terminal');
+const painelTerminal = document.getElementById('painel-terminal');
+const botaoFecharTerminal = document.getElementById('botao-fechar-terminal');
 
 let controlesToqueConfigurados = false;
 let controleDoJogo;
@@ -185,6 +188,15 @@ function retomarPartida() {
 // O evento click atende tanto ao mouse quanto ao toque nos botões.
 botaoPausar.addEventListener('click', pausarPartida);
 botaoRetomar.addEventListener('click', retomarPartida);
+
+if (botaoAbrirTerminal && painelTerminal && botaoFecharTerminal) {
+  botaoAbrirTerminal.addEventListener('click', () => {
+    painelTerminal.classList.remove('escondido');
+  });
+  botaoFecharTerminal.addEventListener('click', () => {
+    painelTerminal.classList.add('escondido');
+  });
+}
 
 if (botaoReiniciar) {
   botaoReiniciar.disabled = false;

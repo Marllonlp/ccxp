@@ -76,6 +76,8 @@ window.addEventListener('keyup', (e) => {
 window.addEventListener('blur', limparAcoes);
 
 // Configuração dinâmica lendo o HTML
+// Usa Pointer Events para responder tanto a toque quanto a mouse/caneta,
+// já que testes com mouse em tela estreita não disparam eventos de touch.
 export function configurarControlesToque() {
     const botoes = document.querySelectorAll('.mobile-controls button[data-action]');
 
@@ -84,19 +86,24 @@ export function configurarControlesToque() {
 
         const acao = botao.getAttribute('data-action');
 
-        botao.addEventListener('touchstart', (e) => {
+        botao.addEventListener('pointerdown', (e) => {
             e.preventDefault();
             setInput(acao, true);
         });
 
-        botao.addEventListener('touchend', (e) => {
+        botao.addEventListener('pointerup', (e) => {
             e.preventDefault();
             setInput(acao, false);
         });
 
-        botao.addEventListener('touchcancel', (e) => {
+        botao.addEventListener('pointercancel', (e) => {
             e.preventDefault();
             limparAcoes();
+        });
+
+        botao.addEventListener('pointerleave', (e) => {
+            e.preventDefault();
+            setInput(acao, false);
         });
     });
 }

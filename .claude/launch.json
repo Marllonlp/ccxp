@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ccxp-1",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [".claude/no_cache_server.py", "4173"],
+      "port": 4173
+    }
+  ]
+}
