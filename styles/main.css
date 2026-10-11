@@ -2,39 +2,97 @@
   box-sizing: border-box;
 }
 
-/* Centraliza a página e deixa uma margem ao redor da área de jogo. */
+/* O cenário ocupa toda a janela, sem margens ou rolagem. */
+html,
 body {
   margin: 0;
-  min-height: 100vh;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
   background-color: #20242b;
   color: #f3f4f6;
   font-family: system-ui, sans-serif;
 }
 
 .game-shell {
+  position: relative;
   width: 100%;
-  max-width: 960px;
-  display: grid;
-  gap: 16px;
+  height: 100vh;
+  height: 100dvh;
 }
 
-.page-header h1 {
+.orientation-prompt {
+  display: none;
+}
+
+.orientation-card {
+  width: min(86vw, 360px);
+  padding: 28px 24px;
+  border: 1px solid #64748b;
+  border-radius: 12px;
+  background: #172a3d;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
+  text-align: center;
+}
+
+.orientation-card h1,
+.orientation-card p {
   margin: 0;
-  font-size: 20px;
 }
 
-.page-header p {
-  margin: 6px 0 0;
-  color: #cbd5e1;
-  font-size: 14px;
+.orientation-card h1 {
+  font-size: 24px;
+}
+
+.orientation-card p:not(.orientation-icon) {
+  margin-top: 10px;
+  color: #dbeafe;
+  line-height: 1.5;
+}
+
+.orientation-icon {
+  margin-bottom: 12px !important;
+  color: #7dd3fc;
+  font-size: 48px;
+  line-height: 1;
+}
+
+.orientation-card button {
+  min-height: 44px;
+  margin-top: 20px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #38bdf8;
+  color: #082f49;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* Mantém o título e as instruções disponíveis para leitores de tela. */
+.page-header,
+.mobile-controls h2,
+.controls-note {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .game-area {
+  position: relative;
   width: 100%;
+  height: 100%;
   min-width: 0;
 }
 
@@ -42,22 +100,196 @@ body {
 #game-canvas {
   display: block;
   width: 100%;
-  height: auto;
-  background-color: #bde0fe;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  background-color: #dfe7fd;
 }
 
-/* Este painel fica fora do Canvas e reserva o espaço dos controles de toque. */
-.mobile-controls {
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid #475569;
-  border-radius: 8px;
+.pause-button,
+.pause-menu button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #64748b;
+  border-radius: 6px;
   background-color: #29313d;
+  color: #f9fafb;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
-.mobile-controls h2 {
-  margin: 0 0 12px;
-  font-size: 16px;
+.pause-button {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 1;
+}
+
+.pause-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgb(32 36 43 / 90%);
+  text-align: center;
+}
+
+.pause-menu h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.pause-menu button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pause-button:focus-visible,
+.pause-menu button:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 3px;
+}
+
+.pause-button[hidden],
+.pause-menu[hidden] {
+  display: none;
+}
+
+/* Tela inicial: cobre o jogo inteiro. O palco mantém a proporção 16:9 da arte,
+   e todos os elementos usam porcentagens da arte de 1920 × 1080. */
+.tela-inicio {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  background-color: #0b1f33;
+}
+
+.tela-inicio[hidden] {
+  display: none;
+}
+
+.tela-inicio-palco {
+  position: relative;
+  width: min(100%, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.tela-inicio-fundo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Byte parado: GIF 96 × 96 em escala 2×, com os pés sobre a linha da grama (y = 686). */
+.tela-inicio-byte {
+  position: absolute;
+  left: 15.83%;
+  top: 45.74%;
+  width: 10%;
+  height: 17.78%;
+  image-rendering: pixelated;
+}
+
+/* Área do texto do nível, dentro do painel da arte. */
+.tela-inicio-texto {
+  position: absolute;
+  left: 37.76%;
+  top: 30.74%;
+  width: 56.25%;
+  height: 32.68%;
+  display: grid;
+  place-items: center;
+  padding: 4cqw;
+  box-sizing: border-box;
+  text-align: center;
+  color: #7dd3fc;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.5cqw;
+  line-height: 1.9;
+}
+
+.tela-inicio-texto p {
+  margin: 0;
+}
+
+.botao-inicio {
+  position: absolute;
+  top: 66.2%;
+  height: 9.72%;
+  width: 26.3%;
+  padding: 0;
+  border: 3px solid #0b0f1a;
+  border-radius: 0;
+  color: #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.8cqw;
+  text-shadow: 3px 3px 0 #0b0f1a;
+  cursor: pointer;
+  box-shadow: 0 8px 0 #0b0f1a;
+  touch-action: manipulation;
+}
+
+.botao-jogar {
+  left: 38.54%;
+  background: linear-gradient(#6ff07a, #2fbf3f 45%, #1e8a2e);
+}
+
+.botao-sair {
+  left: 66.82%;
+  background: linear-gradient(#ff7a85, #e63946 45%, #b5252f);
+}
+
+.botao-inicio:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.botao-inicio:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0 #0b0f1a;
+}
+
+.botao-inicio:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.botao-inicio:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Os controles ficam sobre o cenário, sem diminuir a área de jogo. */
+.mobile-controls {
+  position: absolute;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 1;
+  min-width: 0;
+  pointer-events: none;
 }
 
 .controls-layout,
@@ -69,7 +301,6 @@ body {
 
 .controls-layout {
   justify-content: space-between;
-  flex-wrap: wrap;
 }
 
 .mobile-controls button {
@@ -78,10 +309,13 @@ body {
   padding: 10px 12px;
   border: 1px solid #64748b;
   border-radius: 6px;
-  background-color: #374151;
+  background-color: rgb(55 65 81 / 80%);
   color: #f9fafb;
   font: inherit;
   font-weight: 600;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
 }
 
 .mobile-controls button:disabled {
@@ -89,43 +323,33 @@ body {
   cursor: not-allowed;
 }
 
-.controls-note {
-  margin: 12px 0 0;
-  color: #cbd5e1;
-  font-size: 13px;
-  line-height: 1.5;
+/* Em pé, aproveita o céu livre acima da fase para não cobrir o personagem. */
+@media (orientation: portrait) {
+  .mobile-controls {
+    bottom: calc(56.25vw + max(12px, env(safe-area-inset-bottom)));
+  }
 }
 
-/* Em telas baixas e deitadas, os controles ficam ao lado da área de jogo. */
-@media (orientation: landscape) and (max-height: 740px) and (min-width: 600px) {
-  .game-shell {
-    grid-template-columns: minmax(0, 1fr) 220px;
-    gap: 12px;
-  }
-
-  .page-header {
-    grid-column: 1 / -1;
-  }
-
-  .game-area {
-    max-width: min(100%, calc((100dvh - 110px) * 16 / 9));
-    justify-self: center;
-  }
-
-  .mobile-controls {
-    align-self: start;
-  }
-
-  .controls-layout {
-    flex-direction: column;
-  }
-
-  .movement-controls,
-  .action-controls {
+@media (orientation: portrait) and (max-width: 800px) {
+  .orientation-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    place-items: center;
+    padding: 20px;
+    background: #0b1f33;
   }
+}
 
+/* No computador, o teclado deixa o cenário livre dos controles de toque. */
+@media (hover: hover) and (pointer: fine) {
+  .mobile-controls {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
   .mobile-controls button {
     min-width: 0;
     padding-inline: 6px;
