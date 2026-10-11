@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Base do jogo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,25 +15,37 @@
 </head>
 
 <body>
-  <section id="aviso-orientacao" class="orientation-prompt" aria-labelledby="titulo-orientacao">
-    <div class="orientation-card">
-      <p class="orientation-icon" aria-hidden="true">↻</p>
-      <h1 id="titulo-orientacao">Vire o celular</h1>
-      <p>Para começar o jogo, use a tela na horizontal.</p>
-      <button type="button" id="botao-orientacao">Usar tela horizontal</button>
-    </div>
-  </section>
-
   <main class="game-shell">
+    <section id="aviso-orientacao" class="orientation-prompt" aria-labelledby="titulo-orientacao" role="dialog" aria-modal="true">
+      <div class="orientation-card">
+        <p class="orientation-icon" aria-hidden="true">↻</p>
+        <h1 id="titulo-orientacao">Vire o celular</h1>
+        <p id="texto-orientacao">Para jogar, use a tela na horizontal. Você pode girar o aparelho manualmente.</p>
+        <button type="button" id="botao-orientacao">Usar tela horizontal</button>
+      </div>
+    </section>
+
     <header class="page-header">
       <h1>Base do jogo</h1>
       <p id="game-status" role="status">Carregando a área de teste…</p>
     </header>
 
     <section class="game-area" aria-label="Área de teste do jogo">
-      <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Área de teste com um retângulo vermelho">
+      <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Fase de plataforma com Byte, inimigos e checkpoints">
         Seu navegador não oferece suporte ao Canvas.
       </canvas>
+
+      <div id="game-hud" class="game-hud" hidden>
+        <div class="hud-stats">
+          <div class="hud-lives">
+            <canvas id="hud-vidas" width="114" height="32" role="img" aria-label="3 de 3 vidas"></canvas>
+          </div>
+          <div class="hud-coins">
+            <canvas id="hud-moedas" width="74" height="32" role="img" aria-label="0 de 10 moedas"></canvas>
+          </div>
+        </div>
+        <p id="hud-mensagem" class="hud-message" role="status" hidden></p>
+      </div>
 
       <button type="button" id="botao-pausar" class="pause-button" aria-controls="menu-pausa">
         Pausar
@@ -79,7 +91,7 @@
       </section>
     </section>
 
-    <section class="mobile-controls" aria-labelledby="controls-title">
+    <section class="mobile-controls" aria-labelledby="controls-title" hidden>
       <h2 id="controls-title">Controles de celular</h2>
       <div class="controls-layout">
         <div class="movement-controls">
@@ -91,7 +103,7 @@
           <button type="button" data-action="agachamento" class="botao-agachar" aria-label="Agachar"></button>
         </div>
       </div>
-      <p class="controls-note">Área reservada. Os controles serão conectados na integração da equipe.</p>
+      <p class="controls-note">Segure as setas para andar. Toque em pular ou segure agachar.</p>
     </section>
 
     <noscript>Ative o JavaScript no navegador para executar o jogo.</noscript>

@@ -1,6 +1,6 @@
 # CCXP
 
-Protótipo de um jogo de plataforma 2D para navegador, feito com HTML, CSS e JavaScript. A versão atual possui uma fase de teste com plataformas, obstáculos, checkpoints e controles para computador e celular. O personagem e o cenário usam formas simples como visual provisório.
+Protótipo de um jogo de plataforma 2D para navegador, feito com HTML, CSS e JavaScript. A versão atual possui uma fase de teste com plataformas, obstáculos, checkpoints e controles para computador e celular. O personagem, os inimigos e o cenário usam sprites em pixel art.
 
 ## Como jogar
 
@@ -10,11 +10,11 @@ A fase possui checkpoints, ativados ao tocar neles. Quando um checkpoint é salv
 
 Ao cair para fora da fase, o personagem perde uma vida e retorna ao último checkpoint ativado. Se nenhum checkpoint tiver sido ativado, retorna à posição inicial.
 
-Há **quatro robôs sentinelas** pela fase: dois patrulham plataformas e dois ficam no chão, depois do terceiro checkpoint e no trecho final. Cada um anda entre dois marcos amarelos. Pule sobre os robôs no chão ou passe por baixo das plataformas patrulhadas. Qualquer contato desconta um coração e devolve o personagem ao ponto seguro, com um segundo de invulnerabilidade. Os robôs continuam patrulhando; nesta versão, eles não podem ser derrotados.
+Há **três robôs sentinelas** pela fase: um patrulha uma plataforma e dois ficam no chão, depois do terceiro checkpoint e no trecho final. Cada um anda entre dois marcos amarelos. Pule sobre os robôs no chão ou passe por baixo da plataforma patrulhada. Qualquer contato desconta um coração e devolve o personagem ao ponto seguro, com um segundo de invulnerabilidade. Os robôs continuam patrulhando; nesta versão, eles não podem ser derrotados.
 
 Para mudar os campos, edite `patrulhasSentinelas` em `src/level.js`: `inicioX` e `fimX` delimitam a área inteira do robô, `superficieY` indica a altura da superfície de apoio e `velocidade` é medida em pixels por segundo. A patrulha original vai de **1535 a 1645**, sobre o chão em **480**, a **80 px/s**. Mantenha cada área sobre chão ou plataforma contínua, sem paredes ou vãos, e longe das posições de retorno dos checkpoints. Para adicionar outro sentinela, inclua outra configuração na lista.
 
-Há **cinco plantas inimigas**: três no chão (**x = 230, 1820 e 3120**), uma sobre o bloco suspenso inicial (**x = 680**) e uma na plataforma alta do trecho final (**x = 2684**). Elas permanecem no lugar e usam seu GIF animado. Pule sobre elas ou siga por outro nível da fase: o contato desconta um coração e retorna ao ponto seguro, com um segundo de invulnerabilidade. Para mover ou adicionar plantas, edite a lista `plantas` em `src/level.js`, usando `x` e `superficieY`.
+Há **quatro plantas inimigas**: duas no chão (**x = 1820 e 3120**), uma sobre o bloco suspenso inicial (**x = 680**) e uma na plataforma alta do trecho final (**x = 2684**). Elas permanecem no lugar e usam seu GIF animado. Pule sobre elas ou siga por outro nível da fase: o contato desconta um coração e retorna ao ponto seguro, com um segundo de invulnerabilidade. Para mover ou adicionar plantas, edite a lista `plantas` em `src/level.js`, usando `x` e `superficieY`.
 
 Use o botão **Pausar** para interromper a partida e abrir o menu. Enquanto o jogo está pausado, o personagem e a simulação ficam parados. O botão **Retomar** fecha o menu e continua a partida de onde parou.
 
@@ -28,12 +28,23 @@ O progresso fica apenas na partida atual. Recarregar a página reinicia o person
 | Mover para a direita | Seta direita ou D | Segurar → |
 | Pular | Seta para cima, W ou espaço | Tocar em Pular |
 | Agachar | Seta para baixo ou S | Segurar Agachar |
-| Pausar | Clicar no botão Pausar | Tocar em Pausar |
-| Retomar | Clicar no botão Retomar | Tocar em Retomar |
+| Pausar | P ou botão Pausar | Tocar em Pausar |
+| Retomar | P ou botão Retomar | Tocar em Retomar |
+| Reiniciar | R ou botão Reiniciar fase | Reiniciar fase no menu de pausa |
 
 Para saltar novamente, solte e acione outra vez a tecla ou o botão de pulo. O personagem só pula quando está apoiado no chão e não está agachado.
 
-Pausa e retomada são acessadas pelos botões do jogo. Não há atalho específico de teclado para pausar ou reiniciar a fase.
+Os controles de toque aceitam andar e pular ao mesmo tempo. Soltar o botão, cancelar o toque ou pausar limpa as ações para evitar movimento preso.
+
+## Adaptação às telas
+
+O cenário ocupa a área disponível da janela, com escala uniforme para personagens, inimigos e plataformas. A câmera mostra mais cenário em telas largas e acompanha os saltos nas plataformas altas. As coordenadas do mapa e a física permanecem iguais em todas as telas.
+
+Redimensionar a janela preserva a posição, as vidas, os checkpoints e os itens coletados. Os corações, o contador de moedas e as mensagens ficam em uma camada fixa, com tamanho independente do zoom. A resolução de desenho considera a densidade da tela, limitada a 2×.
+
+No celular e no tablet, jogue na horizontal. Ao girar para a vertical durante uma partida, o jogo pausa e mostra o aviso de orientação. Depois de girar de volta, use **Retomar**. Os controles respeitam as bordas do aparelho, e a câmera reserva espaço para eles quando o personagem está no chão.
+
+Caso o navegador não permita bloquear a orientação na horizontal, gire o aparelho manualmente. O jogo se adapta automaticamente ao espaço disponível.
 
 ## Como executar
 
@@ -87,4 +98,5 @@ A partida começa com três vidas. Quedas e contatos com inimigos descontam um c
 | `src/player.js` | Estado, movimentação e desenho do personagem. |
 | `src/enemies.js` | Movimento, animação, desenho e contatos dos inimigos. |
 | `src/level.js` | Cenário, obstáculos, checkpoints e posições de retorno. |
-| `src/collisions.js` | Colisões com o cenário e verificação de espaço. |
+| `src/collisions.js` | Colisões com o cenário, coleta de itens e verificação de espaço. |
+| `src/viewport.js` | Escala, área visível e resolução do Canvas conforme a tela. |

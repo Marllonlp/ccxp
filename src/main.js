@@ -11,15 +11,34 @@ import {
   limparCheckpoints,
   desenharFase,
   calcularCamera,
+  calcularCameraVertical,
   aplicarCameraMundo,
   patrulhasSentinelas,
   plantas,
+  moedas,
+  limparColetaveis,
 } from './level.js';
-import { resolverColisoes, verificarEspaco } from './collisions.js';
+import { resolverColisoes, verificarEspaco, verificarColetaveis } from './collisions.js';
 import { registrarEfeito, registrarGanhoMusica, removerGanhoMusica, definirVolume } from './audio.js';
+import { calcularVisao, ajustarCanvas } from './viewport.js';
 
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
+const gameShell = document.querySelector('.game-shell');
+const controlesToque = document.querySelector('.mobile-controls');
+const hud = document.getElementById('game-hud');
+const canvasVidas = document.getElementById('hud-vidas');
+const contextoVidas = canvasVidas.getContext('2d');
+const canvasMoedas = document.getElementById('hud-moedas');
+const contextoMoedas = canvasMoedas.getContext('2d');
+const moedaHUD = new Image();
+moedaHUD.src = 'assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif';
+const mensagemHUD = document.getElementById('hud-mensagem');
+const tecladoPrincipal = window.matchMedia('(hover: hover) and (pointer: fine)');
+const retratoMovel = window.matchMedia('(orientation: portrait) and (pointer: coarse)');
+let visao = calcularVisao(960, 540);
+let pixelRatio = 1;
+let margemSuperior = 72;
 const botaoPausar = document.getElementById('botao-pausar');
 const menuPausa = document.getElementById('menu-pausa');
 const botaoRetomar = document.getElementById('botao-retomar');
@@ -125,16 +144,14 @@ function pararMusicaFundo() {
 
 async function solicitarTelaHorizontal() {
   try {
-    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-      await document.documentElement.requestFullscreen();
-    }
-
-    if (screen.orientation?.lock) {
-      await screen.orientation.lock('landscape');
-    }
+    if (screen.orientation?.lock) await screen.orientation.lock('landscape');
   } catch {
-    // Alguns navegadores só permitem a rotação pelas configurações do aparelho.
+    // A mensagem abaixo também atende aos navegadores sem bloqueio de orientação.
   }
+  if (retratoMovel.matches) {
+    document.getElementById('texto-orientacao').textContent = 'Gire o aparelho manualmente para continuar na horizontal.';
+  }
+  redimensionarJogo();
 }
 
 botaoOrientacao?.addEventListener('click', solicitarTelaHorizontal);
@@ -159,6 +176,64 @@ let mensagemAte = 0;
 // - jogando, pausado: partida em andamento ou com o menu de pausa aberto.
 let estadoDaPartida = 'inicio';
 
+function atualizarInterface() {
+  hud.hidden = estadoDaPartida === 'inicio';
+  controlesToque.hidden = estadoDaPartida !== 'jogando';
+  gameShell.dataset.estado = estadoDaPartida;
+}
+
+function atualizarHUD() {
+  for (const ctx of [contextoVidas, contextoMoedas]) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  }
+  desenharVidas(contextoVidas, player.vidas, performance.now() / 1000, { x: 0, y: 0 });
+  const rotulo = `${player.vidas} de 3 vidas`;
+  if (canvasVidas.getAttribute('aria-label') !== rotulo) canvasVidas.setAttribute('aria-label', rotulo);
+
+  if (moedaHUD.complete && moedaHUD.naturalWidth > 0) {
+    contextoMoedas.imageSmoothingEnabled = false;
+    contextoMoedas.drawImage(moedaHUD, 0, 8, 16, 16);
+  }
+  const moedasColetadas = moedas.filter((moeda) => moeda.coletado).length;
+  contextoMoedas.fillStyle = '#f3f4f6';
+  contextoMoedas.font = 'bold 16px system-ui, sans-serif';
+  contextoMoedas.textBaseline = 'middle';
+  contextoMoedas.fillText(String(moedasColetadas), 24, 16);
+  const rotuloMoedas = `${moedasColetadas} de ${moedas.length} moedas`;
+  if (canvasMoedas.getAttribute('aria-label') !== rotuloMoedas) {
+    canvasMoedas.setAttribute('aria-label', rotuloMoedas);
+  }
+  const texto = mensagem && performance.now() < mensagemAte ? mensagem : '';
+  if (mensagemHUD.textContent !== texto) mensagemHUD.textContent = texto;
+  mensagemHUD.hidden = !texto;
+}
+
+function redimensionarJogo() {
+  const { width, height } = canvas.getBoundingClientRect();
+  if (!width || !height) return;
+  const botao = controlesToque.querySelector('button');
+  const tamanhoBotao = parseFloat(getComputedStyle(botao).height) || 56;
+  const margemRodape = parseFloat(getComputedStyle(controlesToque).bottom) || 12;
+  const margemControles = tecladoPrincipal.matches ? 0 : tamanhoBotao + margemRodape + 20;
+  visao = calcularVisao(width, height, margemControles);
+  pixelRatio = ajustarCanvas(canvas, visao);
+  ajustarCanvas(canvasVidas, { largura: 114, altura: 32 }, pixelRatio);
+  ajustarCanvas(canvasMoedas, { largura: 74, altura: 32 }, pixelRatio);
+  margemSuperior = Math.max(72, hud.querySelector('.hud-stats').getBoundingClientRect().bottom + 12);
+  document.querySelector('.game-area').inert = retratoMovel.matches;
+  if (retratoMovel.matches && estadoDaPartida === 'jogando') pausarPartida();
+  if (retratoMovel.matches && document.activeElement !== botaoOrientacao) {
+    botaoOrientacao.focus({ preventScroll: true });
+  } else if (!retratoMovel.matches && document.activeElement === botaoOrientacao) {
+    const proximoFoco = !menuSom.hidden ? controleMusica
+      : estadoDaPartida === 'inicio' ? botaoJogar : botaoRetomar;
+    proximoFoco.focus({ preventScroll: true });
+  }
+  controleDoJogo.draw();
+}
+
 function reposicionar(ponto) {
   player.retornar(ponto.x, ponto.y);
 }
@@ -166,21 +241,27 @@ function reposicionar(ponto) {
 /** Zera a partida: vidas, checkpoints e posição inicial. Não mexe nos menus. */
 function prepararNovaPartida() {
   limparCheckpoints();
+  limparColetaveis();
   const pontoInicial = obterPosicaoInicial();
   player.vidas = 3;
   player.tempoInvulneravel = 0;
   player.retornar(pontoInicial.x, pontoInicial.y);
   inimigos.forEach((inimigo) => inimigo.reiniciar());
   limparAcoes();
+  mensagem = '';
+  mensagemAte = 0;
 }
 
 /** Esconde a tela inicial e os menus, e começa a partida do zero. */
 function iniciarPartida() {
+  if (retratoMovel.matches) return;
   prepararNovaPartida();
   estadoDaPartida = 'jogando';
   telaInicio.hidden = true;
   menuPausa.hidden = true;
   botaoPausar.hidden = false;
+  atualizarInterface();
+  redimensionarJogo();
   controleDoJogo.start();
   botaoPausar.focus({ preventScroll: true });
 }
@@ -193,6 +274,7 @@ function mostrarTelaInicio() {
   botaoPausar.hidden = true;
   menuPausa.hidden = true;
   telaInicio.hidden = false;
+  atualizarInterface();
   pararMusicaFundo();
   botaoJogar.focus({ preventScroll: true });
 }
@@ -240,6 +322,17 @@ const dependenciasDoJogo = {
       return;
     }
 
+    const coletavel = verificarColetaveis(player);
+    if (coletavel) {
+      if (coletavel.id.startsWith('vida-')) {
+        player.vidas = Math.min(3, player.vidas + 1);
+        mensagem = player.vidas === 3 ? 'Vida recuperada' : 'Coração coletado';
+      } else {
+        mensagem = 'Moeda coletada';
+      }
+      mensagemAte = performance.now() + 1000;
+    }
+
     const inimigoTocado = inimigos.find((inimigo) => inimigo.toca(player));
     if (inimigoTocado && player.receberDano()) {
       if (player.vidas <= 0) {
@@ -254,30 +347,30 @@ const dependenciasDoJogo = {
   },
 
   drawScene: (ctx) => {
-    const cameraX = calcularCamera(player.x, player.largura);
-    desenharFase(ctx, cameraX);
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    const cameraX = calcularCamera(player.x, player.largura, visao);
+    const cameraY = calcularCameraVertical(player.y, visao, margemSuperior);
+    desenharFase(ctx, cameraX, visao, cameraY);
 
     // Personagem e inimigos usam a mesma câmera, em coordenadas do mundo.
     ctx.save();
-    aplicarCameraMundo(ctx, cameraX);
+    aplicarCameraMundo(ctx, cameraX, visao, cameraY);
     inimigos.forEach((inimigo) => inimigo.desenhar(ctx));
     player.desenhar(ctx);
     ctx.restore();
 
-    // Vidas e mensagens ficam fixas na tela.
-    desenharVidas(ctx, player.vidas);
-
-    if (mensagem && performance.now() < mensagemAte) {
-      ctx.fillStyle = '#1d3557';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText(mensagem, 24, 80);
-    }
+    atualizarHUD();
   },
 };
 
 const controleDoJogo = startGame(canvas, context, dependenciasDoJogo);
 // O jogo começa parado: a tela inicial é exibida até o jogador clicar em Jogar.
 mostrarTelaInicio();
+redimensionarJogo();
+new ResizeObserver(redimensionarJogo).observe(gameShell);
+window.addEventListener('resize', redimensionarJogo);
+retratoMovel.addEventListener('change', redimensionarJogo);
+tecladoPrincipal.addEventListener('change', redimensionarJogo);
 
 // Chamada pelo jogo quando as vidas acabam: toca o som de derrota e volta à tela inicial.
 function aguardarEscolhaDoJogador() {
@@ -295,16 +388,18 @@ function pausarPartida() {
   pausarMusicaFundo();
   botaoPausar.hidden = true;
   menuPausa.hidden = false;
+  atualizarInterface();
   botaoRetomar.focus({ preventScroll: true });
 }
 
 function retomarPartida() {
-  if (estadoDaPartida !== 'pausado') return;
+  if (estadoDaPartida !== 'pausado' || retratoMovel.matches) return;
 
   limparAcoes();
   estadoDaPartida = 'jogando';
   menuPausa.hidden = true;
   botaoPausar.hidden = false;
+  atualizarInterface();
   controleDoJogo.start();
   retomarMusicaFundo();
   botaoPausar.focus({ preventScroll: true });
@@ -312,6 +407,7 @@ function retomarPartida() {
 
 // O evento click atende tanto ao mouse quanto ao toque nos botões.
 botaoJogar.addEventListener('click', () => {
+  if (retratoMovel.matches) return;
   tocarSomApertarPlay();
   iniciarMusicaFundo();
   iniciarPartida();
@@ -353,6 +449,7 @@ if (botaoReiniciar) {
 // Atalhos de teclado: P para pausar/retomar, R para reiniciar.
 // Na tela inicial, nenhum atalho age: só o botão Jogar.
 window.addEventListener('keydown', (evento) => {
+  if (retratoMovel.matches) return;
   // Com o painel de som aberto, Esc só fecha o painel: não pausa nem retoma o jogo.
   if (!menuSom.hidden) {
     if (evento.key === 'Escape') fecharMenuSom();
