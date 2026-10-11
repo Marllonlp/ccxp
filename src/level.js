@@ -106,12 +106,99 @@ const CORES = {
   teto: '#5f0f40',
 };
 
+// Peças do pacote pedacos_de_chao_pacote. Tamanho nativo: 256 × 80.
+const PASTA_PECAS = 'assets/characters/Imagens_Personagens/02_cenario/pedacos_de_chao_pacote/';
+const LARGURA_PECA = 256;
+// Linha em que a grama começa dentro da peça, em pixels nativos.
+// Desenhamos a peça deslocada para que essa linha fique sobre a superfície da colisão.
+const SUPERFICIE_PECA = 20;
+
+const pecaNormal = new Image();
+pecaNormal.src = `${PASTA_PECAS}chao_normal_256x80.png`;
+const pecaAgua = new Image();
+pecaAgua.src = `${PASTA_PECAS}chao_agua_256x80.png`;
+
+// Camadas de fundo do pacote fundo_pecas_pacote (dia). Tamanho nativo: 256 × 240.
+const PASTA_FUNDO = 'assets/characters/Imagens_Personagens/02_cenario/fundo_pecas_pacote/';
+const ALTURA_FUNDO = 240;
+const fundoCeu = new Image();
+fundoCeu.src = `${PASTA_FUNDO}fundo_ceu_256x240.png`;
+const fundoNuvens = new Image();
+fundoNuvens.src = `${PASTA_FUNDO}fundo_nuvens_256x240.png`;
+const fundoMontanhas = new Image();
+fundoMontanhas.src = `${PASTA_FUNDO}fundo_distante_montanhas_256x240.png`;
+const fundoFloresta = new Image();
+fundoFloresta.src = `${PASTA_FUNDO}fundo_colinas_floresta_256x240.png`;
+
+function pecaCarregada(imagem) {
+  return imagem.complete && imagem.naturalWidth > 0;
+}
+
+/**
+ * Céu: estica uma coluna da imagem por toda a tela. A coluna não tem o sol,
+ * então as faixas de cor ficam uniformes e sem repetir o sol.
+ */
+function desenharCeu(ctx) {
+  if (pecaCarregada(fundoCeu)) {
+    ctx.drawImage(fundoCeu, 0, 0, 1, ALTURA_FUNDO, 0, 0, LARGURA_FASE, ALTURA_FASE);
+    return;
+  }
+  const gradiente = ctx.createLinearGradient(0, 0, 0, ALTURA_FASE);
+  gradiente.addColorStop(0, '#9fd3f5');
+  gradiente.addColorStop(1, '#dfe7fd');
+  ctx.fillStyle = gradiente;
+  ctx.fillRect(0, 0, LARGURA_FASE, ALTURA_FASE);
+}
+
+/** Repete uma camada de fundo na horizontal, na altura y. */
+function desenharCamada(ctx, imagem, y) {
+  if (!pecaCarregada(imagem)) return;
+  for (let x = 0; x < LARGURA_FASE; x += 256) {
+    ctx.drawImage(imagem, x, y);
+  }
+}
+
+/** Peças de chão repetidas na horizontal. A grama fica na superfície y=480, igual à colisão. */
+function desenharChao(ctx) {
+  const superficie = 480;
+  for (let x = 0; x < LARGURA_FASE; x += LARGURA_PECA) {
+    ctx.drawImage(pecaNormal, x, superficie - SUPERFICIE_PECA);
+  }
+}
+
+/** Água no vão do chão, centralizada no meio do vão. */
+function desenharVao(ctx, vao) {
+  const centro = vao.x + vao.width / 2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(vao.x, vao.y, vao.width, vao.height);
+  ctx.clip();
+  // Na peça de água, a coluna de água fica no centro horizontal (x = 128).
+  ctx.drawImage(pecaAgua, centro - LARGURA_PECA / 2, vao.y - SUPERFICIE_PECA);
+  ctx.restore();
+}
+
 /** Visual provisório da fase, até a aplicação dos assets do Kelvis. */
 export function desenharFase(ctx) {
-  ctx.fillStyle = '#dfe7fd';
-  ctx.fillRect(0, 0, LARGURA_FASE, ALTURA_FASE);
+  desenharCeu(ctx);
+
+  // Camadas do fundo, do mais distante para o mais próximo. Todas terminam em y=540,
+  // com a mesma escala 1× das peças de chão.
+  const yFundo = ALTURA_FASE - ALTURA_FUNDO;
+  desenharCamada(ctx, fundoNuvens, 0);
+  desenharCamada(ctx, fundoMontanhas, yFundo);
+  desenharCamada(ctx, fundoFloresta, yFundo);
+
+  if (pecaCarregada(pecaNormal) && pecaCarregada(pecaAgua)) {
+    desenharChao(ctx);
+    desenharVao(ctx, { x: 340, y: 480, width: 100, height: 60 });
+  }
 
   for (const obstaculo of obstaculos) {
+    if (obstaculo.tipo === 'chao' && pecaCarregada(pecaNormal)) {
+      // O chão já foi desenhado pela faixa; só o trecho de colisão precisa existir.
+      continue;
+    }
     ctx.fillStyle = CORES[obstaculo.tipo] || '#333333';
     ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height);
   }
