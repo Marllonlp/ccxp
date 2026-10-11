@@ -42,7 +42,23 @@
       <section id="menu-pausa" class="pause-menu" hidden aria-labelledby="titulo-pausa">
         <h2 id="titulo-pausa">Jogo pausado</h2>
         <button type="button" id="botao-retomar">Retomar</button>
+        <button type="button" id="botao-som-pausa" aria-controls="menu-som">Som</button>
         <button type="button" id="botao-reiniciar" disabled>Reiniciar fase</button>
+      </section>
+
+      <section id="menu-som" class="pause-menu menu-som" hidden aria-labelledby="titulo-som">
+        <h2 id="titulo-som">Som</h2>
+        <div class="linha-volume">
+          <label for="volume-musica">Música</label>
+          <input type="range" id="volume-musica" min="0" max="100" value="100" />
+          <output id="valor-musica" for="volume-musica">100%</output>
+        </div>
+        <div class="linha-volume">
+          <label for="volume-efeitos">Efeitos</label>
+          <input type="range" id="volume-efeitos" min="0" max="100" value="100" />
+          <output id="valor-efeitos" for="volume-efeitos">100%</output>
+        </div>
+        <button type="button" id="botao-voltar-som">Voltar</button>
       </section>
 
       <!-- Tela inicial: aparece ao abrir o jogo e quando as vidas acabam. -->
@@ -59,6 +75,7 @@
           <button type="button" id="botao-jogar" class="botao-inicio botao-jogar">▶ JOGAR</button>
           <button type="button" id="botao-sair" class="botao-inicio botao-sair" disabled title="Ainda não disponível">✕ SAIR</button>
         </div>
+        <button type="button" id="botao-som-inicio" class="pause-button" aria-controls="menu-som">♪ Som</button>
       </section>
     </section>
 

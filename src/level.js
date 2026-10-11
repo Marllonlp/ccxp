@@ -7,11 +7,19 @@ export const LARGURA_TELA = 960;
 export const ALTURA_FASE = 540;
 export const LARGURA_FASE = 3200;
 
+// Zoom do mundo: plataformas, totens e chão aparecem 1,5× maiores na tela.
+// A física continua nas unidades originais; só o desenho é ampliado.
+export const ESCALA_MUNDO = 1.5;
+const LARGURA_VISAO = LARGURA_TELA / ESCALA_MUNDO;
+const ALTURA_VISAO = ALTURA_FASE / ESCALA_MUNDO;
+// A câmera mostra a faixa de baixo da fase: o chão continua encostado na parte de baixo da tela.
+const Y_CAMERA = ALTURA_FASE - ALTURA_VISAO;
+
 // Limite inferior da fase (RF04). Pedro usa este valor para detectar a queda.
 export const LIMITE_QUEDA = 620;
 
 // Canto superior esquerdo do personagem em pé sobre o chão inicial.
-const POSICAO_INICIAL = { x: 40, y: 400 };
+const POSICAO_INICIAL = { x: 40, y: 414 };
 
 // Superfície do chão. Com a colisão em y=480, o personagem fica em pé com os pés em 480.
 const SUPERFICIE_CHAO = 480;
@@ -60,31 +68,37 @@ export const vaos = [
   { x: 2300, y: SUPERFICIE_CHAO, width: 100, height: 60 },
 ];
 
-// Checkpoints (RF08). A área é apenas de contato: eles não bloqueiam a passagem.
+// Checkpoints (RF08) são totens de 32 × 64 em pé sobre o chão (superfície em y=480).
+// A área é apenas de contato: eles não bloqueiam a passagem.
 // posicaoSegura é o canto superior esquerdo do personagem em pé sobre o chão.
+// totem indica o modelo do pacote plataformas_totens_pacote.
 export const checkpoints = [
   {
     id: 'cp1',
-    x: 280, y: 400, width: 30, height: 80,
-    posicaoSegura: { x: 275, y: 400 },
+    x: 280, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 275, y: 414 },
+    totem: 'tela',
     ativo: false,
   },
   {
     id: 'cp2',
-    x: 500, y: 400, width: 30, height: 80,
-    posicaoSegura: { x: 495, y: 400 },
+    x: 500, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 495, y: 414 },
+    totem: 'obelisco',
     ativo: false,
   },
   {
     id: 'cp3',
-    x: 1480, y: 400, width: 30, height: 80,
-    posicaoSegura: { x: 1475, y: 400 },
+    x: 1480, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 1475, y: 414 },
+    totem: 'terminal',
     ativo: false,
   },
   {
     id: 'cp4',
-    x: 2420, y: 400, width: 30, height: 80,
-    posicaoSegura: { x: 2415, y: 400 },
+    x: 2420, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 2415, y: 414 },
+    totem: 'antena',
     ativo: false,
   },
 ];
@@ -148,9 +162,20 @@ export function limparCheckpoints() {
  * a janela sair dos limites da fase.
  */
 export function calcularCamera(xPersonagem, larguraPersonagem) {
-  const centro = xPersonagem + larguraPersonagem / 2 - LARGURA_TELA / 2;
-  const maximo = LARGURA_FASE - LARGURA_TELA;
+  const centro = xPersonagem + larguraPersonagem / 2 - LARGURA_VISAO / 2;
+  const maximo = LARGURA_FASE - LARGURA_VISAO;
   return Math.round(Math.min(Math.max(centro, 0), maximo));
+}
+
+/**
+ * Aplica zoom e câmera no contexto. Use com save/restore para desenhar elementos
+ * do mundo (o personagem, por exemplo) na mesma escala do cenário.
+ */
+export function aplicarCameraMundo(ctx, cameraX) {
+  // Pixel art ampliada: sem suavização, para as bordas continuarem nítidas.
+  ctx.imageSmoothingEnabled = false;
+  ctx.scale(ESCALA_MUNDO, ESCALA_MUNDO);
+  ctx.translate(-cameraX, -Y_CAMERA);
 }
 
 const CORES = {
@@ -175,6 +200,59 @@ pecaCristal.src = `${PASTA_PECAS}chao_cristais_256x80.png`;
 const pecaAgua = new Image();
 pecaAgua.src = `${PASTA_PECAS}chao_agua_256x80.png`;
 
+// Plataformas e totens do pacote plataformas_totens_pacote.
+// A plataforma terra (96 × 24) é esticada até a largura da colisão. Cada totem tem a versão
+// inativa (1 quadro) e a ativa (4 quadros lado a lado, 32 × 64 cada).
+const PASTA_PLATAFORMAS = 'assets/characters/Imagens_Personagens/02_cenario/plataformas_totens_pacote/';
+const ALTURA_PLATAFORMA = 24;
+// A grama fica no topo da peça: sobe a imagem para que a superfície fique sobre a colisão.
+const SOBRA_PLATAFORMA = 4;
+const FPS_TOTEM_ATIVO = 8;
+const QUADROS_TOTEM_ATIVO = 4;
+
+function carregarImagem(arquivo) {
+  const imagem = new Image();
+  imagem.src = `${PASTA_PLATAFORMAS}${arquivo}`;
+  return imagem;
+}
+
+const plataformaTerra = carregarImagem('plataforma_terra_96x24_1f.png');
+
+const totens = {
+  antena: {
+    inativo: carregarImagem('totem_antena_inativo_32x64.png'),
+    ativo: carregarImagem('totem_antena_ativo_32x64_4f.png'),
+  },
+  obelisco: {
+    inativo: carregarImagem('totem_obelisco_inativo_32x64.png'),
+    ativo: carregarImagem('totem_obelisco_ativo_32x64_4f.png'),
+  },
+  tela: {
+    inativo: carregarImagem('totem_tela_inativo_32x64.png'),
+    ativo: carregarImagem('totem_tela_ativo_32x64_4f.png'),
+  },
+  terminal: {
+    inativo: carregarImagem('totem_terminal_inativo_32x64.png'),
+    ativo: carregarImagem('totem_terminal_ativo_32x64_4f.png'),
+  },
+};
+
+// Obstáculos do pacote obstaculo_pilha_pacote: pilhas de computadores animadas em 4 quadros.
+// Parede (40 × 80) usa a torre (44 × 80). Teto (160 × 100) é montado com pilhas médias e baixas.
+const PASTA_PILHA = 'assets/characters/Imagens_Personagens/02_cenario/obstaculo_pilha_pacote/';
+const FPS_PILHA = 6;
+const QUADROS_PILHA = 4;
+
+function carregarPilha(arquivo) {
+  const imagem = new Image();
+  imagem.src = `${PASTA_PILHA}${arquivo}`;
+  return imagem;
+}
+
+const pilhaTorre = carregarPilha('obstaculo_pilha_torre_44x80_4f.png');
+const pilhaMedia = carregarPilha('obstaculo_pilha_media_40x52_4f.png');
+const pilhaBaixa = carregarPilha('obstaculo_pilha_baixa_40x40_4f.png');
+
 // Camadas de fundo do pacote fundo_pecas_pacote (dia). Tamanho nativo: 256 × 240.
 const PASTA_FUNDO = 'assets/characters/Imagens_Personagens/02_cenario/fundo_pecas_pacote/';
 const ALTURA_FUNDO = 240;
@@ -189,6 +267,8 @@ fundoFloresta.src = `${PASTA_FUNDO}fundo_colinas_floresta_256x240.png`;
 
 // Fator de rolagem de cada camada: quanto menor, mais distante ela parece.
 const FATOR_NUVENS = 0.1;
+// Velocidade própria das nuvens, em px/s: andam devagar para a esquerda, mesmo com o Byte parado.
+const VELOCIDADE_NUVENS = 8;
 const FATOR_MONTANHAS = 0.25;
 const FATOR_FLORESTA = 0.5;
 
@@ -216,9 +296,11 @@ function desenharCeu(ctx) {
  * Repete uma camada de fundo na horizontal, na altura y. A camada anda mais
  * devagar que a câmera conforme o fator; o deslocamento volta a zero a cada peça.
  */
-function desenharCamada(ctx, imagem, y, cameraX, fator) {
+function desenharCamada(ctx, imagem, y, cameraX, fator, velocidadeAutomatica = 0) {
   if (!pecaCarregada(imagem)) return;
-  const deslocamento = (cameraX * fator) % LARGURA_PECA;
+  // velocidadeAutomatica (px/s) faz a camada andar sozinha, mesmo com a câmera parada.
+  const tempo = performance.now() / 1000;
+  const deslocamento = (cameraX * fator + tempo * velocidadeAutomatica) % LARGURA_PECA;
   for (let x = -deslocamento; x < LARGURA_TELA; x += LARGURA_PECA) {
     ctx.drawImage(imagem, Math.round(x), y);
   }
@@ -262,6 +344,21 @@ function desenharMundo(ctx) {
   }
 
   for (const obstaculo of obstaculos) {
+    if (obstaculo.tipo === 'plataforma' && pecaCarregada(plataformaTerra)) {
+      desenharPlataforma(ctx, obstaculo);
+      continue;
+    }
+
+    if (obstaculo.tipo === 'parede' && pecaCarregada(pilhaTorre)) {
+      desenharParedePilha(ctx, obstaculo);
+      continue;
+    }
+
+    if (obstaculo.tipo === 'teto' && pecaCarregada(pilhaMedia) && pecaCarregada(pilhaBaixa)) {
+      desenharTetoPilha(ctx, obstaculo);
+      continue;
+    }
+
     const peca = obstaculo.tipo === 'chao' ? pecaNormal
       : obstaculo.tipo === 'chao_cristal' ? pecaCristal
       : null;
@@ -274,27 +371,82 @@ function desenharMundo(ctx) {
     ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height);
   }
 
+  const tempo = performance.now() / 1000;
   for (const checkpoint of checkpoints) {
-    // Forma e símbolo diferenciam inativo de ativo, não apenas a cor.
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = checkpoint.ativo ? '#2a9d8f' : '#8d99ae';
-    ctx.strokeRect(checkpoint.x, checkpoint.y, checkpoint.width, checkpoint.height);
-
-    if (checkpoint.ativo) {
-      ctx.fillStyle = '#2a9d8f';
-      ctx.fillRect(checkpoint.x, checkpoint.y, checkpoint.width, checkpoint.height);
-    }
-
-    ctx.fillStyle = checkpoint.ativo ? '#ffffff' : '#8d99ae';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(
-      checkpoint.ativo ? '✓' : '○',
-      checkpoint.x + checkpoint.width / 2,
-      checkpoint.y + checkpoint.height / 2 + 7,
-    );
-    ctx.textAlign = 'left';
+    desenharTotem(ctx, checkpoint, tempo);
   }
+}
+
+/** Plataforma flutuante: a peça de terra é esticada até a largura da colisão. */
+function desenharPlataforma(ctx, obstaculo) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(
+    plataformaTerra,
+    obstaculo.x,
+    obstaculo.y - SOBRA_PLATAFORMA,
+    obstaculo.width,
+    ALTURA_PLATAFORMA,
+  );
+  ctx.restore();
+}
+
+/** Desenha um quadro da animação de uma folha de sprites com 4 quadros lado a lado. */
+function desenharQuadroPilha(ctx, imagem, larguraQuadro, alturaQuadro, dx, dy, tempo) {
+  const quadro = Math.floor(tempo * FPS_PILHA) % QUADROS_PILHA;
+  ctx.drawImage(imagem, quadro * larguraQuadro, 0, larguraQuadro, alturaQuadro,
+    Math.round(dx), Math.round(dy), larguraQuadro, alturaQuadro);
+}
+
+/** Parede: a torre (44 × 80) fica centralizada na colisão de 40 px e apoiada no chão. */
+function desenharParedePilha(ctx, obstaculo) {
+  const tempo = performance.now() / 1000;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  desenharQuadroPilha(ctx, pilhaTorre, 44, 80,
+    obstaculo.x + obstaculo.width / 2 - 22,
+    obstaculo.y + obstaculo.height - 80,
+    tempo);
+  ctx.restore();
+}
+
+/** Teto suspenso (160 × 100): pilhas baixas em cima e médias embaixo, em colunas de 40 px. */
+function desenharTetoPilha(ctx, obstaculo) {
+  const tempo = performance.now() / 1000;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  for (let x = obstaculo.x; x < obstaculo.x + obstaculo.width; x += 40) {
+    desenharQuadroPilha(ctx, pilhaBaixa, 40, 40, x, obstaculo.y + 8, tempo);
+    desenharQuadroPilha(ctx, pilhaMedia, 40, 52, x, obstaculo.y + obstaculo.height - 52, tempo);
+  }
+  ctx.restore();
+}
+
+/**
+ * Totem do checkpoint. Inativo: imagem parada. Ativo (tocado): versão animada em 4 quadros.
+ * A troca acontece quando verificarCheckpoints marca o checkpoint como ativo.
+ */
+function desenharTotem(ctx, checkpoint, tempo) {
+  const modelo = totens[checkpoint.totem];
+  const imagem = checkpoint.ativo ? modelo.ativo : modelo.inativo;
+
+  if (!pecaCarregada(imagem)) {
+    // Sem imagem carregada: mostra um retângulo simples, na mesma área de contato.
+    ctx.fillStyle = checkpoint.ativo ? '#2a9d8f' : '#8d99ae';
+    ctx.fillRect(checkpoint.x, checkpoint.y, checkpoint.width, checkpoint.height);
+    return;
+  }
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (checkpoint.ativo) {
+    const quadro = Math.floor(tempo * FPS_TOTEM_ATIVO) % QUADROS_TOTEM_ATIVO;
+    ctx.drawImage(imagem, quadro * checkpoint.width, 0, checkpoint.width, checkpoint.height,
+      checkpoint.x, checkpoint.y, checkpoint.width, checkpoint.height);
+  } else {
+    ctx.drawImage(imagem, checkpoint.x, checkpoint.y);
+  }
+  ctx.restore();
 }
 
 /**
@@ -307,12 +459,12 @@ export function desenharFase(ctx, cameraX = 0) {
 
   // Camadas do fundo, da mais distante para a mais próxima.
   const yFundo = ALTURA_FASE - ALTURA_FUNDO;
-  desenharCamada(ctx, fundoNuvens, 0, cameraX, FATOR_NUVENS);
+  desenharCamada(ctx, fundoNuvens, 0, cameraX, FATOR_NUVENS, VELOCIDADE_NUVENS);
   desenharCamada(ctx, fundoMontanhas, yFundo, cameraX, FATOR_MONTANHAS);
   desenharCamada(ctx, fundoFloresta, yFundo, cameraX, FATOR_FLORESTA);
 
   ctx.save();
-  ctx.translate(-cameraX, 0);
+  aplicarCameraMundo(ctx, cameraX);
   desenharMundo(ctx);
   ctx.restore();
 }
