@@ -5,6 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Base do jogo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles/main.css" />
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/input.js"></script>
@@ -42,10 +45,20 @@
         <button type="button" id="botao-reiniciar" disabled>Reiniciar fase</button>
       </section>
 
-      <section id="menu-vidas-esgotadas" class="pause-menu" hidden aria-labelledby="titulo-vidas-esgotadas">
-        <h2 id="titulo-vidas-esgotadas" tabindex="-1">Vidas esgotadas</h2>
-        <button type="button" id="botao-continuar" disabled>Continuar</button>
-        <button type="button" id="botao-reiniciar-vidas" disabled>Reiniciar fase</button>
+      <!-- Tela inicial: aparece ao abrir o jogo e quando as vidas acabam. -->
+      <!-- A arte de fundo já traz o painel e os títulos; os botões e o texto são desenhados aqui. -->
+      <section id="tela-inicio" class="tela-inicio" aria-labelledby="titulo-inicio">
+        <div class="tela-inicio-palco">
+          <img class="tela-inicio-fundo" src="./assets/characters/Imagens_Personagens/02_cenario/tela_inicio_pacote/tela_inicio_fundo_sem_botoes_1920x1080.png" alt="" />
+          <h2 id="titulo-inicio" class="sr-only">Nível 01: Byte</h2>
+          <img class="tela-inicio-byte" src="./assets/characters/Imagens_Personagens/01_byte/02_byte_parado.gif" alt="Byte parado" />
+          <div class="tela-inicio-texto">
+            <!-- Texto provisório: será substituído pelo conteúdo do modo de ensino. -->
+            <p>Texto genérico do nível. O modo de ensino ainda não foi integrado.</p>
+          </div>
+          <button type="button" id="botao-jogar" class="botao-inicio botao-jogar">▶ JOGAR</button>
+          <button type="button" id="botao-sair" class="botao-inicio botao-sair" disabled title="Ainda não disponível">✕ SAIR</button>
+        </div>
       </section>
     </section>
 

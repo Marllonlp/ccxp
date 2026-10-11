@@ -18,10 +18,9 @@ const context = canvas.getContext('2d');
 const botaoPausar = document.getElementById('botao-pausar');
 const menuPausa = document.getElementById('menu-pausa');
 const botaoRetomar = document.getElementById('botao-retomar');
-const menuVidasEsgotadas = document.getElementById('menu-vidas-esgotadas');
-const tituloVidasEsgotadas = document.getElementById('titulo-vidas-esgotadas');
 const botaoReiniciar = document.getElementById('botao-reiniciar');
-const botaoReiniciarVidas = document.getElementById('botao-reiniciar-vidas');
+const telaInicio = document.getElementById('tela-inicio');
+const botaoJogar = document.getElementById('botao-jogar');
 const botaoOrientacao = document.getElementById('botao-orientacao');
 
 configurarControlesToque();
@@ -53,30 +52,53 @@ if (status) {
 // --- Integração (vidas, queda e reinício) -------------------
 let mensagem = '';
 let mensagemAte = 0;
-// Estados da partida: jogando, pausado e aguardandoEscolha.
-let estadoDaPartida = 'jogando';
+// Estados da partida:
+// - inicio: tela inicial, aberta ao carregar o jogo e quando as vidas acabam.
+// - jogando, pausado: partida em andamento ou com o menu de pausa aberto.
+let estadoDaPartida = 'inicio';
 
 function reposicionar(ponto) {
   player.retornar(ponto.x, ponto.y);
 }
 
-function reiniciarJogo() {
+/** Zera a partida: vidas, checkpoints e posição inicial. Não mexe nos menus. */
+function prepararNovaPartida() {
   limparCheckpoints();
   const pontoInicial = obterPosicaoInicial();
   player.vidas = 3;
   player.retornar(pontoInicial.x, pontoInicial.y);
   limparAcoes();
+}
+
+/** Esconde a tela inicial e os menus, e começa a partida do zero. */
+function iniciarPartida() {
+  prepararNovaPartida();
+  estadoDaPartida = 'jogando';
+  telaInicio.hidden = true;
+  menuPausa.hidden = true;
+  botaoPausar.hidden = false;
+  controleDoJogo.start();
+  botaoPausar.focus({ preventScroll: true });
+}
+
+/** Abre a tela inicial e para o jogo. Usada ao carregar a página e ao perder todas as vidas. */
+function mostrarTelaInicio() {
+  estadoDaPartida = 'inicio';
+  controleDoJogo.stop();
+  limparAcoes();
+  botaoPausar.hidden = true;
+  menuPausa.hidden = true;
+  telaInicio.hidden = false;
+  botaoJogar.focus({ preventScroll: true });
+}
+
+function reiniciarJogo() {
+  // Na tela inicial não há fase em andamento para reiniciar.
+  if (estadoDaPartida === 'inicio') return;
+
+  iniciarPartida();
   mensagem = 'Fase reiniciada';
   mensagemAte = performance.now() + 1500;
-
-  if (estadoDaPartida !== 'jogando') {
-    estadoDaPartida = 'jogando';
-    menuPausa.hidden = true;
-    menuVidasEsgotadas.hidden = true;
-    botaoPausar.hidden = false;
-    controleDoJogo.start();
-    botaoPausar.focus({ preventScroll: true });
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -131,18 +153,13 @@ const dependenciasDoJogo = {
 };
 
 const controleDoJogo = startGame(canvas, context, dependenciasDoJogo);
+// O jogo começa parado: a tela inicial é exibida até o jogador clicar em Jogar.
+mostrarTelaInicio();
 
-// Será chamada na integração quando Pedro informar que as vidas acabaram.
+// Chamada pelo jogo quando as vidas acabam: volta à tela inicial.
 function aguardarEscolhaDoJogador() {
   if (estadoDaPartida !== 'jogando') return;
-
-  estadoDaPartida = 'aguardandoEscolha';
-  controleDoJogo.stop();
-  limparAcoes();
-  botaoPausar.hidden = true;
-  menuPausa.hidden = true;
-  menuVidasEsgotadas.hidden = false;
-  tituloVidasEsgotadas.focus({ preventScroll: true });
+  mostrarTelaInicio();
 }
 
 function pausarPartida() {
@@ -168,6 +185,7 @@ function retomarPartida() {
 }
 
 // O evento click atende tanto ao mouse quanto ao toque nos botões.
+botaoJogar.addEventListener('click', iniciarPartida);
 botaoPausar.addEventListener('click', pausarPartida);
 botaoRetomar.addEventListener('click', retomarPartida);
 
@@ -175,12 +193,9 @@ if (botaoReiniciar) {
   botaoReiniciar.disabled = false;
   botaoReiniciar.addEventListener('click', reiniciarJogo);
 }
-if (botaoReiniciarVidas) {
-  botaoReiniciarVidas.disabled = false;
-  botaoReiniciarVidas.addEventListener('click', reiniciarJogo);
-}
 
-// Atalhos de teclado: P para pausar/retomar, R para reiniciar
+// Atalhos de teclado: P para pausar/retomar, R para reiniciar.
+// Na tela inicial, nenhum atalho age: só o botão Jogar.
 window.addEventListener('keydown', (evento) => {
   if (evento.key === 'p' || evento.key === 'P' || evento.key === 'Escape') {
     if (estadoDaPartida === 'jogando') {

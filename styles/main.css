@@ -160,6 +160,127 @@ body {
   display: none;
 }
 
+/* Tela inicial: cobre o jogo inteiro. O palco mantém a proporção 16:9 da arte,
+   e todos os elementos usam porcentagens da arte de 1920 × 1080. */
+.tela-inicio {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  background-color: #0b1f33;
+}
+
+.tela-inicio[hidden] {
+  display: none;
+}
+
+.tela-inicio-palco {
+  position: relative;
+  width: min(100%, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.tela-inicio-fundo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Byte parado: GIF 96 × 96 em escala 2×, com os pés sobre a linha da grama (y = 686). */
+.tela-inicio-byte {
+  position: absolute;
+  left: 15.83%;
+  top: 45.74%;
+  width: 10%;
+  height: 17.78%;
+  image-rendering: pixelated;
+}
+
+/* Área do texto do nível, dentro do painel da arte. */
+.tela-inicio-texto {
+  position: absolute;
+  left: 37.76%;
+  top: 30.74%;
+  width: 56.25%;
+  height: 32.68%;
+  display: grid;
+  place-items: center;
+  padding: 4cqw;
+  box-sizing: border-box;
+  text-align: center;
+  color: #7dd3fc;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.5cqw;
+  line-height: 1.9;
+}
+
+.tela-inicio-texto p {
+  margin: 0;
+}
+
+.botao-inicio {
+  position: absolute;
+  top: 66.2%;
+  height: 9.72%;
+  width: 26.3%;
+  padding: 0;
+  border: 3px solid #0b0f1a;
+  border-radius: 0;
+  color: #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.8cqw;
+  text-shadow: 3px 3px 0 #0b0f1a;
+  cursor: pointer;
+  box-shadow: 0 8px 0 #0b0f1a;
+  touch-action: manipulation;
+}
+
+.botao-jogar {
+  left: 38.54%;
+  background: linear-gradient(#6ff07a, #2fbf3f 45%, #1e8a2e);
+}
+
+.botao-sair {
+  left: 66.82%;
+  background: linear-gradient(#ff7a85, #e63946 45%, #b5252f);
+}
+
+.botao-inicio:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.botao-inicio:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0 #0b0f1a;
+}
+
+.botao-inicio:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.botao-inicio:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Os controles ficam sobre o cenário, sem diminuir a área de jogo. */
 .mobile-controls {
   position: absolute;
