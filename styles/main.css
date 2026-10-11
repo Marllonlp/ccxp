@@ -24,6 +24,56 @@ body {
   height: 100dvh;
 }
 
+.orientation-prompt {
+  display: none;
+}
+
+.orientation-card {
+  width: min(86vw, 360px);
+  padding: 28px 24px;
+  border: 1px solid #64748b;
+  border-radius: 12px;
+  background: #172a3d;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
+  text-align: center;
+}
+
+.orientation-card h1,
+.orientation-card p {
+  margin: 0;
+}
+
+.orientation-card h1 {
+  font-size: 24px;
+}
+
+.orientation-card p:not(.orientation-icon) {
+  margin-top: 10px;
+  color: #dbeafe;
+  line-height: 1.5;
+}
+
+.orientation-icon {
+  margin-bottom: 12px !important;
+  color: #7dd3fc;
+  font-size: 48px;
+  line-height: 1;
+}
+
+.orientation-card button {
+  min-height: 44px;
+  margin-top: 20px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #38bdf8;
+  color: #082f49;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
 /* Mantém o título e as instruções disponíveis para leitores de tela. */
 .page-header,
 .mobile-controls h2,
@@ -156,6 +206,18 @@ body {
 @media (orientation: portrait) {
   .mobile-controls {
     bottom: calc(56.25vw + max(12px, env(safe-area-inset-bottom)));
+  }
+}
+
+@media (orientation: portrait) and (max-width: 800px) {
+  .orientation-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: #0b1f33;
   }
 }
 

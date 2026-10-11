@@ -21,8 +21,25 @@ const menuVidasEsgotadas = document.getElementById('menu-vidas-esgotadas');
 const tituloVidasEsgotadas = document.getElementById('titulo-vidas-esgotadas');
 const botaoReiniciar = document.getElementById('botao-reiniciar');
 const botaoReiniciarVidas = document.getElementById('botao-reiniciar-vidas');
+const botaoOrientacao = document.getElementById('botao-orientacao');
 
 configurarControlesToque();
+
+async function solicitarTelaHorizontal() {
+  try {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen();
+    }
+
+    if (screen.orientation?.lock) {
+      await screen.orientation.lock('landscape');
+    }
+  } catch {
+    // Alguns navegadores só permitem a rotação pelas configurações do aparelho.
+  }
+}
+
+botaoOrientacao?.addEventListener('click', solicitarTelaHorizontal);
 
 const inicio = obterPosicaoInicial();
 const player = new Player(inicio.x, inicio.y);
