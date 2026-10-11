@@ -27,7 +27,7 @@ function drawTestRectangle(context) {
  * @param {function(object, number): void} [modules.updatePlayer] Recebe ações e deltaTime.
  * @param {function(number): void} [modules.resolveCollisions] Recebe deltaTime.
  * @param {function(CanvasRenderingContext2D, HTMLCanvasElement): void} [modules.drawScene] Desenha o estado final.
- * @returns {{start: function, stop: function, destroy: function}} Controle do ciclo.
+ * @returns {{start: function, stop: function, draw: function, destroy: function}} Controle do ciclo e desenho.
  */
 export function startGame(canvas, context, {
   readActions = () => EMPTY_ACTIONS,
@@ -47,6 +47,7 @@ export function startGame(canvas, context, {
   }
 
   function draw() {
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, canvas.width, canvas.height);
     drawScene(context, canvas);
   }
@@ -99,5 +100,5 @@ export function startGame(canvas, context, {
   document.addEventListener('visibilitychange', resetClock);
   start();
 
-  return { start, stop, destroy };
+  return { start, stop, draw, destroy };
 }
