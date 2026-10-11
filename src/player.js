@@ -3,6 +3,7 @@
 // A atualização será chamada pelo ciclo com ações e deltaTime em segundos.
 
 import { inputState } from './input.js';
+import { registrarEfeito } from './audio.js';
 
 export class AnimacaoGIF {
   constructor(caminho) {
@@ -121,13 +122,29 @@ export function desenharVidas(ctx, vidas, tempo = performance.now() / 1000) {
   }
 }
 
+const somPulo = new Audio('assets/sound/pular.mp3');
+registrarEfeito(somPulo);
+
+/** Toca o som de pulo uma vez. Falhas de reprodução são registradas no console e não travam o jogo. */
+function tocarSomPulo() {
+  try {
+    somPulo.currentTime = 0;
+    somPulo.play().catch((erro) => console.error('Falha ao tocar pular.mp3:', erro));
+  } catch (erro) {
+    console.error('Falha ao tocar pular.mp3:', erro);
+  }
+}
+
 export class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
 
     this.larguraNormal = 40;
-    this.alturaNormal = 80;
+    // Caixa de colisão igual ao desenho do Byte: em pé 66 px, agachado 49 px.
+    // Em pé ela fica abaixo da plataforma (base em y=410); agachado passa pelo bloco suspenso (vão de 50 px).
+    this.alturaNormal = 66;
+    this.alturaAgachado = 49;
     this.largura = this.larguraNormal;
     this.altura = this.alturaNormal;
 
@@ -174,18 +191,18 @@ export class Player {
       if (inputState.agachamento) {
         if (!this.agachado) {
           this.agachado = true;
-          this.altura = this.alturaNormal / 2;
-          this.y += this.alturaNormal / 2; // Mantém os pés na mesma posição
+          this.altura = this.alturaAgachado;
+          this.y += this.alturaNormal - this.alturaAgachado; // Mantém os pés na mesma posição
         }
       } else if (this.agachado) {
         // Se a função não for passada na integração, assume que tem espaço (fallback temporário)
         const temEspaco = verificarEspacoTeto
-          ? verificarEspacoTeto(this.x, this.y - (this.alturaNormal / 2), this.largura, this.alturaNormal)
+          ? verificarEspacoTeto(this.x, this.y - (this.alturaNormal - this.alturaAgachado), this.largura, this.alturaNormal)
           : true;
 
         if (temEspaco) {
           this.agachado = false;
-          this.y -= this.alturaNormal / 2;
+          this.y -= this.alturaNormal - this.alturaAgachado;
           this.altura = this.alturaNormal;
         }
       }
@@ -195,6 +212,7 @@ export class Player {
         this.vy = this.forcaPulo;
         this.noChao = false;
         inputState.pulo = false;
+        tocarSomPulo();
       }
     }
 
@@ -250,13 +268,19 @@ export class Player {
 
   desenhar(ctx) {
     const animacao = byteSprites[this.estadoAnimacao] || byteSprites.parado;
-    const larguraSprite = 96;
-    const alturaSprite = 96;
-    const dx = Math.round(this.x + (this.largura / 2) - (larguraSprite / 2));
-    const dy = Math.round(this.y + this.altura - 94);
+    // Todos os estados usam a mesma escala, então o Byte tem sempre o mesmo tamanho.
+    // Valores em pixels do sprite original de 96 × 96: o corpo visível vai da linha 2 até a 93
+    // (agachado, da linha 26). Com escala 0,72, o corpo em pé ocupa 66 px e agachado 49 px.
+    const escala = 0.72;
+    const tamanhoSprite = 96 * escala;
+    const CENTRO_VISIVEL = 54;
+    const BASE_VISIVEL = 94;
+    const dx = Math.round(this.x + (this.largura / 2) - CENTRO_VISIVEL * escala);
+    // Os pés ficam na base da caixa de colisão.
+    const dy = Math.round(this.y + this.altura - BASE_VISIVEL * escala);
     const flip = !this.olhandoDireita;
 
-    animacao.desenhar(ctx, this.tempoAnimacao, dx, dy, larguraSprite, alturaSprite, flip);
+    animacao.desenhar(ctx, this.tempoAnimacao, dx, dy, tamanhoSprite, tamanhoSprite, flip);
   }
 
   desenharVidas(ctx, tempo) {

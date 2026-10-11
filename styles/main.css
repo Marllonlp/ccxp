@@ -160,6 +160,31 @@ body {
   display: none;
 }
 
+/* Painel de som: fica acima da tela inicial (z-index 3) e opaco, para não mostrar os botões de trás. */
+.menu-som {
+  z-index: 4;
+  background-color: #20242b;
+}
+
+.menu-som .linha-volume {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 12px;
+  width: min(86vw, 360px);
+  margin: 0 auto;
+  text-align: left;
+}
+
+.menu-som input[type='range'] {
+  width: 100%;
+  accent-color: #38bdf8;
+}
+
+.menu-som output {
+  text-align: right;
+}
+
 /* Tela inicial: cobre o jogo inteiro. O palco mantém a proporção 16:9 da arte,
    e todos os elementos usam porcentagens da arte de 1920 × 1080. */
 .tela-inicio {
