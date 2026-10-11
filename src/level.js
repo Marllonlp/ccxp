@@ -1,19 +1,17 @@
 // Responsável: Dudu. Dados do cenário, obstáculos e checkpoints da fase de teste.
 // Convenções acordadas: x cresce para a direita, y cresce para baixo.
 // Todo obstáculo é um retângulo com x, y, width e height, em coordenadas do mundo.
-// A fase tem LARGURA_FASE de comprimento; a câmera mostra uma janela de LARGURA_TELA.
+// A fase tem LARGURA_FASE de comprimento; a janela visível se adapta à tela.
+
+import { calcularVisao } from './viewport.js';
+import { AnimacaoGIF } from './player.js';
 
 export const LARGURA_TELA = 960;
 export const ALTURA_FASE = 540;
 export const LARGURA_FASE = 3200;
 
-// Zoom do mundo: plataformas, totens e chão aparecem 1,5× maiores na tela.
-// A física continua nas unidades originais; só o desenho é ampliado.
-export const ESCALA_MUNDO = 1.5;
-const LARGURA_VISAO = LARGURA_TELA / ESCALA_MUNDO;
-const ALTURA_VISAO = ALTURA_FASE / ESCALA_MUNDO;
-// A câmera mostra a faixa de baixo da fase: o chão continua encostado na parte de baixo da tela.
-const Y_CAMERA = ALTURA_FASE - ALTURA_VISAO;
+// A escala acompanha a altura disponível; a física mantém as unidades do mapa.
+const VISAO_PADRAO = calcularVisao(LARGURA_TELA, ALTURA_FASE);
 
 // Limite inferior da fase (RF04). Pedro usa este valor para detectar a queda.
 export const LIMITE_QUEDA = 620;
@@ -71,12 +69,38 @@ export const vaos = [
 // Plantas distribuídas pelo chão, pelas plataformas e pelo bloco suspenso inicial.
 // superficieY é o topo da superfície em que cada planta fica apoiada.
 export const plantas = [
-  { id: 'planta-1', x: 230, superficieY: SUPERFICIE_CHAO },
   { id: 'planta-2', x: 680, superficieY: 330 },
   { id: 'planta-4', x: 1820, superficieY: SUPERFICIE_CHAO },
   { id: 'planta-5', x: 2684, superficieY: 310 },
   { id: 'planta-6', x: 3120, superficieY: SUPERFICIE_CHAO },
 ];
+
+// Coletáveis: moedas ficam em caminhos de progressão e corações recompensam
+// a exploração sem permitir ultrapassar o limite inicial de três vidas.
+export const moedas = [
+  { id: 'moeda-1', x: 170, y: 350, coletado: false },
+  { id: 'moeda-2', x: 315, y: 270, coletado: false },
+  { id: 'moeda-3', x: 520, y: 430, coletado: false },
+  { id: 'moeda-4', x: 1045, y: 350, coletado: false },
+  { id: 'moeda-5', x: 1205, y: 270, coletado: false },
+  { id: 'moeda-6', x: 1540, y: 430, coletado: false },
+  { id: 'moeda-7', x: 1880, y: 430, coletado: false },
+  { id: 'moeda-8', x: 2560, y: 350, coletado: false },
+  { id: 'moeda-9', x: 2695, y: 270, coletado: false },
+  { id: 'moeda-10', x: 2950, y: 430, coletado: false },
+];
+
+export const vidasItens = [
+  { id: 'vida-1', x: 2180, y: 448, coletado: false },
+  { id: 'vida-2', x: 2880, y: 448, coletado: false },
+];
+
+const moedaSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif');
+const vidaItemSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/06_vida_item.gif');
+
+export function limparColetaveis() {
+  for (const item of [...moedas, ...vidasItens]) item.coletado = false;
+}
 
 // Campo de patrulha: início e fim delimitam toda a área ocupada pelo robô.
 // Cada campo fica sobre uma superfície contínua, sem invadir paredes ou vãos.
@@ -94,13 +118,6 @@ export const patrulhasSentinelas = [
     fimX: 1102,
     superficieY: 390,
     velocidade: 65,
-  },
-  {
-    id: 'sentinela-3',
-    inicioX: 2508,
-    fimX: 2602,
-    superficieY: 390,
-    velocidade: 75,
   },
   {
     id: 'sentinela-4',
@@ -204,21 +221,26 @@ export function limparCheckpoints() {
  * Câmera horizontal: mantém o personagem perto do centro da tela e não deixa
  * a janela sair dos limites da fase.
  */
-export function calcularCamera(xPersonagem, larguraPersonagem) {
-  const centro = xPersonagem + larguraPersonagem / 2 - LARGURA_VISAO / 2;
-  const maximo = LARGURA_FASE - LARGURA_VISAO;
+export function calcularCamera(xPersonagem, larguraPersonagem, visao = VISAO_PADRAO) {
+  const centro = xPersonagem + larguraPersonagem / 2 - visao.larguraMundo / 2;
+  const maximo = Math.max(0, LARGURA_FASE - visao.larguraMundo);
   return Math.round(Math.min(Math.max(centro, 0), maximo));
+}
+
+// Acompanha saltos nas plataformas altas para manter o personagem visível.
+export function calcularCameraVertical(yPersonagem, visao = VISAO_PADRAO, margemSuperior = 72) {
+  return Math.max(0, Math.min(visao.cameraY, yPersonagem - margemSuperior / visao.escala));
 }
 
 /**
  * Aplica zoom e câmera no contexto. Use com save/restore para desenhar elementos
  * do mundo (o personagem, por exemplo) na mesma escala do cenário.
  */
-export function aplicarCameraMundo(ctx, cameraX) {
+export function aplicarCameraMundo(ctx, cameraX, visao = VISAO_PADRAO, cameraY = visao.cameraY) {
   // Pixel art ampliada: sem suavização, para as bordas continuarem nítidas.
   ctx.imageSmoothingEnabled = false;
-  ctx.scale(ESCALA_MUNDO, ESCALA_MUNDO);
-  ctx.translate(-cameraX, -Y_CAMERA);
+  ctx.scale(visao.escala, visao.escala);
+  ctx.translate(-cameraX, -cameraY);
 }
 
 const CORES = {
@@ -323,66 +345,75 @@ function pecaCarregada(imagem) {
  * Céu: estica uma coluna da imagem por toda a tela. A coluna não tem o sol,
  * então as faixas de cor ficam uniformes e sem repetir o sol.
  */
-function desenharCeu(ctx) {
+function desenharCeu(ctx, visao) {
   if (pecaCarregada(fundoCeu)) {
-    ctx.drawImage(fundoCeu, 0, 0, 1, ALTURA_FUNDO, 0, 0, LARGURA_TELA, ALTURA_FASE);
+    ctx.drawImage(fundoCeu, 0, 0, 1, ALTURA_FUNDO, 0, 0, visao.largura, visao.altura);
     return;
   }
-  const gradiente = ctx.createLinearGradient(0, 0, 0, ALTURA_FASE);
+  const gradiente = ctx.createLinearGradient(0, 0, 0, visao.altura);
   gradiente.addColorStop(0, '#9fd3f5');
   gradiente.addColorStop(1, '#dfe7fd');
   ctx.fillStyle = gradiente;
-  ctx.fillRect(0, 0, LARGURA_TELA, ALTURA_FASE);
+  ctx.fillRect(0, 0, visao.largura, visao.altura);
 }
 
 /**
  * Repete uma camada de fundo na horizontal, na altura y. A camada anda mais
  * devagar que a câmera conforme o fator; o deslocamento volta a zero a cada peça.
  */
-function desenharCamada(ctx, imagem, y, cameraX, fator, velocidadeAutomatica = 0) {
+function desenharCamada(ctx, imagem, y, cameraX, fator, visao, velocidadeAutomatica = 0) {
   if (!pecaCarregada(imagem)) return;
   // velocidadeAutomatica (px/s) faz a camada andar sozinha, mesmo com a câmera parada.
   const tempo = performance.now() / 1000;
-  const deslocamento = (cameraX * fator + tempo * velocidadeAutomatica) % LARGURA_PECA;
-  for (let x = -deslocamento; x < LARGURA_TELA; x += LARGURA_PECA) {
-    ctx.drawImage(imagem, Math.round(x), y);
+  const escala = visao.altura / ALTURA_FASE;
+  const larguraPeca = LARGURA_PECA * escala;
+  const deslocamento = ((cameraX * fator + tempo * velocidadeAutomatica) * escala) % larguraPeca;
+  for (let x = -deslocamento; x < visao.largura; x += larguraPeca) {
+    ctx.drawImage(imagem, Math.round(x), y, larguraPeca, ALTURA_FUNDO * escala);
   }
 }
 
 /** Chão de um obstáculo, repetindo a peça e cortando o que passa das bordas. */
-function desenharTrechoChao(ctx, obstaculo, peca) {
+function desenharTrechoChao(ctx, obstaculo, peca, limiteInferior) {
   ctx.save();
   ctx.beginPath();
-  ctx.rect(obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height);
+  ctx.rect(obstaculo.x, obstaculo.y, obstaculo.width, Math.max(obstaculo.height, limiteInferior - obstaculo.y));
   ctx.clip();
   for (let x = obstaculo.x; x < obstaculo.x + obstaculo.width; x += LARGURA_PECA) {
     ctx.drawImage(peca, x, obstaculo.y - SUPERFICIE_PECA);
+    // Repete apenas a textura de terra para completar a faixa sob os controles.
+    for (let y = obstaculo.y + obstaculo.height; y < limiteInferior; y += 32) {
+      ctx.drawImage(peca, 0, 48, LARGURA_PECA, 32, x, y, LARGURA_PECA, 32);
+    }
   }
   ctx.restore();
 }
 
 /** Água do vão, com a coluna de água centralizada no meio do vão. */
-function desenharVao(ctx, vao) {
+function desenharVao(ctx, vao, limiteInferior) {
   const centro = vao.x + vao.width / 2;
   ctx.save();
   ctx.beginPath();
-  ctx.rect(vao.x, vao.y, vao.width, vao.height);
+  ctx.rect(vao.x, vao.y, vao.width, Math.max(vao.height, limiteInferior - vao.y));
   ctx.clip();
   // Na peça de água, a coluna de água fica no centro horizontal (x = 128).
   ctx.drawImage(pecaAgua, centro - LARGURA_PECA / 2, vao.y - SUPERFICIE_PECA);
+  for (let y = vao.y + vao.height; y < limiteInferior; y += 32) {
+    ctx.drawImage(pecaAgua, 0, 48, LARGURA_PECA, 32, centro - LARGURA_PECA / 2, y, LARGURA_PECA, 32);
+  }
   ctx.restore();
 }
 
 /** Desenha os elementos do mundo. Chamado com a câmera já aplicada no contexto. */
-function desenharMundo(ctx) {
+function desenharMundo(ctx, limiteInferior) {
   const pecasCarregadas = pecaCarregada(pecaNormal) && pecaCarregada(pecaAgua);
 
   for (const vao of vaos) {
     if (pecasCarregadas) {
-      desenharVao(ctx, vao);
+      desenharVao(ctx, vao, limiteInferior);
     } else {
       ctx.fillStyle = '#2a6f97';
-      ctx.fillRect(vao.x, vao.y, vao.width, vao.height);
+      ctx.fillRect(vao.x, vao.y, vao.width, Math.max(vao.height, limiteInferior - vao.y));
     }
   }
 
@@ -407,16 +438,30 @@ function desenharMundo(ctx) {
       : null;
 
     if (peca && pecaCarregada(peca)) {
-      desenharTrechoChao(ctx, obstaculo, peca);
+      desenharTrechoChao(ctx, obstaculo, peca, limiteInferior);
       continue;
     }
     ctx.fillStyle = CORES[obstaculo.tipo] || '#333333';
-    ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height);
+    const altura = obstaculo.tipo.startsWith('chao')
+      ? Math.max(obstaculo.height, limiteInferior - obstaculo.y)
+      : obstaculo.height;
+    ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.width, altura);
   }
 
   const tempo = performance.now() / 1000;
   for (const checkpoint of checkpoints) {
     desenharTotem(ctx, checkpoint, tempo);
+  }
+
+  for (const moeda of moedas) {
+    if (!moeda.coletado) {
+      moedaSprite.desenhar(ctx, tempo, moeda.x, moeda.y, 16, 16);
+    }
+  }
+  for (const vida of vidasItens) {
+    if (!vida.coletado) {
+      vidaItemSprite.desenhar(ctx, tempo, vida.x, vida.y, 16, 16);
+    }
   }
 }
 
@@ -497,17 +542,17 @@ function desenharTotem(ctx, checkpoint, tempo) {
  * (com rolagem em parallax) e, por último, o mundo. O personagem é desenhado
  * por quem chama, dentro da mesma translação da câmera.
  */
-export function desenharFase(ctx, cameraX = 0) {
-  desenharCeu(ctx);
+export function desenharFase(ctx, cameraX = 0, visao = VISAO_PADRAO, cameraY = visao.cameraY) {
+  desenharCeu(ctx, visao);
 
   // Camadas do fundo, da mais distante para a mais próxima.
-  const yFundo = ALTURA_FASE - ALTURA_FUNDO;
-  desenharCamada(ctx, fundoNuvens, 0, cameraX, FATOR_NUVENS, VELOCIDADE_NUVENS);
-  desenharCamada(ctx, fundoMontanhas, yFundo, cameraX, FATOR_MONTANHAS);
-  desenharCamada(ctx, fundoFloresta, yFundo, cameraX, FATOR_FLORESTA);
+  const yFundo = visao.altura * (1 - ALTURA_FUNDO / ALTURA_FASE);
+  desenharCamada(ctx, fundoNuvens, 0, cameraX, FATOR_NUVENS, visao, VELOCIDADE_NUVENS);
+  desenharCamada(ctx, fundoMontanhas, yFundo, cameraX, FATOR_MONTANHAS, visao);
+  desenharCamada(ctx, fundoFloresta, yFundo, cameraX, FATOR_FLORESTA, visao);
 
   ctx.save();
-  aplicarCameraMundo(ctx, cameraX);
-  desenharMundo(ctx);
+  aplicarCameraMundo(ctx, cameraX, visao, cameraY);
+  desenharMundo(ctx, cameraY + visao.alturaMundo);
   ctx.restore();
 }

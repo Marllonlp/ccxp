@@ -99,10 +99,10 @@ export const heartSprites = {
   ultima: new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/04_ultima_vida.gif'),
 };
 
-export function desenharVidas(ctx, vidas, tempo = performance.now() / 1000) {
+export function desenharVidas(ctx, vidas, tempo = performance.now() / 1000, { x = 24, y = 20 } = {}) {
   const totalVidas = 3;
-  const startX = 24;
-  const startY = 20;
+  const startX = x;
+  const startY = y;
   const tamanho = 32;
   const espacamento = 38;
 
