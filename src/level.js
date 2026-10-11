@@ -1,31 +1,63 @@
 // Responsável: Dudu. Dados do cenário, obstáculos e checkpoints da fase de teste.
 // Convenções acordadas: x cresce para a direita, y cresce para baixo.
-// Todo obstáculo é um retângulo com x, y, width e height, em pixels internos (960 × 540).
+// Todo obstáculo é um retângulo com x, y, width e height, em coordenadas do mundo.
+// A fase tem LARGURA_FASE de comprimento; a câmera mostra uma janela de LARGURA_TELA.
 
-export const LARGURA_FASE = 960;
+export const LARGURA_TELA = 960;
 export const ALTURA_FASE = 540;
+export const LARGURA_FASE = 3200;
 
 // Limite inferior da fase (RF04). Pedro usa este valor para detectar a queda.
 export const LIMITE_QUEDA = 620;
 
-// Canto superior esquerdo do personagem em pé sobre o Chão A.
+// Canto superior esquerdo do personagem em pé sobre o chão inicial.
 const POSICAO_INICIAL = { x: 40, y: 400 };
 
-// Obstáculos sólidos. O campo "tipo" só orienta o visual provisório.
-export const obstaculos = [
-  // Chão dividido em dois trechos: o vão entre eles serve para testar a queda.
-  { tipo: 'chao', x: 0, y: 480, width: 340, height: 60 },
-  { tipo: 'chao', x: 440, y: 480, width: 520, height: 60 },
+// Superfície do chão. Com a colisão em y=480, o personagem fica em pé com os pés em 480.
+const SUPERFICIE_CHAO = 480;
 
-  // Duas plataformas em degraus. A segunda também serve para bater a cabeça por baixo.
+// Alcance do pulo: 500 px/s de impulso e 1200 px/s² de gravidade dão cerca de 104 px de altura.
+// Por isso plataformas e paredes ficam até 90 px acima do chão, e vãos têm no máximo 100 px.
+
+// Obstáculos sólidos. O campo "tipo" define o visual provisório ou a peça de cenário.
+export const obstaculos = [
+  // --- Trecho inicial ---
+  { tipo: 'chao', x: 0, y: SUPERFICIE_CHAO, width: 340, height: 60 },
+  { tipo: 'chao', x: 440, y: SUPERFICIE_CHAO, width: 520, height: 60 },
   { tipo: 'plataforma', x: 120, y: 390, width: 110, height: 20 },
   { tipo: 'plataforma', x: 270, y: 310, width: 110, height: 20 },
 
   // Bloco suspenso: deixa 50 px livres até o chão, o que só permite passar agachado.
   { tipo: 'teto', x: 620, y: 330, width: 160, height: 100 },
 
-  // Parede alta demais para ser pulada: bloqueia o movimento pelos dois lados.
-  { tipo: 'parede', x: 830, y: 340, width: 40, height: 140 },
+  // Degrau baixo: alto o bastante para exigir o pulo, baixo o bastante para ser vencido.
+  { tipo: 'parede', x: 860, y: 400, width: 40, height: 80 },
+
+  // --- Escadaria de plataformas ---
+  { tipo: 'chao', x: 960, y: SUPERFICIE_CHAO, width: 340, height: 60 },
+  { tipo: 'plataforma', x: 1000, y: 390, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 1160, y: 310, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 1320, y: 390, width: 110, height: 20 },
+
+  // --- Chão de cristais e teto baixo ---
+  { tipo: 'chao_cristal', x: 1300, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'chao', x: 1800, y: SUPERFICIE_CHAO, width: 500, height: 60 },
+  { tipo: 'teto', x: 1950, y: 330, width: 200, height: 100 },
+
+  // --- Trecho final com degraus e paredes baixas ---
+  { tipo: 'chao_cristal', x: 2400, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'plataforma', x: 2500, y: 390, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 2650, y: 310, width: 110, height: 20 },
+  { tipo: 'chao', x: 2800, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'parede', x: 2900, y: 400, width: 40, height: 80 },
+  { tipo: 'parede', x: 3050, y: 400, width: 40, height: 80 },
+];
+
+// Vãos com água. O personagem cai neles e volta ao ponto seguro.
+export const vaos = [
+  { x: 340, y: SUPERFICIE_CHAO, width: 100, height: 60 },
+  { x: 1700, y: SUPERFICIE_CHAO, width: 100, height: 60 },
+  { x: 2300, y: SUPERFICIE_CHAO, width: 100, height: 60 },
 ];
 
 // Checkpoints (RF08). A área é apenas de contato: eles não bloqueiam a passagem.
@@ -41,6 +73,18 @@ export const checkpoints = [
     id: 'cp2',
     x: 500, y: 400, width: 30, height: 80,
     posicaoSegura: { x: 495, y: 400 },
+    ativo: false,
+  },
+  {
+    id: 'cp3',
+    x: 1480, y: 400, width: 30, height: 80,
+    posicaoSegura: { x: 1475, y: 400 },
+    ativo: false,
+  },
+  {
+    id: 'cp4',
+    x: 2420, y: 400, width: 30, height: 80,
+    posicaoSegura: { x: 2415, y: 400 },
     ativo: false,
   },
 ];
@@ -99,8 +143,19 @@ export function limparCheckpoints() {
   ultimoCheckpoint = null;
 }
 
+/**
+ * Câmera horizontal: mantém o personagem perto do centro da tela e não deixa
+ * a janela sair dos limites da fase.
+ */
+export function calcularCamera(xPersonagem, larguraPersonagem) {
+  const centro = xPersonagem + larguraPersonagem / 2 - LARGURA_TELA / 2;
+  const maximo = LARGURA_FASE - LARGURA_TELA;
+  return Math.round(Math.min(Math.max(centro, 0), maximo));
+}
+
 const CORES = {
   chao: '#4a4e69',
+  chao_cristal: '#4a4e69',
   plataforma: '#6d6875',
   parede: '#9a031e',
   teto: '#5f0f40',
@@ -115,6 +170,8 @@ const SUPERFICIE_PECA = 20;
 
 const pecaNormal = new Image();
 pecaNormal.src = `${PASTA_PECAS}chao_normal_256x80.png`;
+const pecaCristal = new Image();
+pecaCristal.src = `${PASTA_PECAS}chao_cristais_256x80.png`;
 const pecaAgua = new Image();
 pecaAgua.src = `${PASTA_PECAS}chao_agua_256x80.png`;
 
@@ -130,6 +187,11 @@ fundoMontanhas.src = `${PASTA_FUNDO}fundo_distante_montanhas_256x240.png`;
 const fundoFloresta = new Image();
 fundoFloresta.src = `${PASTA_FUNDO}fundo_colinas_floresta_256x240.png`;
 
+// Fator de rolagem de cada camada: quanto menor, mais distante ela parece.
+const FATOR_NUVENS = 0.1;
+const FATOR_MONTANHAS = 0.25;
+const FATOR_FLORESTA = 0.5;
+
 function pecaCarregada(imagem) {
   return imagem.complete && imagem.naturalWidth > 0;
 }
@@ -140,33 +202,41 @@ function pecaCarregada(imagem) {
  */
 function desenharCeu(ctx) {
   if (pecaCarregada(fundoCeu)) {
-    ctx.drawImage(fundoCeu, 0, 0, 1, ALTURA_FUNDO, 0, 0, LARGURA_FASE, ALTURA_FASE);
+    ctx.drawImage(fundoCeu, 0, 0, 1, ALTURA_FUNDO, 0, 0, LARGURA_TELA, ALTURA_FASE);
     return;
   }
   const gradiente = ctx.createLinearGradient(0, 0, 0, ALTURA_FASE);
   gradiente.addColorStop(0, '#9fd3f5');
   gradiente.addColorStop(1, '#dfe7fd');
   ctx.fillStyle = gradiente;
-  ctx.fillRect(0, 0, LARGURA_FASE, ALTURA_FASE);
+  ctx.fillRect(0, 0, LARGURA_TELA, ALTURA_FASE);
 }
 
-/** Repete uma camada de fundo na horizontal, na altura y. */
-function desenharCamada(ctx, imagem, y) {
+/**
+ * Repete uma camada de fundo na horizontal, na altura y. A camada anda mais
+ * devagar que a câmera conforme o fator; o deslocamento volta a zero a cada peça.
+ */
+function desenharCamada(ctx, imagem, y, cameraX, fator) {
   if (!pecaCarregada(imagem)) return;
-  for (let x = 0; x < LARGURA_FASE; x += 256) {
-    ctx.drawImage(imagem, x, y);
+  const deslocamento = (cameraX * fator) % LARGURA_PECA;
+  for (let x = -deslocamento; x < LARGURA_TELA; x += LARGURA_PECA) {
+    ctx.drawImage(imagem, Math.round(x), y);
   }
 }
 
-/** Peças de chão repetidas na horizontal. A grama fica na superfície y=480, igual à colisão. */
-function desenharChao(ctx) {
-  const superficie = 480;
-  for (let x = 0; x < LARGURA_FASE; x += LARGURA_PECA) {
-    ctx.drawImage(pecaNormal, x, superficie - SUPERFICIE_PECA);
+/** Chão de um obstáculo, repetindo a peça e cortando o que passa das bordas. */
+function desenharTrechoChao(ctx, obstaculo, peca) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height);
+  ctx.clip();
+  for (let x = obstaculo.x; x < obstaculo.x + obstaculo.width; x += LARGURA_PECA) {
+    ctx.drawImage(peca, x, obstaculo.y - SUPERFICIE_PECA);
   }
+  ctx.restore();
 }
 
-/** Água no vão do chão, centralizada no meio do vão. */
+/** Água do vão, com a coluna de água centralizada no meio do vão. */
 function desenharVao(ctx, vao) {
   const centro = vao.x + vao.width / 2;
   ctx.save();
@@ -178,25 +248,26 @@ function desenharVao(ctx, vao) {
   ctx.restore();
 }
 
-/** Visual provisório da fase, até a aplicação dos assets do Kelvis. */
-export function desenharFase(ctx) {
-  desenharCeu(ctx);
+/** Desenha os elementos do mundo. Chamado com a câmera já aplicada no contexto. */
+function desenharMundo(ctx) {
+  const pecasCarregadas = pecaCarregada(pecaNormal) && pecaCarregada(pecaAgua);
 
-  // Camadas do fundo, do mais distante para o mais próximo. Todas terminam em y=540,
-  // com a mesma escala 1× das peças de chão.
-  const yFundo = ALTURA_FASE - ALTURA_FUNDO;
-  desenharCamada(ctx, fundoNuvens, 0);
-  desenharCamada(ctx, fundoMontanhas, yFundo);
-  desenharCamada(ctx, fundoFloresta, yFundo);
-
-  if (pecaCarregada(pecaNormal) && pecaCarregada(pecaAgua)) {
-    desenharChao(ctx);
-    desenharVao(ctx, { x: 340, y: 480, width: 100, height: 60 });
+  for (const vao of vaos) {
+    if (pecasCarregadas) {
+      desenharVao(ctx, vao);
+    } else {
+      ctx.fillStyle = '#2a6f97';
+      ctx.fillRect(vao.x, vao.y, vao.width, vao.height);
+    }
   }
 
   for (const obstaculo of obstaculos) {
-    if (obstaculo.tipo === 'chao' && pecaCarregada(pecaNormal)) {
-      // O chão já foi desenhado pela faixa; só o trecho de colisão precisa existir.
+    const peca = obstaculo.tipo === 'chao' ? pecaNormal
+      : obstaculo.tipo === 'chao_cristal' ? pecaCristal
+      : null;
+
+    if (peca && pecaCarregada(peca)) {
+      desenharTrechoChao(ctx, obstaculo, peca);
       continue;
     }
     ctx.fillStyle = CORES[obstaculo.tipo] || '#333333';
@@ -224,4 +295,24 @@ export function desenharFase(ctx) {
     );
     ctx.textAlign = 'left';
   }
+}
+
+/**
+ * Desenha o cenário inteiro para a câmera em cameraX: céu e camadas de fundo
+ * (com rolagem em parallax) e, por último, o mundo. O personagem é desenhado
+ * por quem chama, dentro da mesma translação da câmera.
+ */
+export function desenharFase(ctx, cameraX = 0) {
+  desenharCeu(ctx);
+
+  // Camadas do fundo, da mais distante para a mais próxima.
+  const yFundo = ALTURA_FASE - ALTURA_FUNDO;
+  desenharCamada(ctx, fundoNuvens, 0, cameraX, FATOR_NUVENS);
+  desenharCamada(ctx, fundoMontanhas, yFundo, cameraX, FATOR_MONTANHAS);
+  desenharCamada(ctx, fundoFloresta, yFundo, cameraX, FATOR_FLORESTA);
+
+  ctx.save();
+  ctx.translate(-cameraX, 0);
+  desenharMundo(ctx);
+  ctx.restore();
 }

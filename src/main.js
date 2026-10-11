@@ -9,6 +9,7 @@ import {
   verificarCheckpoints,
   limparCheckpoints,
   desenharFase,
+  calcularCamera,
 } from './level.js';
 import { resolverColisoes, verificarEspaco } from './collisions.js';
 
@@ -109,8 +110,16 @@ const dependenciasDoJogo = {
   },
 
   drawScene: (ctx) => {
-    desenharFase(ctx);
+    const cameraX = calcularCamera(player.x, player.largura);
+    desenharFase(ctx, cameraX);
+
+    // O personagem usa coordenadas do mundo, então é desenhado com a mesma câmera.
+    ctx.save();
+    ctx.translate(-cameraX, 0);
     player.desenhar(ctx);
+    ctx.restore();
+
+    // Vidas e mensagens ficam fixas na tela.
     desenharVidas(ctx, player.vidas);
 
     if (mensagem && performance.now() < mensagemAte) {
