@@ -18,10 +18,17 @@ body {
 }
 
 .game-shell {
+  --control-size: clamp(48px, 12dvh, 72px);
   position: relative;
   width: 100%;
   height: 100vh;
   height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .orientation-prompt {
@@ -36,6 +43,8 @@ body {
   background: #172a3d;
   box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
   text-align: center;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .orientation-card h1,
@@ -96,13 +105,12 @@ body {
   min-width: 0;
 }
 
-/* Só a exibição muda de tamanho: a resolução interna permanece 960 × 540. */
+/* A resolução interna acompanha a janela; a câmera preserva a proporção do mundo. */
 #game-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
+  image-rendering: pixelated;
   background-color: #dfe7fd;
 }
 
@@ -133,8 +141,10 @@ body {
   z-index: 2;
   display: grid;
   place-content: center;
+  align-content: safe center;
   gap: 8px;
-  padding: 12px;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  overflow-y: auto;
   background-color: rgb(32 36 43 / 90%);
   text-align: center;
 }
@@ -153,11 +163,6 @@ body {
 .pause-menu button:focus-visible {
   outline: 3px solid #bde0fe;
   outline-offset: 3px;
-}
-
-.pause-button[hidden],
-.pause-menu[hidden] {
-  display: none;
 }
 
 /* Painel de som: fica acima da tela inicial (z-index 3) e opaco, para não mostrar os botões de trás. */
@@ -196,13 +201,10 @@ body {
   background-color: #0b1f33;
 }
 
-.tela-inicio[hidden] {
-  display: none;
-}
-
 .tela-inicio-palco {
   position: relative;
   width: min(100%, calc(100vh * 16 / 9));
+  width: min(100%, calc(100dvh * 16 / 9));
   aspect-ratio: 16 / 9;
   overflow: hidden;
   container-type: inline-size;
@@ -235,13 +237,14 @@ body {
   height: 32.68%;
   display: grid;
   place-items: center;
-  padding: 4cqw;
+  padding: clamp(10px, 3cqw, 40px);
   box-sizing: border-box;
   text-align: center;
   color: #7dd3fc;
   font-family: 'Press Start 2P', monospace;
-  font-size: 1.5cqw;
-  line-height: 1.9;
+  font-size: clamp(10px, 1.5cqw, 22px);
+  line-height: 1.7;
+  overflow-y: auto;
 }
 
 .tela-inicio-texto p {
@@ -258,7 +261,8 @@ body {
   border-radius: 0;
   color: #ffffff;
   font-family: 'Press Start 2P', monospace;
-  font-size: 1.8cqw;
+  font-size: clamp(11px, 1.8cqw, 26px);
+  min-height: 44px;
   text-shadow: 3px 3px 0 #0b0f1a;
   cursor: pointer;
   box-shadow: 0 8px 0 #0b0f1a;
@@ -329,18 +333,64 @@ body {
 }
 
 .mobile-controls button {
-  min-width: 56px;
+  min-width: 48px;
   min-height: 48px;
-  padding: 10px 12px;
-  border: 1px solid #64748b;
-  border-radius: 6px;
-  background-color: rgb(55 65 81 / 80%);
+  width: var(--control-size);
+  height: var(--control-size);
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
   color: #f9fafb;
   font: inherit;
   font-weight: 600;
   pointer-events: auto;
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
+  opacity: 0.88;
+}
+
+/* Sprites dos botões de toque (normal/pressionado). */
+.botao-esquerda {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/04_esquerda_normal.png);
+}
+
+.botao-esquerda:active,
+.botao-esquerda.pressionado {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/03_esquerda_pressionado.png);
+}
+
+.botao-direita {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/02_direita_normal.png);
+}
+
+.botao-direita:active,
+.botao-direita.pressionado {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/01_direita_pressionado.png);
+}
+
+/* Reaproveita o sprite de "agachar" espelhado para formar a seta de cima. */
+.botao-pulo {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/06_abaixar_normal.png);
+  transform: rotate(180deg);
+}
+
+.botao-pulo:active,
+.botao-pulo.pressionado {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/05_abaixar_pressionado.png);
+}
+
+.botao-agachar {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/06_abaixar_normal.png);
+}
+
+.botao-agachar:active,
+.botao-agachar.pressionado {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/05_abaixar_pressionado.png);
 }
 
 .mobile-controls button:disabled {
@@ -348,16 +398,9 @@ body {
   cursor: not-allowed;
 }
 
-/* Em pé, aproveita o céu livre acima da fase para não cobrir o personagem. */
-@media (orientation: portrait) {
-  .mobile-controls {
-    bottom: calc(56.25vw + max(12px, env(safe-area-inset-bottom)));
-  }
-}
-
-@media (orientation: portrait) and (max-width: 800px) {
+@media (orientation: portrait) and (pointer: coarse) {
   .orientation-prompt {
-    position: fixed;
+    position: absolute;
     inset: 0;
     z-index: 10;
     display: grid;
@@ -375,9 +418,64 @@ body {
 }
 
 @media (max-width: 380px) {
-  .mobile-controls button {
-    min-width: 0;
-    padding-inline: 6px;
+  .controls-layout,
+  .movement-controls,
+  .action-controls {
+    gap: 4px;
+  }
+}
+
+.game-hud {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  z-index: 1;
+  max-width: calc(100% - 128px);
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.hud-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-message {
+  padding: 8px 12px;
+  border: 1px solid #64748b;
+  border-radius: 8px;
+  background: rgb(11 31 51 / 90%);
+  color: #f3f4f6;
+  margin: 0;
+  font-size: clamp(12px, 2vw, 16px);
+}
+
+#hud-vidas,
+#hud-moedas {
+  display: block;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+#hud-vidas {
+  width: 114px;
+}
+
+#hud-moedas {
+  width: 74px;
+}
+
+@media (max-height: 360px) and (orientation: landscape) {
+  .pause-menu {
+    gap: 4px;
+  }
+
+  .pause-menu button {
+    padding-block: 6px;
   }
 }
 

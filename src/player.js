@@ -99,10 +99,10 @@ export const heartSprites = {
   ultima: new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/04_ultima_vida.gif'),
 };
 
-export function desenharVidas(ctx, vidas, tempo = performance.now() / 1000) {
+export function desenharVidas(ctx, vidas, tempo = performance.now() / 1000, { x = 24, y = 20 } = {}) {
   const totalVidas = 3;
-  const startX = 24;
-  const startY = 20;
+  const startX = x;
+  const startY = y;
   const tamanho = 32;
   const espacamento = 38;
 
@@ -159,6 +159,7 @@ export class Player {
 
     this.vidas = 3;
     this.emQuedaLivre = false;
+    this.tempoInvulneravel = 0;
 
     this.olhandoDireita = true;
     this.estadoAnimacao = 'parado';
@@ -167,6 +168,7 @@ export class Player {
 
   obterEstado() {
     if (this.vidas <= 0) return 'morte';
+    if (this.tempoInvulneravel > 0) return 'dano';
     if (this.emQuedaLivre) return 'caindo';
     if (this.agachado) return 'agachado';
     if (!this.noChao) {
@@ -177,6 +179,8 @@ export class Player {
   }
 
   atualizar(deltaTime, verificarEspacoTeto, limiteFaseY, onGameOver) {
+    this.tempoInvulneravel = Math.max(0, this.tempoInvulneravel - deltaTime);
+
     // 1. Movimento e Ações (ignorado em queda livre)
     if (!this.emQuedaLivre) {
       if (inputState.esquerda && !inputState.direita) {
@@ -249,6 +253,16 @@ export class Player {
     }
   }
 
+  receberDano() {
+    if (this.vidas <= 0 || this.tempoInvulneravel > 0) return false;
+
+    this.vidas -= 1;
+    this.tempoInvulneravel = 1;
+    this.estadoAnimacao = this.obterEstado();
+    this.tempoAnimacao = 0;
+    return true;
+  }
+
   retornar(x, y) {
     if (typeof x === 'object' && x !== null) {
       y = x.y;
@@ -262,7 +276,7 @@ export class Player {
     this.noChao = false;
     this.agachado = false;
     this.altura = this.alturaNormal;
-    this.estadoAnimacao = 'parado';
+    this.estadoAnimacao = this.tempoInvulneravel > 0 ? 'dano' : 'parado';
     this.tempoAnimacao = 0;
   }
 
@@ -280,7 +294,12 @@ export class Player {
     const dy = Math.round(this.y + this.altura - BASE_VISIVEL * escala);
     const flip = !this.olhandoDireita;
 
+    ctx.save();
+    if (this.tempoInvulneravel > 0 && Math.floor(this.tempoInvulneravel * 10) % 2 === 0) {
+      ctx.globalAlpha *= 0.35;
+    }
     animacao.desenhar(ctx, this.tempoAnimacao, dx, dy, tamanhoSprite, tamanhoSprite, flip);
+    ctx.restore();
   }
 
   desenharVidas(ctx, tempo) {

@@ -14,6 +14,7 @@ export const inputState = {
 // Exige um novo acionamento do botão/tecla para cada salto e pausa
 let puloLiberado = true;
 let pausaLiberada = true;
+const ponteirosPorBotao = new Map();
 
 export function setInput(acao, estado) {
     if (acao === 'pulo') {
@@ -43,6 +44,8 @@ export function limparAcoes() {
     }
     puloLiberado = true;
     pausaLiberada = true;
+    ponteirosPorBotao.forEach(ponteiros => ponteiros.clear());
+    document.querySelectorAll('.mobile-controls .pressionado').forEach(botao => botao.classList.remove('pressionado'));
 }
 
 // Mapeamento de teclas para ações
@@ -84,19 +87,25 @@ export function configurarControlesToque() {
 
         const acao = botao.getAttribute('data-action');
 
-        botao.addEventListener('touchstart', (e) => {
+        const ponteiros = new Set();
+        ponteirosPorBotao.set(botao, ponteiros);
+        botao.addEventListener('pointerdown', (e) => {
             e.preventDefault();
+            ponteiros.add(e.pointerId);
+            botao.setPointerCapture(e.pointerId);
+            botao.classList.add('pressionado');
             setInput(acao, true);
         });
 
-        botao.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            setInput(acao, false);
-        });
-
-        botao.addEventListener('touchcancel', (e) => {
-            e.preventDefault();
-            limparAcoes();
-        });
+        const liberar = (e) => {
+            ponteiros.delete(e.pointerId);
+            if (ponteiros.size === 0) {
+                botao.classList.remove('pressionado');
+                setInput(acao, false);
+            }
+        };
+        botao.addEventListener('pointerup', liberar);
+        botao.addEventListener('pointercancel', liberar);
+        botao.addEventListener('lostpointercapture', liberar);
     });
 }
