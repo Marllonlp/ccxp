@@ -1,0 +1,39 @@
+{
+  "niveis": [
+    {
+      "numero": 1,
+      "nome": "NÍVEL 1",
+      "descricao": "(a definir)",
+      "estado": "disponivel",
+      "estrelas": 0
+    },
+    {
+      "numero": 2,
+      "nome": "NÍVEL 2",
+      "descricao": "(a definir)",
+      "estado": "bloqueado",
+      "estrelas": 0
+    },
+    {
+      "numero": 3,
+      "nome": "NÍVEL 3",
+      "descricao": "(a definir)",
+      "estado": "bloqueado",
+      "estrelas": 0
+    },
+    {
+      "numero": 4,
+      "nome": "NÍVEL 4",
+      "descricao": "(a definir)",
+      "estado": "bloqueado",
+      "estrelas": 0
+    },
+    {
+      "numero": 5,
+      "nome": "NÍVEL 5",
+      "descricao": "(a definir)",
+      "estado": "bloqueado",
+      "estrelas": 0
+    }
+  ]
+}

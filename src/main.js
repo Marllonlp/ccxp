@@ -17,10 +17,19 @@ import {
   plantas,
   moedas,
   limparColetaveis,
+  carregarFase,
+  indiceFaseAtual,
+  verificarMeta,
+  infoFases,
+  quantidadeFases,
+  checkpoints,
 } from './level.js';
 import { resolverColisoes, verificarEspaco, verificarColetaveis } from './collisions.js';
 import { registrarEfeito, registrarGanhoMusica, removerGanhoMusica, definirVolume } from './audio.js';
 import { calcularVisao, ajustarCanvas } from './viewport.js';
+import { criarTelaNiveis } from './telaNiveis.js';
+import { iniciarDemoTitulo } from './demoTitulo.js';
+import { criarTerminal, carregarMissoes } from './terminal.js';
 
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
@@ -45,6 +54,7 @@ const botaoRetomar = document.getElementById('botao-retomar');
 const botaoReiniciar = document.getElementById('botao-reiniciar');
 const telaInicio = document.getElementById('tela-inicio');
 const botaoJogar = document.getElementById('botao-jogar');
+const botaoSair = document.getElementById('botao-sair');
 const botaoOrientacao = document.getElementById('botao-orientacao');
 
 const telaTitulo = document.getElementById('tela-titulo');
@@ -58,6 +68,106 @@ const tituloPainel = document.getElementById('titulo-painel');
 const textoPainel = document.getElementById('texto-painel');
 const botaoFecharPainel = document.getElementById('botao-fechar-painel');
 let indiceTitulo = 0;
+
+const telaNiveis = document.getElementById('tela-niveis');
+const rotuloInicio = document.getElementById('rotulo-nivel-inicio');
+const textoInicio = document.getElementById('texto-nivel-inicio');
+const somVitoria = new Audio('./assets/sound/vadim_makes_sound-retro-arcade-level-up-552982.mp3');
+registrarEfeito(somVitoria);
+
+const PASTA_NIVEIS = './assets/characters/Imagens_Personagens/02_cenario/tela_niveis_editavel_pacote/';
+const NIVEIS_NA_TELA = 5;
+const ESTRELAS_MAXIMAS = 3;
+let dadosJsonNiveis = [];
+fetch(PASTA_NIVEIS + 'niveis.json')
+  .then((resposta) => resposta.json())
+  .then((json) => { dadosJsonNiveis = json.niveis ?? []; })
+  .catch((erro) => console.error('Falha ao carregar niveis.json:', erro));
+
+// Progresso: níveis liberados e estrelas de cada um. Fica salvo no navegador.
+const CHAVE_PROGRESSO = 'byte-progresso';
+function carregarProgresso() {
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CHAVE_PROGRESSO));
+    if (salvo && Number.isInteger(salvo.liberados)) {
+      return {
+        liberados: Math.min(Math.max(salvo.liberados, 1), NIVEIS_NA_TELA),
+        estrelas: Array.isArray(salvo.estrelas) ? salvo.estrelas : [],
+      };
+    }
+  } catch {
+    // Progresso ilegível ou sem armazenamento: começa do primeiro nível.
+  }
+  return { liberados: 1, estrelas: [] };
+}
+function salvarProgresso() {
+  try {
+    localStorage.setItem(CHAVE_PROGRESSO, JSON.stringify(progresso));
+  } catch {
+    // Sem armazenamento disponível: o progresso vale só enquanto a página estiver aberta.
+  }
+}
+let progresso = carregarProgresso();
+
+const seletorNiveis = criarTelaNiveis(document.getElementById('canvas-niveis'), {
+  onEscolher: (indice) => escolherNivel(indice),
+  onVoltar: () => mostrarTitulo(),
+  onSair: () => mostrarTitulo(),
+  implementados: quantidadeFases,
+});
+
+// Terminal do totem: abre a missão do totem ativo em que o Byte está.
+const telaTerminal = document.getElementById('tela-terminal');
+const imagemBotaoTerminal = new Image();
+imagemBotaoTerminal.src = './assets/characters/Imagens_Personagens/02_cenario/terminal_python_pacote/botao_abrir_terminal_normal_150x28.png';
+let missoesTerminal = [];
+carregarMissoes()
+  .then((lista) => { missoesTerminal = lista; })
+  .catch((erro) => console.error('Falha ao carregar missoes.json:', erro));
+let totemProximo = null;
+let areaBotaoTerminal = null;
+const terminal = criarTerminal(document.getElementById('canvas-terminal'), {
+  onFechar: () => fecharTerminal(),
+  onResolvido: () => {},
+});
+
+function abrirTerminal() {
+  const missao = missoesTerminal.find((item) => item.id === totemProximo?.missao);
+  if (!missao) return;
+  estadoDaPartida = 'terminal';
+  controleDoJogo.stop();
+  limparAcoes();
+  telaTerminal.hidden = false;
+  terminal.abrir(missao);
+  atualizarInterface();
+}
+
+function fecharTerminal() {
+  if (estadoDaPartida !== 'terminal') return;
+  terminal.fechar();
+  telaTerminal.hidden = true;
+  estadoDaPartida = 'jogando';
+  limparAcoes();
+  controleDoJogo.start();
+  atualizarInterface();
+}
+
+/** Botão ABRIR TERMINAL sobre o totem, em coordenadas de tela (escala da visão). */
+function desenharBotaoTerminal(ctx, cameraX, cameraY) {
+  areaBotaoTerminal = null;
+  if (estadoDaPartida !== 'jogando' || !totemProximo || !imagemBotaoTerminal.complete) return;
+  const escala = visao.escala;
+  const s = escala / 1.5;
+  const centroX = (totemProximo.x + totemProximo.width / 2 - cameraX) * escala;
+  const topo = (totemProximo.y - cameraY) * escala;
+  const largura = 150 * s;
+  const altura = 28 * s;
+  const balanco = Math.floor(performance.now() / 400) % 2 === 0 ? 0 : s;
+  const x = centroX - largura / 2;
+  const y = topo - 37 * s + balanco;
+  ctx.drawImage(imagemBotaoTerminal, x, y, largura, altura);
+  areaBotaoTerminal = { x, y, largura, altura };
+}
 const somApertarPlay = new Audio('./assets/sound/apertar_play.mp3');
 registrarEfeito(somApertarPlay);
 const somPerder = new Audio('./assets/sound/perder.mp3');
@@ -170,10 +280,15 @@ botaoOrientacao?.addEventListener('click', solicitarTelaHorizontal);
 
 const inicio = obterPosicaoInicial();
 const player = new Player(inicio.x, inicio.y);
-const inimigos = [
-  ...patrulhasSentinelas.map((campo) => new Sentinela(campo)),
-  ...plantas.map((posicao) => new Planta(posicao)),
-];
+// Inimigos da fase carregada: recriados ao começar cada partida, porque cada fase tem os seus.
+let inimigos = [];
+function criarInimigos() {
+  return [
+    ...patrulhasSentinelas.map((campo) => new Sentinela(campo)),
+    ...plantas.map((posicao) => new Planta(posicao)),
+  ];
+}
+inimigos = criarInimigos();
 
 const status = document.getElementById('game-status');
 if (status) {
@@ -255,11 +370,11 @@ function reposicionar(ponto) {
 function prepararNovaPartida() {
   limparCheckpoints();
   limparColetaveis();
+  inimigos = criarInimigos();
   const pontoInicial = obterPosicaoInicial();
   player.vidas = 3;
   player.tempoInvulneravel = 0;
   player.retornar(pontoInicial.x, pontoInicial.y);
-  inimigos.forEach((inimigo) => inimigo.reiniciar());
   limparAcoes();
   mensagem = '';
   mensagemAte = 0;
@@ -281,6 +396,7 @@ function iniciarPartida() {
 }
 
 /** Abre a tela inicial e para o jogo. Usada ao carregar a página e ao perder todas as vidas. */
+/** Abre a tela do nível atual (nome e texto da fase carregada) e para o jogo. */
 function mostrarTelaInicio() {
   estadoDaPartida = 'inicio';
   controleDoJogo.stop();
@@ -288,10 +404,79 @@ function mostrarTelaInicio() {
   botaoPausar.hidden = true;
   menuPausa.hidden = true;
   telaTitulo.hidden = true;
+  telaNiveis.hidden = true;
+  seletorNiveis.esconder();
+  const { nome, texto } = textosDoNivel(indiceFaseAtual());
+  rotuloInicio.textContent = nome.toUpperCase();
+  textoInicio.textContent = texto;
   telaInicio.hidden = false;
   atualizarInterface();
   pararMusicaFundo();
   botaoJogar.focus({ preventScroll: true });
+}
+
+/** Nome e texto de um nível: de niveis.json, com a fase como reserva. */
+function textosDoNivel(indice) {
+  const dados = dadosJsonNiveis[indice];
+  const fase = infoFases[indice];
+  const descricao = dados?.descricao;
+  return {
+    nome: dados?.nome ?? fase?.nome ?? `Nível ${indice + 1}`,
+    texto: descricao && descricao !== '(a definir)' ? descricao : (fase?.texto ?? ''),
+  };
+}
+
+/** Dados da tela de níveis: estado e estrelas vêm do progresso salvo. */
+function montarDadosNiveis() {
+  const total = dadosJsonNiveis.length || NIVEIS_NA_TELA;
+  return Array.from({ length: total }, (_, i) => {
+    let estado = 'bloqueado';
+    if (i < progresso.liberados - 1) estado = 'completo';
+    else if (i === progresso.liberados - 1) estado = 'disponivel';
+    const { nome } = textosDoNivel(i);
+    return {
+      nome: nome.toUpperCase(),
+      descricao: dadosJsonNiveis[i]?.descricao ?? '',
+      estado,
+      estrelas: progresso.estrelas[i] ?? 0,
+    };
+  });
+}
+
+/** Abre a tela de níveis, com o último nível liberado selecionado. */
+function mostrarNiveis() {
+  estadoDaPartida = 'niveis';
+  controleDoJogo.stop();
+  limparAcoes();
+  botaoPausar.hidden = true;
+  menuPausa.hidden = true;
+  telaTitulo.hidden = true;
+  telaInicio.hidden = true;
+  pararMusicaFundo();
+  telaNiveis.hidden = false;
+  seletorNiveis.mostrar(montarDadosNiveis(), Math.min(progresso.liberados, quantidadeFases) - 1);
+}
+
+/** Carrega a fase escolhida e abre a tela do nível. Níveis bloqueados ou sem fase não abrem. */
+function escolherNivel(indice) {
+  if (indice >= progresso.liberados || indice >= quantidadeFases) return;
+  carregarFase(indice);
+  mostrarTelaInicio();
+}
+
+/** Vitória: toca o som, guarda as estrelas (vidas restantes), libera a próxima fase e volta à tela de níveis. */
+function concluirFase() {
+  const concluida = indiceFaseAtual();
+  controleDoJogo.stop();
+  limparAcoes();
+  somVitoria.currentTime = 0;
+  somVitoria.play().catch((erro) => console.error('Falha ao tocar vitoria:', erro));
+
+  const estrelasGanhas = Math.min(Math.max(player.vidas, 1), ESTRELAS_MAXIMAS);
+  progresso.estrelas[concluida] = Math.max(progresso.estrelas[concluida] ?? 0, estrelasGanhas);
+  progresso.liberados = Math.max(progresso.liberados, Math.min(concluida + 2, NIVEIS_NA_TELA));
+  salvarProgresso();
+  mostrarNiveis();
 }
 
 /** Abre a tela de título, com o botão Jogar selecionado. Usada ao carregar a página. */
@@ -302,6 +487,8 @@ function mostrarTitulo() {
   botaoPausar.hidden = true;
   menuPausa.hidden = true;
   telaInicio.hidden = true;
+  telaNiveis.hidden = true;
+  seletorNiveis.esconder();
   telaTitulo.hidden = false;
   pararMusicaFundo();
   selecionarBotaoTitulo(0);
@@ -342,7 +529,7 @@ function fecharPainelTitulo() {
 
 function reiniciarJogo() {
   // Na tela de título ou na tela inicial não há fase em andamento para reiniciar.
-  if (estadoDaPartida === 'inicio' || estadoDaPartida === 'titulo') return;
+  if (estadoDaPartida === 'inicio' || estadoDaPartida === 'titulo' || estadoDaPartida === 'niveis') return;
 
   iniciarPartida();
   mensagem = 'Fase reiniciada';
@@ -369,6 +556,16 @@ const dependenciasDoJogo = {
   resolveCollisions: (deltaTime) => {
     if (estadoDaPartida !== 'jogando') return;
     resolverColisoes(player, deltaTime);
+
+    // Totem ativo com missão, encostado pelo Byte: mostra o botão ABRIR TERMINAL.
+    totemProximo = checkpoints.find((c) => c.ativo && c.missao
+      && player.x < c.x + c.width && player.x + player.largura > c.x
+      && player.y < c.y + c.height && player.y + player.altura > c.y) ?? null;
+
+    if (verificarMeta(player)) {
+      concluirFase();
+      return;
+    }
 
     const checkpoint = verificarCheckpoints(player);
     if (checkpoint) {
@@ -420,6 +617,7 @@ const dependenciasDoJogo = {
     player.desenhar(ctx);
     ctx.restore();
 
+    desenharBotaoTerminal(ctx, cameraX, cameraY);
     atualizarHUD();
   },
 };
@@ -427,6 +625,12 @@ const dependenciasDoJogo = {
 const controleDoJogo = startGame(canvas, context, dependenciasDoJogo);
 // O jogo começa parado: a tela de título é exibida até o jogador escolher Jogar.
 mostrarTitulo();
+iniciarDemoTitulo(document.getElementById('canvas-demo-titulo'), {
+  montanhas: document.querySelector('.titulo-montanhas'),
+  cidade: document.querySelector('.titulo-cidade'),
+  floresta: document.querySelector('.titulo-floresta'),
+  chao: document.querySelector('.titulo-chao'),
+});
 redimensionarJogo();
 new ResizeObserver(redimensionarJogo).observe(gameShell);
 window.addEventListener('resize', redimensionarJogo);
@@ -467,6 +671,9 @@ function retomarPartida() {
 }
 
 // O evento click atende tanto ao mouse quanto ao toque nos botões.
+// SAIR da tela do nível: volta à tela de níveis, sem iniciar a fase.
+botaoSair.addEventListener('click', () => mostrarNiveis());
+
 botaoJogar.addEventListener('click', () => {
   if (retratoMovel.matches) return;
   tocarSomApertarPlay();
@@ -474,9 +681,9 @@ botaoJogar.addEventListener('click', () => {
   iniciarPartida();
 });
 
-/** Jogar na tela de título abre a tela do nível; a partida começa no Jogar dessa tela. */
+/** Jogar na tela de título abre a tela de níveis. */
 function iniciarPeloTitulo() {
-  mostrarTelaInicio();
+  mostrarNiveis();
 }
 
 botoesTitulo.forEach((botao, i) => {
@@ -525,11 +732,39 @@ if (botaoReiniciar) {
 
 // Atalhos de teclado: P para pausar/retomar, R para reiniciar.
 // Na tela inicial, nenhum atalho age: só o botão Jogar.
+canvas.addEventListener('click', (evento) => {
+  if (!areaBotaoTerminal || estadoDaPartida !== 'jogando') return;
+  const area = canvas.getBoundingClientRect();
+  const x = (evento.clientX - area.left) * visao.largura / area.width;
+  const y = (evento.clientY - area.top) * visao.altura / area.height;
+  const b = areaBotaoTerminal;
+  if (x >= b.x && x < b.x + b.largura && y >= b.y && y < b.y + b.altura) abrirTerminal();
+});
+
 window.addEventListener('keydown', (evento) => {
   if (retratoMovel.matches) return;
   // Com o painel de som aberto, Esc só fecha o painel: não pausa nem retoma o jogo.
   if (!menuSom.hidden) {
     if (evento.key === 'Escape') fecharMenuSom();
+    return;
+  }
+
+  // Terminal aberto: o próprio terminal trata as teclas (Esc fecha, Tab/Delete editam).
+  if (estadoDaPartida === 'terminal') {
+    terminal.tratarTecla(evento);
+    return;
+  }
+
+  // E ou Enter abrem o terminal quando o Byte está num totem ativo com missão.
+  if (estadoDaPartida === 'jogando' && totemProximo && ['e', 'E', 'Enter'].includes(evento.key)) {
+    evento.preventDefault();
+    abrirTerminal();
+    return;
+  }
+
+  // Tela de níveis: a própria tela trata setas, Enter e Esc.
+  if (estadoDaPartida === 'niveis') {
+    seletorNiveis.tratarTecla(evento);
     return;
   }
 
