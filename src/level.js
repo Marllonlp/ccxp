@@ -8,7 +8,7 @@ import { AnimacaoGIF } from './player.js';
 
 export const LARGURA_TELA = 960;
 export const ALTURA_FASE = 540;
-export const LARGURA_FASE = 3200;
+export let LARGURA_FASE = 3200;
 
 // A escala acompanha a altura disponível; a física mantém as unidades do mapa.
 const VISAO_PADRAO = calcularVisao(LARGURA_TELA, ALTURA_FASE);
@@ -17,7 +17,7 @@ const VISAO_PADRAO = calcularVisao(LARGURA_TELA, ALTURA_FASE);
 export const LIMITE_QUEDA = 620;
 
 // Canto superior esquerdo do personagem em pé sobre o chão inicial.
-const POSICAO_INICIAL = { x: 40, y: 414 };
+let posicaoInicial = { x: 40, y: 414 };
 
 // Superfície do chão. Com a colisão em y=480, o personagem fica em pé com os pés em 480.
 const SUPERFICIE_CHAO = 480;
@@ -26,7 +26,7 @@ const SUPERFICIE_CHAO = 480;
 // Por isso plataformas e paredes ficam até 90 px acima do chão, e vãos têm no máximo 100 px.
 
 // Obstáculos sólidos. O campo "tipo" define o visual provisório ou a peça de cenário.
-export const obstaculos = [
+const OBSTACULOS_FASE_1 = [
   // --- Trecho inicial ---
   { tipo: 'chao', x: 0, y: SUPERFICIE_CHAO, width: 340, height: 60 },
   { tipo: 'chao', x: 440, y: SUPERFICIE_CHAO, width: 520, height: 60 },
@@ -60,7 +60,7 @@ export const obstaculos = [
 ];
 
 // Vãos com água. O personagem cai neles e volta ao ponto seguro.
-export const vaos = [
+const VAOS_FASE_1 = [
   { x: 340, y: SUPERFICIE_CHAO, width: 100, height: 60 },
   { x: 1700, y: SUPERFICIE_CHAO, width: 100, height: 60 },
   { x: 2300, y: SUPERFICIE_CHAO, width: 100, height: 60 },
@@ -68,7 +68,7 @@ export const vaos = [
 
 // Plantas distribuídas pelo chão, pelas plataformas e pelo bloco suspenso inicial.
 // superficieY é o topo da superfície em que cada planta fica apoiada.
-export const plantas = [
+const PLANTAS_FASE_1 = [
   { id: 'planta-2', x: 680, superficieY: 330 },
   { id: 'planta-4', x: 1820, superficieY: SUPERFICIE_CHAO },
   { id: 'planta-5', x: 2684, superficieY: 310 },
@@ -77,7 +77,7 @@ export const plantas = [
 
 // Coletáveis: moedas ficam em caminhos de progressão e corações recompensam
 // a exploração sem permitir ultrapassar o limite inicial de três vidas.
-export const moedas = [
+const MOEDAS_FASE_1 = [
   { id: 'moeda-1', x: 170, y: 350, coletado: false },
   { id: 'moeda-2', x: 315, y: 270, coletado: false },
   { id: 'moeda-3', x: 520, y: 430, coletado: false },
@@ -90,7 +90,7 @@ export const moedas = [
   { id: 'moeda-10', x: 2950, y: 430, coletado: false },
 ];
 
-export const vidasItens = [
+const VIDAS_FASE_1 = [
   { id: 'vida-1', x: 2180, y: 448, coletado: false },
   { id: 'vida-2', x: 2880, y: 448, coletado: false },
 ];
@@ -104,7 +104,7 @@ export function limparColetaveis() {
 
 // Campo de patrulha: início e fim delimitam toda a área ocupada pelo robô.
 // Cada campo fica sobre uma superfície contínua, sem invadir paredes ou vãos.
-export const patrulhasSentinelas = [
+const PATRULHAS_FASE_1 = [
   {
     id: 'sentinela-1',
     inicioX: 1535,
@@ -132,12 +132,13 @@ export const patrulhasSentinelas = [
 // A área é apenas de contato: eles não bloqueiam a passagem.
 // posicaoSegura é o canto superior esquerdo do personagem em pé sobre o chão.
 // totem indica o modelo do pacote plataformas_totens_pacote.
-export const checkpoints = [
+const CHECKPOINTS_FASE_1 = [
   {
     id: 'cp1',
     x: 280, y: 416, width: 32, height: 64,
     posicaoSegura: { x: 275, y: 414 },
     totem: 'tela',
+    missao: 1,
     ativo: false,
   },
   {
@@ -165,9 +166,119 @@ export const checkpoints = [
 
 let ultimoCheckpoint = null;
 
+// Dados que a fase carregada usa. Trocados por carregarFase().
+export let obstaculos = [];
+export let vaos = [];
+export let checkpoints = [];
+// Inimigos e coletáveis da fase carregada. Trocados por carregarFase().
+export let plantas = [];
+export let moedas = [];
+export let vidasItens = [];
+export let patrulhasSentinelas = [];
+let metaAtual = null;
+let indiceFase = 0;
+
+// Fase 2: exemplo para testar a progressão. Troque pelo desenho definitivo quando estiver pronto.
+const OBSTACULOS_FASE_2 = [
+  { tipo: 'chao', x: 0, y: SUPERFICIE_CHAO, width: 600, height: 60 },
+  { tipo: 'plataforma', x: 760, y: 390, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 920, y: 310, width: 110, height: 20 },
+  { tipo: 'chao', x: 700, y: SUPERFICIE_CHAO, width: 700, height: 60 },
+  { tipo: 'teto', x: 1150, y: 330, width: 160, height: 100 },
+  { tipo: 'parede', x: 1400, y: 400, width: 40, height: 80 },
+  { tipo: 'chao', x: 1440, y: SUPERFICIE_CHAO, width: 200, height: 60 },
+  { tipo: 'chao', x: 1740, y: SUPERFICIE_CHAO, width: 260, height: 60 },
+];
+
+const VAOS_FASE_2 = [
+  { x: 600, y: SUPERFICIE_CHAO, width: 100, height: 60 },
+  { x: 1640, y: SUPERFICIE_CHAO, width: 100, height: 60 },
+];
+
+const CHECKPOINTS_FASE_2 = [
+  { id: 'f2cp1', x: 560, y: 416, width: 32, height: 64, posicaoSegura: { x: 555, y: 414 }, totem: 'obelisco', ativo: false },
+  { id: 'f2cp2', x: 1480, y: 416, width: 32, height: 64, posicaoSegura: { x: 1475, y: 414 }, totem: 'terminal', ativo: false },
+];
+
+/**
+ * Fases do jogo, na ordem. A meta é o ponto de chegada: tocar nela conclui a fase.
+ * `texto` é a mensagem da tela do nível, antes da partida.
+ */
+const FASES = [
+  {
+    nome: 'Nível 01',
+    subtitulo: 'Byte',
+    texto: 'Texto de exemplo: o modo de ensino deste nível ainda não foi implementado.',
+    larguraFase: 3200,
+    posicaoInicial: { x: 40, y: 414 },
+    obstaculos: OBSTACULOS_FASE_1,
+    vaos: VAOS_FASE_1,
+    checkpoints: CHECKPOINTS_FASE_1,
+    plantas: PLANTAS_FASE_1,
+    moedas: MOEDAS_FASE_1,
+    vidasItens: VIDAS_FASE_1,
+    patrulhas: PATRULHAS_FASE_1,
+    meta: { x: 3120, y: 416, width: 32, height: 64 },
+  },
+  {
+    nome: 'Nível 02',
+    subtitulo: 'Byte',
+    texto: 'Texto de exemplo: este é um nível provisório para testar a progressão.',
+    larguraFase: 2100,
+    posicaoInicial: { x: 40, y: 414 },
+    obstaculos: OBSTACULOS_FASE_2,
+    vaos: VAOS_FASE_2,
+    checkpoints: CHECKPOINTS_FASE_2,
+    plantas: [],
+    moedas: [],
+    vidasItens: [],
+    patrulhas: [],
+    meta: { x: 1930, y: 416, width: 32, height: 64 },
+  },
+];
+
+/** Nome e texto de cada fase, para as telas de níveis e de início. */
+export const infoFases = FASES.map(({ nome, subtitulo, texto }) => ({ nome, subtitulo, texto }));
+export const quantidadeFases = FASES.length;
+
+/** Carrega a fase de índice `indice` (0 = primeira): cenário, vãos, checkpoints, meta e início. */
+export function carregarFase(indice) {
+  const fase = FASES[indice];
+  indiceFase = indice;
+  obstaculos = fase.obstaculos;
+  vaos = fase.vaos;
+  checkpoints = fase.checkpoints.map((checkpoint) => ({
+    ...checkpoint,
+    posicaoSegura: { ...checkpoint.posicaoSegura },
+    ativo: false,
+  }));
+  plantas = fase.plantas.map((planta) => ({ ...planta }));
+  moedas = fase.moedas.map((moeda) => ({ ...moeda, coletado: false }));
+  vidasItens = fase.vidasItens.map((vida) => ({ ...vida, coletado: false }));
+  patrulhasSentinelas = fase.patrulhas.map((patrulha) => ({ ...patrulha }));
+  LARGURA_FASE = fase.larguraFase;
+  posicaoInicial = { ...fase.posicaoInicial };
+  metaAtual = { ...fase.meta };
+  ultimoCheckpoint = null;
+}
+
+/** Índice (0 = primeira) da fase carregada. */
+export function indiceFaseAtual() {
+  return indiceFase;
+}
+
+/** Verdadeiro quando o personagem toca a meta da fase. */
+export function verificarMeta(player) {
+  const meta = metaAtual;
+  return player.x < meta.x + meta.width
+    && player.x + player.largura > meta.x
+    && player.y < meta.y + meta.height
+    && player.y + player.altura > meta.y;
+}
+
 /** Posição inicial da fase. Devolve uma copia para ninguém alterar o original. */
 export function obterPosicaoInicial() {
-  return { x: POSICAO_INICIAL.x, y: POSICAO_INICIAL.y };
+  return { x: posicaoInicial.x, y: posicaoInicial.y };
 }
 
 /**
@@ -463,6 +574,9 @@ function desenharMundo(ctx, limiteInferior) {
       vidaItemSprite.desenhar(ctx, tempo, vida.x, vida.y, 16, 16);
     }
   }
+  if (metaAtual) {
+    desenharTotem(ctx, { ...metaAtual, totem: 'antena', ativo: true }, tempo);
+  }
 }
 
 /** Plataforma flutuante: a peça de terra é esticada até a largura da colisão. */
@@ -556,3 +670,6 @@ export function desenharFase(ctx, cameraX = 0, visao = VISAO_PADRAO, cameraY = v
   desenharMundo(ctx, cameraY + visao.alturaMundo);
   ctx.restore();
 }
+
+// Começa no primeiro nível. O menu carrega outros níveis com carregarFase().
+carregarFase(0);

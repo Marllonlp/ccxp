@@ -478,3 +478,334 @@ body {
     padding-block: 6px;
   }
 }
+
+/* Tela de título: montada sobre a arte do pacote tela_titulo_pacote.
+   Todas as medidas são porcentagens ou cqw da área 16:9, como na tela inicial. */
+.tela-titulo {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  background-color: #0b1f33;
+  overflow: hidden;
+}
+
+.tela-titulo[hidden] {
+  display: none;
+}
+
+.tela-titulo-palco {
+  position: relative;
+  width: min(100%, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  container-type: inline-size;
+  image-rendering: pixelated;
+}
+
+/* Camadas do cenário, do fundo para a frente. As fontes 4x das peças têm 1024 px de largura
+   no quadro de 1920 px, por isso cada camada usa 53,33cqw de largura. */
+.titulo-camada {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-repeat: repeat-x;
+  image-rendering: pixelated;
+}
+
+.titulo-ceu {
+  inset: 0;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_ceu_com_sol_480x270.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Nuvens: a faixa de 128 × 120 em 4x, andando devagar para a esquerda. */
+.titulo-nuvens {
+  top: 0;
+  height: 44%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_nuvens_tile_128x120.png');
+  background-size: 26.67cqw auto;
+  background-position: 0 0;
+  animation: deriva-nuvens-titulo 90s linear infinite;
+}
+
+@keyframes deriva-nuvens-titulo {
+  from { background-position: 0 0; }
+  to { background-position: -26.67cqw 0; }
+}
+
+.titulo-montanhas {
+  bottom: 29.63%;
+  height: 88.89%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/fundo_pecas_pacote/fundo_distante_montanhas_256x240_4x.png');
+  background-size: 53.33cqw 100%;
+  background-position: left bottom;
+}
+
+.titulo-cidade {
+  bottom: 29.63%;
+  height: 88.89%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/fundo_pecas_pacote/fundo_distante_cidade_256x240_4x.png');
+  background-size: 53.33cqw 100%;
+  background-position: left bottom;
+}
+
+.titulo-floresta {
+  bottom: 29.63%;
+  height: 88.89%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/fundo_pecas_pacote/fundo_colinas_floresta_256x240_4x.png');
+  background-size: 53.33cqw 100%;
+  background-position: left bottom;
+}
+
+/* Chão: a peça 1024 × 320 (4x) fica encostada na parte de baixo da tela. */
+.titulo-chao {
+  bottom: 0;
+  height: 29.63%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/pedacos_de_chao_pacote/chao_normal_256x80_4x.png');
+  background-size: 53.33cqw 100%;
+  background-position: left bottom;
+}
+
+/* Cena de demonstração do título: canvas 480 × 270 ampliado com pixel nítido. */
+.demo-titulo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.titulo-byte {
+  position: absolute;
+  left: 9.4%;
+  bottom: 21.3%;
+  width: 8.33%;
+  image-rendering: pixelated;
+}
+
+.titulo-logo {
+  position: absolute;
+  left: 20.05%;
+  top: 1.5%;
+  width: 59.4%;
+  image-rendering: pixelated;
+}
+
+.titulo-menu {
+  position: absolute;
+  left: 34.1%;
+  top: 41.2%;
+  width: 31.8%;
+  display: grid;
+  gap: 1.2%;
+}
+
+/* Botões com as artes de 624 × 128 (4x): normal, selecionado e pressionado. */
+.botao-titulo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 624 / 128;
+  padding: 0;
+  border: 0;
+  background: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_jogar_normal_156x32_4x.png') center / 100% 100% no-repeat;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#botao-titulo-como {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_como_jogar_normal_156x32_4x.png');
+}
+
+#botao-titulo-sobre {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_sobre_normal_156x32_4x.png');
+}
+
+.botao-titulo.selecionado {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_jogar_selecionado_156x32_4x.png');
+}
+
+#botao-titulo-como.selecionado {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_como_jogar_selecionado_156x32_4x.png');
+}
+
+#botao-titulo-sobre.selecionado {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_sobre_selecionado_156x32_4x.png');
+}
+
+.botao-titulo:active {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_jogar_pressionado_156x32_4x.png');
+}
+
+#botao-titulo-como:active {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_como_jogar_pressionado_156x32_4x.png');
+}
+
+#botao-titulo-sobre:active {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_sobre_pressionado_156x32_4x.png');
+}
+
+.botao-titulo:focus-visible {
+  outline: none;
+}
+
+/* Cursor animado (2 quadros de 10 × 11), em escala 3x. A posição vertical é ajustada pelo script. */
+.titulo-cursor {
+  position: absolute;
+  left: 30.5%;
+  width: 1.5625%;
+  aspect-ratio: 10 / 11;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_cursor_2f_10x11.png');
+  background-size: 200% 100%;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  animation: pisca-cursor-titulo 0.6s steps(2) infinite;
+  transition: top 0.12s steps(3);
+}
+
+@keyframes pisca-cursor-titulo {
+  from { background-position: 0 0; }
+  to { background-position: 100% 0; }
+}
+
+.titulo-dica,
+.titulo-versao {
+  position: absolute;
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  color: #f9fafb;
+  text-shadow: 2px 2px 0 #0b0f1a;
+}
+
+.titulo-dica {
+  left: 0;
+  right: 0;
+  bottom: 4.5%;
+  text-align: center;
+  font-size: 1.4cqw;
+  line-height: 1.6;
+}
+
+.titulo-versao {
+  right: 2%;
+  bottom: 1.5%;
+  font-size: 1.2cqw;
+  color: #d6e4f0;
+}
+
+/* Painel de ajuda e sobre: aberto pelos botões Como jogar e Sobre. */
+.titulo-painel {
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  top: 24%;
+  z-index: 7;
+  display: grid;
+  gap: 2.5cqw;
+  padding: 2.5cqw;
+  border: 2px solid #64748b;
+  border-radius: 12px;
+  background-color: #20242b;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
+  font-family: 'Press Start 2P', monospace;
+  color: #f9fafb;
+}
+
+.titulo-painel[hidden] {
+  display: none;
+}
+
+.titulo-painel h2 {
+  margin: 0;
+  font-size: 2.2cqw;
+  text-align: center;
+  color: #7dd3fc;
+}
+
+.titulo-painel-texto p {
+  margin: 0 0 1.2cqw;
+  font-size: 1.2cqw;
+  line-height: 1.9;
+}
+
+.botao-painel {
+  justify-self: center;
+  min-height: 44px;
+  padding: 10px 24px;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  background-color: #29313d;
+  color: #f9fafb;
+  font: inherit;
+  font-size: 1.2cqw;
+  cursor: pointer;
+}
+
+.botao-painel:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 3px;
+}
+
+/* Tela de níveis: canvas 480 × 270 ampliado com pixel nítido. */
+.tela-niveis {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  background-color: #0b1f33;
+  overflow: hidden;
+}
+
+.tela-niveis[hidden] {
+  display: none;
+}
+
+.canvas-niveis {
+  display: block;
+  width: min(100%, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  image-rendering: pixelated;
+}
+
+/* Rótulo "NÍVEL 0X" da tela do nível: cobre o rótulo fixo da arte, com o número da fase. */
+.rotulo-nivel {
+  position: absolute;
+  left: 8.4%;
+  top: 4.9%;
+  width: 17.3%;
+  height: 6.3%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 3px solid #7dd3fc;
+  background-color: #172a3d;
+  color: #7dd3fc;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.3cqw;
+}
+
+/* Terminal do totem: canvas 480 × 270 ampliado com pixel nítido, sobre o jogo pausado. */
+.tela-terminal {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  background-color: rgb(4 6 12 / 80%);
+}
+
+.tela-terminal[hidden] {
+  display: none;
+}
+
+.canvas-terminal {
+  display: block;
+  width: min(100%, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  image-rendering: pixelated;
+}
