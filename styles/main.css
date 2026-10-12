@@ -340,14 +340,12 @@ body {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/01_direita_pressionado.png);
 }
 
-/* Reaproveita o sprite de "agachar" espelhado para formar a seta de cima. */
 .botao-pulo {
-  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/06_abaixar_normal.png);
-  transform: rotate(180deg);
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/13_cima_normal.png);
 }
 
 .botao-pulo:active {
-  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/05_abaixar_pressionado.png);
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/14_cima_pressionado.png);
 }
 
 .botao-agachar {
