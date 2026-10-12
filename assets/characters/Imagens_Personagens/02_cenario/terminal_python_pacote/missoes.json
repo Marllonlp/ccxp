@@ -1,0 +1,94 @@
+{
+  "missoes": [
+    {
+      "id": 1,
+      "titulo": "MISSÃO 1",
+      "enunciado": "João está aprendendo Python e precisa de um programa que diga se um número inteiro é par ou ímpar.",
+      "entrada": "Um número inteiro N.",
+      "saida": [
+        "Se N for divisível por 2, mostre PAR.",
+        "Senão, mostre IMPAR."
+      ],
+      "exemplos": [
+        {
+          "entrada": "4",
+          "saida": "PAR"
+        },
+        {
+          "entrada": "7",
+          "saida": "IMPAR"
+        }
+      ],
+      "trechos": [
+        {
+          "id": "t1",
+          "codigo": "print(\"IMPAR\")",
+          "tipo": "saida"
+        },
+        {
+          "id": "t2",
+          "codigo": "if n % 2 == 0:",
+          "tipo": "decisao"
+        },
+        {
+          "id": "t3",
+          "codigo": "n = int(input())",
+          "tipo": "entrada"
+        },
+        {
+          "id": "t4",
+          "codigo": "else:",
+          "tipo": "decisao"
+        },
+        {
+          "id": "t5",
+          "codigo": "print(\"PAR\")",
+          "tipo": "saida"
+        },
+        {
+          "id": "t6",
+          "codigo": "print(n)",
+          "tipo": "saida",
+          "distrator": true
+        }
+      ],
+      "solucao": [
+        {
+          "id": "t3",
+          "indent": 0
+        },
+        {
+          "id": "t2",
+          "indent": 0
+        },
+        {
+          "id": "t5",
+          "indent": 1
+        },
+        {
+          "id": "t4",
+          "indent": 0
+        },
+        {
+          "id": "t1",
+          "indent": 1
+        }
+      ],
+      "testes": [
+        {
+          "entrada": "4",
+          "esperado": "PAR"
+        },
+        {
+          "entrada": "7",
+          "esperado": "IMPAR"
+        },
+        {
+          "entrada": "0",
+          "esperado": "PAR"
+        }
+      ],
+      "dica": "Use o operador % (resto da divisão). Se n % 2 for 0, o número é par. Lembre: o que fica dentro do if/else vai recuado."
+    }
+  ]
+}

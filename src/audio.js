@@ -4,7 +4,8 @@
 // Volume da música antes do ajuste do jogador: deixa a trilha baixa e agradável.
 const VOLUME_BASE_MUSICA = 0.2;
 
-const volumes = { musica: 1, efeitos: 1 };
+// Começam em 50%, como os controles do painel de som no index.html.
+const volumes = { musica: 0.5, efeitos: 0.5 };
 const efeitos = new Set();
 const ganhosMusica = new Set();
 
