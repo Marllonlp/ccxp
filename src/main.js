@@ -24,6 +24,18 @@ const botaoReiniciar = document.getElementById('botao-reiniciar');
 const telaInicio = document.getElementById('tela-inicio');
 const botaoJogar = document.getElementById('botao-jogar');
 const botaoOrientacao = document.getElementById('botao-orientacao');
+
+const telaTitulo = document.getElementById('tela-titulo');
+const botaoTituloJogar = document.getElementById('botao-titulo-jogar');
+const botaoTituloComo = document.getElementById('botao-titulo-como');
+const botaoTituloSobre = document.getElementById('botao-titulo-sobre');
+const botoesTitulo = [botaoTituloJogar, botaoTituloComo, botaoTituloSobre];
+const cursorTitulo = document.getElementById('cursor-titulo');
+const painelTitulo = document.getElementById('painel-titulo');
+const tituloPainel = document.getElementById('titulo-painel');
+const textoPainel = document.getElementById('texto-painel');
+const botaoFecharPainel = document.getElementById('botao-fechar-painel');
+let indiceTitulo = 0;
 const somApertarPlay = new Audio('./assets/sound/apertar_play.mp3');
 registrarEfeito(somApertarPlay);
 const somPerder = new Audio('./assets/sound/perder.mp3');
@@ -148,7 +160,8 @@ if (status) {
 let mensagem = '';
 let mensagemAte = 0;
 // Estados da partida:
-// - inicio: tela inicial, aberta ao carregar o jogo e quando as vidas acabam.
+// - titulo: tela de título, aberta ao carregar o jogo.
+// - inicio: tela inicial, aberta quando as vidas acabam.
 // - jogando, pausado: partida em andamento ou com o menu de pausa aberto.
 let estadoDaPartida = 'inicio';
 
@@ -169,6 +182,7 @@ function prepararNovaPartida() {
 function iniciarPartida() {
   prepararNovaPartida();
   estadoDaPartida = 'jogando';
+  telaTitulo.hidden = true;
   telaInicio.hidden = true;
   menuPausa.hidden = true;
   botaoPausar.hidden = false;
@@ -183,14 +197,61 @@ function mostrarTelaInicio() {
   limparAcoes();
   botaoPausar.hidden = true;
   menuPausa.hidden = true;
+  telaTitulo.hidden = true;
   telaInicio.hidden = false;
   pararMusicaFundo();
   botaoJogar.focus({ preventScroll: true });
 }
 
+/** Abre a tela de título, com o botão Jogar selecionado. Usada ao carregar a página. */
+function mostrarTitulo() {
+  estadoDaPartida = 'titulo';
+  controleDoJogo.stop();
+  limparAcoes();
+  botaoPausar.hidden = true;
+  menuPausa.hidden = true;
+  telaInicio.hidden = true;
+  telaTitulo.hidden = false;
+  pararMusicaFundo();
+  selecionarBotaoTitulo(0);
+}
+
+/** Marca o botão do título e posiciona o cursor ao lado dele. */
+function selecionarBotaoTitulo(indice) {
+  indiceTitulo = indice;
+  botoesTitulo.forEach((botao, i) => botao.classList.toggle('selecionado', i === indice));
+
+  const palco = telaTitulo.querySelector('.tela-titulo-palco');
+  const alvo = botoesTitulo[indice].getBoundingClientRect();
+  const area = palco.getBoundingClientRect();
+  const centroY = alvo.top - area.top + alvo.height / 2;
+  const topo = (centroY - cursorTitulo.offsetHeight / 2) / area.height * 100;
+  cursorTitulo.style.top = `${topo}%`;
+}
+
+function abrirPainelTitulo(conteudo) {
+  const linhas = conteudo === 'como'
+    ? ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'P ou ESC: pausar', 'R: reiniciar a fase']
+    : ['As aventuras de Byte', 'Versão 1.0', 'Jogo de plataforma em desenvolvimento.'];
+
+  tituloPainel.textContent = conteudo === 'como' ? 'Como jogar' : 'Sobre';
+  textoPainel.replaceChildren(...linhas.map((linha) => {
+    const paragrafo = document.createElement('p');
+    paragrafo.textContent = linha;
+    return paragrafo;
+  }));
+  painelTitulo.hidden = false;
+  botaoFecharPainel.focus({ preventScroll: true });
+}
+
+function fecharPainelTitulo() {
+  painelTitulo.hidden = true;
+  botoesTitulo[indiceTitulo].focus({ preventScroll: true });
+}
+
 function reiniciarJogo() {
-  // Na tela inicial não há fase em andamento para reiniciar.
-  if (estadoDaPartida === 'inicio') return;
+  // Na tela de título ou na tela inicial não há fase em andamento para reiniciar.
+  if (estadoDaPartida === 'inicio' || estadoDaPartida === 'titulo') return;
 
   iniciarPartida();
   mensagem = 'Fase reiniciada';
@@ -249,8 +310,8 @@ const dependenciasDoJogo = {
 };
 
 const controleDoJogo = startGame(canvas, context, dependenciasDoJogo);
-// O jogo começa parado: a tela inicial é exibida até o jogador clicar em Jogar.
-mostrarTelaInicio();
+// O jogo começa parado: a tela de título é exibida até o jogador escolher Jogar.
+mostrarTitulo();
 
 // Chamada pelo jogo quando as vidas acabam: toca o som de derrota e volta à tela inicial.
 function aguardarEscolhaDoJogador() {
@@ -288,6 +349,22 @@ botaoJogar.addEventListener('click', () => {
   tocarSomApertarPlay();
   iniciarMusicaFundo();
   iniciarPartida();
+});
+
+/** Jogar na tela de título abre a tela do nível; a partida começa no Jogar dessa tela. */
+function iniciarPeloTitulo() {
+  mostrarTelaInicio();
+}
+
+botoesTitulo.forEach((botao, i) => {
+  botao.addEventListener('mouseenter', () => selecionarBotaoTitulo(i));
+});
+botaoTituloJogar.addEventListener('click', iniciarPeloTitulo);
+botaoTituloComo.addEventListener('click', () => abrirPainelTitulo('como'));
+botaoTituloSobre.addEventListener('click', () => abrirPainelTitulo('sobre'));
+botaoFecharPainel.addEventListener('click', fecharPainelTitulo);
+window.addEventListener('resize', () => {
+  if (estadoDaPartida === 'titulo') selecionarBotaoTitulo(indiceTitulo);
 });
 botaoPausar.addEventListener('click', pausarPartida);
 botaoRetomar.addEventListener('click', retomarPartida);
@@ -329,6 +406,24 @@ window.addEventListener('keydown', (evento) => {
   // Com o painel de som aberto, Esc só fecha o painel: não pausa nem retoma o jogo.
   if (!menuSom.hidden) {
     if (evento.key === 'Escape') fecharMenuSom();
+    return;
+  }
+
+  // Tela de título: setas escolhem o botão, Enter confirma, Esc fecha o painel aberto.
+  if (estadoDaPartida === 'titulo') {
+    if (!painelTitulo.hidden) {
+      if (evento.key === 'Escape') fecharPainelTitulo();
+      return;
+    }
+    if (evento.key === 'ArrowUp' || evento.key === 'ArrowDown') {
+      evento.preventDefault();
+      const passo = evento.key === 'ArrowDown' ? 1 : -1;
+      selecionarBotaoTitulo((indiceTitulo + passo + botoesTitulo.length) % botoesTitulo.length);
+    } else if (evento.key === 'Enter') {
+      // Impede o Enter nativo de clicar de novo no botão que ganhar o foco depois deste clique.
+      evento.preventDefault();
+      botoesTitulo[indiceTitulo].click();
+    }
     return;
   }
 

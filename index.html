@@ -61,9 +61,39 @@
         <button type="button" id="botao-voltar-som">Voltar</button>
       </section>
 
-      <!-- Tela inicial: aparece ao abrir o jogo e quando as vidas acabam. -->
+      <!-- Tela de título: aparece ao abrir o jogo, antes da primeira partida. -->
+      <section id="tela-titulo" class="tela-titulo" aria-labelledby="titulo-jogo">
+        <div class="tela-titulo-palco">
+          <div class="titulo-camada titulo-ceu"></div>
+          <div class="titulo-camada titulo-nuvens"></div>
+          <div class="titulo-camada titulo-montanhas"></div>
+          <div class="titulo-camada titulo-cidade"></div>
+          <div class="titulo-camada titulo-floresta"></div>
+          <div class="titulo-camada titulo-chao"></div>
+          <img class="titulo-byte" src="./assets/characters/Imagens_Personagens/01_byte/01_byte_correndo.gif" alt="" />
+          <h1 id="titulo-jogo" class="sr-only">As aventuras de Byte</h1>
+          <img class="titulo-logo" src="./assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_logo_308x98_4x.png" alt="" />
+          <div class="titulo-menu" role="group" aria-label="Menu principal">
+            <button type="button" id="botao-titulo-jogar" class="botao-titulo"><span class="sr-only">Jogar</span></button>
+            <button type="button" id="botao-titulo-como" class="botao-titulo"><span class="sr-only">Como jogar</span></button>
+            <button type="button" id="botao-titulo-sobre" class="botao-titulo"><span class="sr-only">Sobre</span></button>
+          </div>
+          <div id="cursor-titulo" class="titulo-cursor" aria-hidden="true"></div>
+          <p class="titulo-dica">SETAS: ESCOLHER &nbsp;&nbsp; ENTER: CONFIRMAR</p>
+          <p class="titulo-versao">v1.0</p>
+
+          <section id="painel-titulo" class="titulo-painel" hidden aria-labelledby="titulo-painel">
+            <h2 id="titulo-painel"></h2>
+            <div id="texto-painel" class="titulo-painel-texto"></div>
+            <button type="button" id="botao-fechar-painel" class="botao-painel">Voltar</button>
+          </section>
+        </div>
+      </section>
+
+      <!-- Tela inicial: aparece quando as vidas acabam. -->
       <!-- A arte de fundo já traz o painel e os títulos; os botões e o texto são desenhados aqui. -->
-      <section id="tela-inicio" class="tela-inicio" aria-labelledby="titulo-inicio">
+      <!-- A arte de fundo já traz o painel e os títulos; os botões e o texto são desenhados aqui. -->
+      <section id="tela-inicio" class="tela-inicio" aria-labelledby="titulo-inicio" hidden>
         <div class="tela-inicio-palco">
           <img class="tela-inicio-fundo" src="./assets/characters/Imagens_Personagens/02_cenario/tela_inicio_pacote/tela_inicio_fundo_sem_botoes_1920x1080.png" alt="" />
           <h2 id="titulo-inicio" class="sr-only">Nível 01: Byte</h2>
