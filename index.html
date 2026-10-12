@@ -62,13 +62,13 @@
         <h2 id="titulo-som">Som</h2>
         <div class="linha-volume">
           <label for="volume-musica">Música</label>
-          <input type="range" id="volume-musica" min="0" max="100" value="100" />
-          <output id="valor-musica" for="volume-musica">100%</output>
+          <input type="range" id="volume-musica" min="0" max="100" value="50" />
+          <output id="valor-musica" for="volume-musica">50%</output>
         </div>
         <div class="linha-volume">
           <label for="volume-efeitos">Efeitos</label>
-          <input type="range" id="volume-efeitos" min="0" max="100" value="100" />
-          <output id="valor-efeitos" for="volume-efeitos">100%</output>
+          <input type="range" id="volume-efeitos" min="0" max="100" value="50" />
+          <output id="valor-efeitos" for="volume-efeitos">50%</output>
         </div>
         <button type="button" id="botao-voltar-som">Voltar</button>
       </section>
@@ -110,6 +110,19 @@
       <!-- Terminal do totem: mini editor de Python, desenhado em canvas 480 × 270. -->
       <section id="tela-terminal" class="tela-terminal" aria-label="Terminal do totem" hidden>
         <canvas id="canvas-terminal" class="canvas-terminal" role="img" aria-label="Terminal do totem"></canvas>
+      </section>
+
+      <!-- Desafio do banco de perguntas: aparece nos corações, sentinelas e vãos com desafio. -->
+      <section id="tela-desafio" class="tela-desafio" role="dialog" aria-modal="true" aria-labelledby="titulo-desafio" hidden>
+        <div class="painel-desafio">
+          <p class="categoria-desafio"></p>
+          <h2 id="titulo-desafio" class="titulo-desafio"></h2>
+          <p class="enunciado-desafio"></p>
+          <pre class="codigo-desafio"></pre>
+          <div class="alternativas-desafio" role="group" aria-label="Alternativas"></div>
+          <p class="resultado-desafio" role="status" hidden></p>
+          <button type="button" class="botao-continuar-desafio" hidden>Continuar</button>
+        </div>
       </section>
 
       <!-- Tela do nível: aparece antes de cada partida e quando as vidas acabam. -->

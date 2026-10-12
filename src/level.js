@@ -29,70 +29,70 @@ const SUPERFICIE_CHAO = 480;
 const OBSTACULOS_FASE_1 = [
   // --- Trecho inicial ---
   { tipo: 'chao', x: 0, y: SUPERFICIE_CHAO, width: 340, height: 60 },
-  { tipo: 'chao', x: 440, y: SUPERFICIE_CHAO, width: 520, height: 60 },
-  { tipo: 'plataforma', x: 120, y: 390, width: 110, height: 20 },
-  { tipo: 'plataforma', x: 270, y: 310, width: 110, height: 20 },
+  { tipo: 'chao', x: 660, y: SUPERFICIE_CHAO, width: 520, height: 60 },
+  // Sem plataformas sobre o primeiro vão: o jogador precisa passar pela pergunta da ponte.
 
   // Bloco suspenso: deixa 50 px livres até o chão, o que só permite passar agachado.
-  { tipo: 'teto', x: 620, y: 330, width: 160, height: 100 },
+  { tipo: 'teto', x: 840, y: 330, width: 160, height: 100 },
 
   // Degrau baixo: alto o bastante para exigir o pulo, baixo o bastante para ser vencido.
-  { tipo: 'parede', x: 860, y: 400, width: 40, height: 80 },
+  { tipo: 'parede', x: 1080, y: 400, width: 40, height: 80 },
 
   // --- Escadaria de plataformas ---
-  { tipo: 'chao', x: 960, y: SUPERFICIE_CHAO, width: 340, height: 60 },
-  { tipo: 'plataforma', x: 1000, y: 390, width: 110, height: 20 },
-  { tipo: 'plataforma', x: 1160, y: 310, width: 110, height: 20 },
-  { tipo: 'plataforma', x: 1320, y: 390, width: 110, height: 20 },
+  { tipo: 'chao', x: 1180, y: SUPERFICIE_CHAO, width: 340, height: 60 },
+  { tipo: 'plataforma', x: 1220, y: 390, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 1380, y: 310, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 1540, y: 390, width: 110, height: 20 },
 
   // --- Chão de cristais e teto baixo ---
-  { tipo: 'chao_cristal', x: 1300, y: SUPERFICIE_CHAO, width: 400, height: 60 },
-  { tipo: 'chao', x: 1800, y: SUPERFICIE_CHAO, width: 500, height: 60 },
-  { tipo: 'teto', x: 1950, y: 330, width: 200, height: 100 },
+  { tipo: 'chao_cristal', x: 1520, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'chao', x: 2020, y: SUPERFICIE_CHAO, width: 500, height: 60 },
+  { tipo: 'teto', x: 2170, y: 330, width: 200, height: 100 },
 
   // --- Trecho final com degraus e paredes baixas ---
-  { tipo: 'chao_cristal', x: 2400, y: SUPERFICIE_CHAO, width: 400, height: 60 },
-  { tipo: 'plataforma', x: 2500, y: 390, width: 110, height: 20 },
-  { tipo: 'plataforma', x: 2650, y: 310, width: 110, height: 20 },
-  { tipo: 'chao', x: 2800, y: SUPERFICIE_CHAO, width: 400, height: 60 },
-  { tipo: 'parede', x: 2900, y: 400, width: 40, height: 80 },
-  { tipo: 'parede', x: 3050, y: 400, width: 40, height: 80 },
+  { tipo: 'chao_cristal', x: 2620, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'plataforma', x: 2720, y: 390, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 2870, y: 310, width: 110, height: 20 },
+  { tipo: 'chao', x: 3020, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'parede', x: 3120, y: 400, width: 40, height: 80 },
 ];
 
 // Vãos com água. O personagem cai neles e volta ao ponto seguro.
+// `desafio` (opcional): pergunta de ponte feita na borda esquerda; acertar constrói a ponte.
 const VAOS_FASE_1 = [
-  { x: 340, y: SUPERFICIE_CHAO, width: 100, height: 60 },
-  { x: 1700, y: SUPERFICIE_CHAO, width: 100, height: 60 },
-  { x: 2300, y: SUPERFICIE_CHAO, width: 100, height: 60 },
+  // Rio largo (320 px): maior que o alcance do pulo (~250 px), só se atravessa pela ponte.
+  { x: 340, y: SUPERFICIE_CHAO, width: 320, height: 60, desafio: 'F1-P1' },
+  { x: 1920, y: SUPERFICIE_CHAO, width: 100, height: 60, desafio: 'F1-P2' },
+  { x: 2520, y: SUPERFICIE_CHAO, width: 100, height: 60 },
 ];
 
 // Plantas distribuídas pelo chão, pelas plataformas e pelo bloco suspenso inicial.
 // superficieY é o topo da superfície em que cada planta fica apoiada.
 const PLANTAS_FASE_1 = [
-  { id: 'planta-2', x: 680, superficieY: 330 },
-  { id: 'planta-4', x: 1820, superficieY: SUPERFICIE_CHAO },
-  { id: 'planta-5', x: 2684, superficieY: 310 },
-  { id: 'planta-6', x: 3120, superficieY: SUPERFICIE_CHAO },
+  { id: 'planta-2', x: 900, superficieY: 330 },
+  { id: 'planta-4', x: 2040, superficieY: SUPERFICIE_CHAO },
+  { id: 'planta-5', x: 2904, superficieY: 310 },
+  // Guarda a saída da fase: a pergunta aparece ao chegar perto.
+  { id: 'planta-6', x: 3340, superficieY: SUPERFICIE_CHAO, desafio: 'F1-M3' },
 ];
 
 // Coletáveis: moedas ficam em caminhos de progressão e corações recompensam
 // a exploração sem permitir ultrapassar o limite inicial de três vidas.
 const MOEDAS_FASE_1 = [
-  { id: 'moeda-1', x: 170, y: 350, coletado: false },
-  { id: 'moeda-2', x: 315, y: 270, coletado: false },
-  { id: 'moeda-3', x: 520, y: 430, coletado: false },
-  { id: 'moeda-4', x: 1045, y: 350, coletado: false },
-  { id: 'moeda-5', x: 1205, y: 270, coletado: false },
-  { id: 'moeda-6', x: 1540, y: 430, coletado: false },
-  { id: 'moeda-7', x: 1880, y: 430, coletado: false },
-  { id: 'moeda-8', x: 2560, y: 350, coletado: false },
-  { id: 'moeda-9', x: 2695, y: 270, coletado: false },
-  { id: 'moeda-10', x: 2950, y: 430, coletado: false },
+  { id: 'moeda-3', x: 740, y: 430, coletado: false },
+  { id: 'moeda-4', x: 1265, y: 350, coletado: false },
+  { id: 'moeda-5', x: 1425, y: 270, coletado: false },
+  { id: 'moeda-6', x: 1760, y: 430, coletado: false },
+  { id: 'moeda-7', x: 2100, y: 430, coletado: false },
+  { id: 'moeda-8', x: 2780, y: 350, coletado: false },
+  { id: 'moeda-9', x: 2915, y: 270, coletado: false },
+  { id: 'moeda-10', x: 3170, y: 430, coletado: false },
 ];
 
+// `desafio`: pergunta feita ao tocar o coração. Acertar recupera a vida; errar faz o coração sumir.
 const VIDAS_FASE_1 = [
-  { id: 'vida-1', x: 2180, y: 448, coletado: false },
-  { id: 'vida-2', x: 2880, y: 448, coletado: false },
+  { id: 'vida-1', x: 2400, y: 448, coletado: false, desafio: 'F1-V1' },
+  { id: 'vida-2', x: 3100, y: 448, coletado: false, desafio: 'F1-V2' },
 ];
 
 const moedaSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif');
@@ -104,25 +104,28 @@ export function limparColetaveis() {
 
 // Campo de patrulha: início e fim delimitam toda a área ocupada pelo robô.
 // Cada campo fica sobre uma superfície contínua, sem invadir paredes ou vãos.
+// `desafio` (opcional): pergunta feita ao chegar perto; acertar desativa o robô.
 const PATRULHAS_FASE_1 = [
   {
     id: 'sentinela-1',
-    inicioX: 1535,
-    fimX: 1645,
+    desafio: 'F1-M1',
+    inicioX: 1755,
+    fimX: 1865,
     superficieY: SUPERFICIE_CHAO,
     velocidade: 80,
   },
   {
     id: 'sentinela-2',
-    inicioX: 1008,
-    fimX: 1102,
+    inicioX: 1228,
+    fimX: 1322,
     superficieY: 390,
     velocidade: 65,
   },
   {
     id: 'sentinela-4',
-    inicioX: 2785,
-    fimX: 2870,
+    desafio: 'F1-M2',
+    inicioX: 3005,
+    fimX: 3090,
     superficieY: SUPERFICIE_CHAO,
     velocidade: 90,
   },
@@ -143,22 +146,22 @@ const CHECKPOINTS_FASE_1 = [
   },
   {
     id: 'cp2',
-    x: 500, y: 416, width: 32, height: 64,
-    posicaoSegura: { x: 495, y: 414 },
+    x: 720, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 715, y: 414 },
     totem: 'obelisco',
     ativo: false,
   },
   {
     id: 'cp3',
-    x: 1480, y: 416, width: 32, height: 64,
-    posicaoSegura: { x: 1475, y: 414 },
+    x: 1700, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 1695, y: 414 },
     totem: 'terminal',
     ativo: false,
   },
   {
     id: 'cp4',
-    x: 2420, y: 416, width: 32, height: 64,
-    posicaoSegura: { x: 2415, y: 414 },
+    x: 2640, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 2635, y: 414 },
     totem: 'antena',
     ativo: false,
   },
@@ -202,14 +205,15 @@ const CHECKPOINTS_FASE_2 = [
 
 /**
  * Fases do jogo, na ordem. A meta é o ponto de chegada: tocar nela conclui a fase.
- * `texto` é a mensagem da tela do nível, antes da partida.
+ * `titulo` (opcional) e `texto` aparecem na caixa de texto da tela do nível, antes da partida.
  */
 const FASES = [
   {
     nome: 'Nível 01',
     subtitulo: 'Byte',
-    texto: 'Texto de exemplo: o modo de ensino deste nível ainda não foi implementado.',
-    larguraFase: 3200,
+    titulo: 'Laboratório das Variáveis',
+    texto: 'Guardar valores com =, atualizar o que foi guardado e diferenciar números, textos e True/False.',
+    larguraFase: 3420,
     posicaoInicial: { x: 40, y: 414 },
     obstaculos: OBSTACULOS_FASE_1,
     vaos: VAOS_FASE_1,
@@ -218,7 +222,7 @@ const FASES = [
     moedas: MOEDAS_FASE_1,
     vidasItens: VIDAS_FASE_1,
     patrulhas: PATRULHAS_FASE_1,
-    meta: { x: 3120, y: 416, width: 32, height: 64 },
+    meta: { x: 3340, y: 416, width: 32, height: 64 },
   },
   {
     nome: 'Nível 02',
@@ -238,15 +242,16 @@ const FASES = [
 ];
 
 /** Nome e texto de cada fase, para as telas de níveis e de início. */
-export const infoFases = FASES.map(({ nome, subtitulo, texto }) => ({ nome, subtitulo, texto }));
+export const infoFases = FASES.map(({ nome, subtitulo, titulo, texto }) => ({ nome, subtitulo, titulo, texto }));
 export const quantidadeFases = FASES.length;
 
 /** Carrega a fase de índice `indice` (0 = primeira): cenário, vãos, checkpoints, meta e início. */
 export function carregarFase(indice) {
   const fase = FASES[indice];
   indiceFase = indice;
-  obstaculos = fase.obstaculos;
-  vaos = fase.vaos;
+  // Cópias: as pontes construídas durante a partida não alteram o desenho original da fase.
+  obstaculos = [...fase.obstaculos];
+  vaos = fase.vaos.map((vao) => ({ ...vao, ponte: false, desafioFeito: false }));
   checkpoints = fase.checkpoints.map((checkpoint) => ({
     ...checkpoint,
     posicaoSegura: { ...checkpoint.posicaoSegura },
@@ -267,13 +272,45 @@ export function indiceFaseAtual() {
   return indiceFase;
 }
 
-/** Verdadeiro quando o personagem toca a meta da fase. */
+/**
+ * Verdadeiro quando o personagem alcança a meta da fase. Vale em qualquer altura: quem pula por cima
+ * da antena também conclui, em vez de passar dela e cair no fim do mapa.
+ */
 export function verificarMeta(player) {
-  const meta = metaAtual;
-  return player.x < meta.x + meta.width
-    && player.x + player.largura > meta.x
-    && player.y < meta.y + meta.height
-    && player.y + player.altura > meta.y;
+  return player.x + player.largura > metaAtual.x;
+}
+
+// Distância antes da borda do vão em que a pergunta de ponte aparece.
+const ALCANCE_DESAFIO_PONTE = 50;
+
+// Altura acima do chão em que a pergunta ainda aparece: pega também quem tenta pular o vão.
+const ALTURA_DESAFIO_PONTE = 120;
+
+/**
+ * Vão com desafio ainda não feito, cuja borda esquerda o personagem alcançou, andando ou pulando.
+ * Devolve o vão, ou null.
+ */
+export function verificarDesafioPonte(player) {
+  const pes = player.y + player.altura;
+  const direita = player.x + player.largura;
+  return vaos.find((vao) => vao.desafio && !vao.desafioFeito
+    && pes <= vao.y + 2 && pes > vao.y - ALTURA_DESAFIO_PONTE
+    && direita > vao.x - ALCANCE_DESAFIO_PONTE && direita <= vao.x + 2) ?? null;
+}
+
+/** Cobre o vão com uma ponte sólida. */
+export function construirPonte(vao) {
+  vao.ponte = true;
+  obstaculos.push({ tipo: 'ponte', x: vao.x, y: vao.y, width: vao.width, height: 20 });
+}
+
+/** Reinício da fase: desfaz as pontes e volta a perguntar nos vãos. */
+export function limparPontes() {
+  obstaculos = obstaculos.filter((obstaculo) => obstaculo.tipo !== 'ponte');
+  for (const vao of vaos) {
+    vao.ponte = false;
+    vao.desafioFeito = false;
+  }
 }
 
 /** Posição inicial da fase. Devolve uma copia para ninguém alterar o original. */
@@ -360,6 +397,7 @@ const CORES = {
   plataforma: '#6d6875',
   parede: '#9a031e',
   teto: '#5f0f40',
+  ponte: '#6b7280',
 };
 
 // Peças do pacote pedacos_de_chao_pacote. Tamanho nativo: 256 × 80.
@@ -375,6 +413,9 @@ const pecaCristal = new Image();
 pecaCristal.src = `${PASTA_PECAS}chao_cristais_256x80.png`;
 const pecaAgua = new Image();
 pecaAgua.src = `${PASTA_PECAS}chao_agua_256x80.png`;
+// Mesma peça de água, com a ponte por cima: usada nos vãos em que o desafio foi resolvido.
+const pecaPonte = new Image();
+pecaPonte.src = `${PASTA_PECAS}chao_ponte_256x80.png`;
 
 // Plataformas e totens do pacote plataformas_totens_pacote.
 // A plataforma terra (96 × 24) é esticada até a largura da colisão. Cada totem tem a versão
@@ -500,18 +541,41 @@ function desenharTrechoChao(ctx, obstaculo, peca, limiteInferior) {
   ctx.restore();
 }
 
-/** Água do vão, com a coluna de água centralizada no meio do vão. */
+// Colunas das peças de água e de ponte, em pixels nativos: a borda de cada margem e um trecho do meio
+// que se repete para cobrir vãos de qualquer largura. O trecho de 48 px mantém os postes da ponte a cada 16 px.
+const COLUNAS_AGUA = { esquerda: [92, 100], meio: [100, 148], direita: [156, 164] };
+const COLUNAS_PONTE = { esquerda: [86, 100], meio: [100, 148], direita: [156, 170] };
+// Altura da peça (80) e faixa de terra/água repetida abaixo dela (linhas 48 a 80).
+const ALTURA_PECA = 80;
+
+/** Água (ou ponte) do vão: margens nas bordas e o meio repetido até cobrir toda a largura. */
 function desenharVao(ctx, vao, limiteInferior) {
-  const centro = vao.x + vao.width / 2;
+  const ponte = vao.ponte && pecaCarregada(pecaPonte);
+  const peca = ponte ? pecaPonte : pecaAgua;
+  const colunas = ponte ? COLUNAS_PONTE : COLUNAS_AGUA;
+  const topo = vao.y - SUPERFICIE_PECA;
+  const fim = vao.x + vao.width;
+
+  // Desenha as colunas [inicio, final) da peça em x, e a faixa de baixo repetida até o limite inferior.
+  const coluna = ([inicio, final], x, largura = final - inicio) => {
+    ctx.drawImage(peca, inicio, 0, largura, ALTURA_PECA, x, topo, largura, ALTURA_PECA);
+    for (let y = topo + ALTURA_PECA; y < limiteInferior; y += 32) {
+      ctx.drawImage(pecaAgua, inicio, 48, largura, 32, x, y, largura, 32);
+    }
+  };
+
   ctx.save();
   ctx.beginPath();
-  ctx.rect(vao.x, vao.y, vao.width, Math.max(vao.height, limiteInferior - vao.y));
+  ctx.rect(vao.x, topo, vao.width, Math.max(ALTURA_PECA, limiteInferior - topo));
   ctx.clip();
-  // Na peça de água, a coluna de água fica no centro horizontal (x = 128).
-  ctx.drawImage(pecaAgua, centro - LARGURA_PECA / 2, vao.y - SUPERFICIE_PECA);
-  for (let y = vao.y + vao.height; y < limiteInferior; y += 32) {
-    ctx.drawImage(pecaAgua, 0, 48, LARGURA_PECA, 32, centro - LARGURA_PECA / 2, y, LARGURA_PECA, 32);
+  const larguraEsquerda = colunas.esquerda[1] - colunas.esquerda[0];
+  const larguraDireita = colunas.direita[1] - colunas.direita[0];
+  const larguraMeio = colunas.meio[1] - colunas.meio[0];
+  for (let x = vao.x + larguraEsquerda; x < fim - larguraDireita; x += larguraMeio) {
+    coluna(colunas.meio, x, Math.min(larguraMeio, fim - larguraDireita - x));
   }
+  coluna(colunas.esquerda, vao.x);
+  coluna(colunas.direita, fim - larguraDireita);
   ctx.restore();
 }
 
@@ -529,6 +593,9 @@ function desenharMundo(ctx, limiteInferior) {
   }
 
   for (const obstaculo of obstaculos) {
+    // A ponte é desenhada junto com o vão, em desenharVao.
+    if (obstaculo.tipo === 'ponte' && pecasCarregadas) continue;
+
     if (obstaculo.tipo === 'plataforma' && pecaCarregada(plataformaTerra)) {
       desenharPlataforma(ctx, obstaculo);
       continue;

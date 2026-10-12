@@ -771,12 +771,15 @@ body {
 }
 
 /* Rótulo "NÍVEL 0X" da tela do nível: cobre o rótulo fixo da arte, com o número da fase. */
+/* A largura acompanha o texto (ex.: Nível 1 - Laboratório das Variáveis), com a aba original como mínimo. */
 .rotulo-nivel {
   position: absolute;
   left: 8.4%;
   top: 4.9%;
-  width: 17.3%;
+  min-width: 17.3%;
   height: 6.3%;
+  padding: 0 1.5cqw;
+  white-space: nowrap;
   margin: 0;
   display: flex;
   align-items: center;
@@ -808,4 +811,172 @@ body {
   width: min(100%, calc(100vh * 16 / 9));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
+}
+
+/* Desafio do banco de perguntas: painel sobre o jogo parado, no estilo do terminal. */
+.tela-desafio {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  overflow-y: auto;
+  background-color: rgb(4 6 12 / 80%);
+}
+
+.tela-desafio[hidden] {
+  display: none;
+}
+
+.painel-desafio {
+  display: grid;
+  gap: clamp(8px, 1.8vh, 16px);
+  width: min(640px, 100%);
+  padding: clamp(14px, 3vh, 28px);
+  border: 3px solid #28384f;
+  border-radius: 4px;
+  background-color: #0b1424;
+  box-shadow: 0 8px 0 #04060c, 0 20px 60px rgb(0 0 0 / 45%);
+  color: #e1e8f5;
+}
+
+.painel-desafio p,
+.painel-desafio h2,
+.painel-desafio pre {
+  margin: 0;
+}
+
+.categoria-desafio {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(8px, 1.6vh, 11px);
+  color: #3ce6ff;
+  text-transform: uppercase;
+}
+
+.titulo-desafio {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(11px, 2.4vh, 16px);
+  line-height: 1.5;
+  color: #ffd646;
+  text-shadow: 2px 2px 0 #04060c;
+}
+
+.enunciado-desafio {
+  font-size: clamp(14px, 2.6vh, 18px);
+  line-height: 1.45;
+}
+
+.codigo-desafio {
+  padding: clamp(8px, 1.6vh, 14px) 16px;
+  border: 1px solid #28384f;
+  background-color: #04060c;
+  font-family: 'CozetteTerm', ui-monospace, monospace;
+  font-size: clamp(16px, 3.2vh, 24px);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  color: #e1e8f5;
+}
+
+.codigo-desafio .lacuna {
+  color: #ffa046;
+}
+
+.codigo-desafio .lacuna.preenchida {
+  color: #5aff8c;
+}
+
+.alternativas-desafio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.alternativa-desafio,
+.botao-continuar-desafio {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 2px solid #28384f;
+  border-radius: 4px;
+  background-color: #1b2a44;
+  color: #e1e8f5;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.alternativa-desafio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.alternativa-desafio .letra {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: #ffd646;
+}
+
+.alternativa-desafio code {
+  font-family: 'CozetteTerm', ui-monospace, monospace;
+  font-size: clamp(16px, 3vh, 22px);
+}
+
+.alternativa-desafio:hover:not(:disabled) {
+  border-color: #3ce6ff;
+}
+
+.alternativa-desafio:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.alternativa-desafio.certa {
+  border-color: #5aff8c;
+  background-color: #12371f;
+  opacity: 1;
+}
+
+.alternativa-desafio.errada {
+  border-color: #ff606e;
+  background-color: #3d151b;
+  opacity: 1;
+}
+
+.alternativa-desafio:focus-visible,
+.botao-continuar-desafio:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 3px;
+}
+
+.resultado-desafio {
+  display: grid;
+  gap: 4px;
+  font-size: clamp(13px, 2.4vh, 16px);
+  line-height: 1.45;
+}
+
+.resultado-desafio[hidden] {
+  display: none;
+}
+
+.resultado-desafio.acerto strong {
+  color: #5aff8c;
+}
+
+.resultado-desafio.erro strong {
+  color: #ff606e;
+}
+
+.botao-continuar-desafio {
+  justify-self: end;
+  padding-inline: 24px;
+  border-color: #5aff8c;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+}
+
+.botao-continuar-desafio[hidden] {
+  display: none;
 }

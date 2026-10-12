@@ -23,6 +23,9 @@ import {
   infoFases,
   quantidadeFases,
   checkpoints,
+  verificarDesafioPonte,
+  construirPonte,
+  limparPontes,
 } from './level.js';
 import { resolverColisoes, verificarEspaco, verificarColetaveis } from './collisions.js';
 import { registrarEfeito, registrarGanhoMusica, removerGanhoMusica, definirVolume } from './audio.js';
@@ -30,6 +33,9 @@ import { calcularVisao, ajustarCanvas } from './viewport.js';
 import { criarTelaNiveis } from './telaNiveis.js';
 import { iniciarDemoTitulo } from './demoTitulo.js';
 import { criarTerminal, carregarMissoes } from './terminal.js';
+import { criarJanelaDesafio } from './desafio.js';
+import { BANCO_DESAFIOS } from './bancoDesafios.js';
+import { Poder } from './poder.js';
 
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
@@ -150,6 +156,101 @@ function fecharTerminal() {
   limparAcoes();
   controleDoJogo.start();
   atualizarInterface();
+}
+
+// Desafios do banco de perguntas: abrem nos corações, monstros e vãos que têm um id de desafio.
+const telaDesafio = document.getElementById('tela-desafio');
+const janelaDesafio = criarJanelaDesafio(telaDesafio);
+// Poderes </> em voo, lançados pelo Byte nos monstros cujas perguntas ele acertou.
+let poderes = [];
+const somAcertoPoder = new Audio('./assets/sound/bannythecoolio-impactful-damage-425132.mp3');
+registrarEfeito(somAcertoPoder, 0.6);
+
+/** Lança o poder do Byte no monstro: ele para na hora e é derrotado quando o poder chega. */
+function lancarPoder(monstro) {
+  monstro.marcarAlvo();
+  player.olhandoDireita = monstro.centro().x >= player.x + player.largura / 2;
+  poderes.push(new Poder(player, monstro, () => {
+    somAcertoPoder.currentTime = 0;
+    somAcertoPoder.play().catch((erro) => console.error('Falha ao tocar o som do poder:', erro));
+  }));
+}
+
+/**
+ * Para o jogo e mostra a pergunta `id`. onFim(acertou) aplica a consequência quando o jogador continua.
+ * Devolve false se o id não estiver no banco: o elemento segue sem pergunta.
+ */
+function abrirDesafio(id, { textoAcerto, textoErro, insistir, onFim }) {
+  const desafio = BANCO_DESAFIOS[id];
+  if (!desafio) {
+    console.error(`Desafio ${id} não encontrado em bancoDesafios.js`);
+    return false;
+  }
+  estadoDaPartida = 'desafio';
+  controleDoJogo.stop();
+  limparAcoes();
+  atualizarInterface();
+  janelaDesafio.abrir(id, desafio, {
+    textoAcerto,
+    textoErro,
+    insistir,
+    onFim: (acertou) => {
+      estadoDaPartida = 'jogando';
+      limparAcoes();
+      onFim(acertou);
+      atualizarInterface();
+      controleDoJogo.start();
+      botaoPausar.focus({ preventScroll: true });
+    },
+  });
+  return true;
+}
+
+/** Coração com desafio: acertar recupera a vida; errar deixa o coração perdido (já foi coletado). */
+function desafioDeVida(item) {
+  return abrirDesafio(item.desafio, {
+    textoAcerto: player.vidas < 3 ? 'Você recuperou uma vida.' : 'Suas vidas já estão completas.',
+    textoErro: 'O coração se perdeu.',
+    onFim: (acertou) => {
+      if (acertou) player.vidas = Math.min(3, player.vidas + 1);
+      mensagem = acertou ? 'Coração coletado' : 'Coração perdido';
+      mensagemAte = performance.now() + 1500;
+    },
+  });
+}
+
+/** Verifica monstros e vãos com desafio perto do Byte. Devolve true se abriu uma pergunta. */
+function verificarDesafiosDoCaminho() {
+  const monstro = inimigos.find((inimigo) => inimigo.pedeDesafio(player));
+  if (monstro) {
+    monstro.desafioFeito = true;
+    const robo = monstro instanceof Sentinela;
+    return abrirDesafio(monstro.desafio, {
+      textoAcerto: `O Byte lança o poder e derrota ${robo ? 'o robô' : 'a planta'}.`,
+      textoErro: robo ? 'O robô continua patrulhando.' : 'A planta continua no caminho.',
+      onFim: (acertou) => {
+        if (acertou) lancarPoder(monstro);
+        mensagem = acertou ? 'Poder lançado!' : `Cuidado com ${robo ? 'o sentinela' : 'a planta'}`;
+        mensagemAte = performance.now() + 1500;
+      },
+    });
+  }
+
+  const vao = verificarDesafioPonte(player);
+  if (vao) {
+    vao.desafioFeito = true;
+    // Sem a ponte a fase não continua: o jogador tenta até acertar.
+    return abrirDesafio(vao.desafio, {
+      textoAcerto: 'A ponte foi construída.',
+      insistir: true,
+      onFim: () => {
+        construirPonte(vao);
+        mensagem = 'Ponte construída';
+        mensagemAte = performance.now() + 1500;
+      },
+    });
+  }
+  return false;
 }
 
 /** Botão ABRIR TERMINAL sobre o totem, em coordenadas de tela (escala da visão). */
@@ -302,6 +403,7 @@ let mensagemAte = 0;
 // - titulo: tela de título, aberta ao carregar o jogo.
 // - inicio: tela inicial, aberta quando as vidas acabam.
 // - jogando, pausado: partida em andamento ou com o menu de pausa aberto.
+// - terminal, desafio: jogo parado com o terminal do totem ou uma pergunta do banco aberta.
 let estadoDaPartida = 'inicio';
 
 function atualizarInterface() {
@@ -370,7 +472,9 @@ function reposicionar(ponto) {
 function prepararNovaPartida() {
   limparCheckpoints();
   limparColetaveis();
+  limparPontes();
   inimigos = criarInimigos();
+  poderes = [];
   const pontoInicial = obterPosicaoInicial();
   player.vidas = 3;
   player.tempoInvulneravel = 0;
@@ -407,7 +511,11 @@ function mostrarTelaInicio() {
   telaNiveis.hidden = true;
   seletorNiveis.esconder();
   const { nome, texto } = textosDoNivel(indiceFaseAtual());
-  rotuloInicio.textContent = nome.toUpperCase();
+  // Aba superior esquerda: "Nível 1 - Laboratório das Variáveis", ou só "Nível 1" sem título.
+  // Fica sem maiúsculas forçadas: a Press Start 2P desenha Í e Ó maiúsculos como minúsculos.
+  const tituloFase = infoFases[indiceFaseAtual()]?.titulo;
+  const nomeNivel = nome.charAt(0) + nome.slice(1).toLowerCase();
+  rotuloInicio.textContent = tituloFase ? `${nomeNivel} - ${tituloFase}` : nomeNivel;
   textoInicio.textContent = texto;
   telaInicio.hidden = false;
   atualizarInterface();
@@ -550,6 +658,8 @@ const dependenciasDoJogo = {
     player.atualizar(deltaTime, verificarEspaco, LIMITE_QUEDA, aguardarEscolhaDoJogador);
     if (estadoDaPartida === 'jogando') {
       inimigos.forEach((inimigo) => inimigo.atualizar(deltaTime));
+      poderes.forEach((poder) => poder.atualizar(deltaTime));
+      poderes = poderes.filter((poder) => !poder.terminou);
     }
   },
 
@@ -561,6 +671,9 @@ const dependenciasDoJogo = {
     totemProximo = checkpoints.find((c) => c.ativo && c.missao
       && player.x < c.x + c.width && player.x + player.largura > c.x
       && player.y < c.y + c.height && player.y + player.altura > c.y) ?? null;
+
+    // As perguntas vêm antes da meta: a planta que guarda a saída sempre pergunta antes de a fase acabar.
+    if (verificarDesafiosDoCaminho()) return;
 
     if (verificarMeta(player)) {
       concluirFase();
@@ -581,6 +694,7 @@ const dependenciasDoJogo = {
     }
 
     const coletavel = verificarColetaveis(player);
+    if (coletavel?.desafio && desafioDeVida(coletavel)) return;
     if (coletavel) {
       if (coletavel.id.startsWith('vida-')) {
         player.vidas = Math.min(3, player.vidas + 1);
@@ -615,6 +729,7 @@ const dependenciasDoJogo = {
     aplicarCameraMundo(ctx, cameraX, visao, cameraY);
     inimigos.forEach((inimigo) => inimigo.desenhar(ctx));
     player.desenhar(ctx);
+    poderes.forEach((poder) => poder.desenhar(ctx));
     ctx.restore();
 
     desenharBotaoTerminal(ctx, cameraX, cameraY);
@@ -746,6 +861,12 @@ window.addEventListener('keydown', (evento) => {
   // Com o painel de som aberto, Esc só fecha o painel: não pausa nem retoma o jogo.
   if (!menuSom.hidden) {
     if (evento.key === 'Escape') fecharMenuSom();
+    return;
+  }
+
+  // Desafio aberto: só as teclas da pergunta valem (A/B/C, setas, Enter e Esc depois da resposta).
+  if (estadoDaPartida === 'desafio') {
+    janelaDesafio.tratarTecla(evento);
     return;
   }
 
