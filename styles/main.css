@@ -18,10 +18,17 @@ body {
 }
 
 .game-shell {
+  --control-size: clamp(48px, 12dvh, 72px);
   position: relative;
   width: 100%;
   height: 100vh;
   height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .orientation-prompt {
@@ -36,6 +43,8 @@ body {
   background: #172a3d;
   box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
   text-align: center;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .orientation-card h1,
@@ -96,13 +105,12 @@ body {
   min-width: 0;
 }
 
-/* Só a exibição muda de tamanho: a resolução interna permanece 960 × 540. */
+/* A resolução interna acompanha a janela; a câmera preserva a proporção do mundo. */
 #game-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
+  image-rendering: pixelated;
   background-color: #dfe7fd;
 }
 
@@ -133,8 +141,10 @@ body {
   z-index: 2;
   display: grid;
   place-content: center;
+  align-content: safe center;
   gap: 8px;
-  padding: 12px;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  overflow-y: auto;
   background-color: rgb(32 36 43 / 90%);
   text-align: center;
 }
@@ -155,9 +165,29 @@ body {
   outline-offset: 3px;
 }
 
-.pause-button[hidden],
-.pause-menu[hidden] {
-  display: none;
+/* Painel de som: fica acima da tela inicial (z-index 3) e opaco, para não mostrar os botões de trás. */
+.menu-som {
+  z-index: 4;
+  background-color: #20242b;
+}
+
+.menu-som .linha-volume {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 12px;
+  width: min(86vw, 360px);
+  margin: 0 auto;
+  text-align: left;
+}
+
+.menu-som input[type='range'] {
+  width: 100%;
+  accent-color: #38bdf8;
+}
+
+.menu-som output {
+  text-align: right;
 }
 
 /* Tela inicial: cobre o jogo inteiro. O palco mantém a proporção 16:9 da arte,
@@ -171,13 +201,10 @@ body {
   background-color: #0b1f33;
 }
 
-.tela-inicio[hidden] {
-  display: none;
-}
-
 .tela-inicio-palco {
   position: relative;
   width: min(100%, calc(100vh * 16 / 9));
+  width: min(100%, calc(100dvh * 16 / 9));
   aspect-ratio: 16 / 9;
   overflow: hidden;
   container-type: inline-size;
@@ -210,13 +237,14 @@ body {
   height: 32.68%;
   display: grid;
   place-items: center;
-  padding: 4cqw;
+  padding: clamp(10px, 3cqw, 40px);
   box-sizing: border-box;
   text-align: center;
   color: #7dd3fc;
   font-family: 'Press Start 2P', monospace;
-  font-size: 1.5cqw;
-  line-height: 1.9;
+  font-size: clamp(10px, 1.5cqw, 22px);
+  line-height: 1.7;
+  overflow-y: auto;
 }
 
 .tela-inicio-texto p {
@@ -233,7 +261,8 @@ body {
   border-radius: 0;
   color: #ffffff;
   font-family: 'Press Start 2P', monospace;
-  font-size: 1.8cqw;
+  font-size: clamp(11px, 1.8cqw, 26px);
+  min-height: 44px;
   text-shadow: 3px 3px 0 #0b0f1a;
   cursor: pointer;
   box-shadow: 0 8px 0 #0b0f1a;
@@ -304,10 +333,10 @@ body {
 }
 
 .mobile-controls button {
-  min-width: 56px;
-  min-height: 56px;
-  width: 56px;
-  height: 56px;
+  min-width: 48px;
+  min-height: 48px;
+  width: var(--control-size);
+  height: var(--control-size);
   padding: 0;
   border: none;
   background-color: transparent;
@@ -321,6 +350,8 @@ body {
   pointer-events: auto;
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
+  opacity: 0.88;
 }
 
 /* Sprites dos botões de toque (normal/pressionado). */
@@ -328,7 +359,8 @@ body {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/04_esquerda_normal.png);
 }
 
-.botao-esquerda:active {
+.botao-esquerda:active,
+.botao-esquerda.pressionado {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/03_esquerda_pressionado.png);
 }
 
@@ -336,7 +368,8 @@ body {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/02_direita_normal.png);
 }
 
-.botao-direita:active {
+.botao-direita:active,
+.botao-direita.pressionado {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/01_direita_pressionado.png);
 }
 
@@ -352,7 +385,8 @@ body {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/06_abaixar_normal.png);
 }
 
-.botao-agachar:active {
+.botao-agachar:active,
+.botao-agachar.pressionado {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/05_abaixar_pressionado.png);
 }
 
@@ -361,16 +395,9 @@ body {
   cursor: not-allowed;
 }
 
-/* Em pé, aproveita o céu livre acima da fase para não cobrir o personagem. */
-@media (orientation: portrait) {
-  .mobile-controls {
-    bottom: calc(56.25vw + max(12px, env(safe-area-inset-bottom)));
-  }
-}
-
-@media (orientation: portrait) and (max-width: 800px) {
+@media (orientation: portrait) and (pointer: coarse) {
   .orientation-prompt {
-    position: fixed;
+    position: absolute;
     inset: 0;
     z-index: 10;
     display: grid;
@@ -388,8 +415,565 @@ body {
 }
 
 @media (max-width: 380px) {
-  .mobile-controls button {
-    min-width: 0;
-    padding-inline: 6px;
+  .controls-layout,
+  .movement-controls,
+  .action-controls {
+    gap: 4px;
   }
+}
+
+.game-hud {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  z-index: 1;
+  max-width: calc(100% - 128px);
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.hud-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-message {
+  padding: 8px 12px;
+  border: 1px solid #64748b;
+  border-radius: 8px;
+  background: rgb(11 31 51 / 90%);
+  color: #f3f4f6;
+  margin: 0;
+  font-size: clamp(12px, 2vw, 16px);
+}
+
+#hud-vidas,
+#hud-moedas {
+  display: block;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+#hud-vidas {
+  width: 114px;
+}
+
+#hud-moedas {
+  width: 74px;
+}
+
+@media (max-height: 360px) and (orientation: landscape) {
+  .pause-menu {
+    gap: 4px;
+  }
+
+  .pause-menu button {
+    padding-block: 6px;
+  }
+}
+
+/* Tela de título: montada sobre a arte do pacote tela_titulo_pacote.
+   Todas as medidas são porcentagens ou cqw da área 16:9, como na tela inicial. */
+.tela-titulo {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  background-color: #0b1f33;
+  overflow: hidden;
+}
+
+.tela-titulo[hidden] {
+  display: none;
+}
+
+.tela-titulo-palco {
+  position: relative;
+  width: min(100%, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  container-type: inline-size;
+  image-rendering: pixelated;
+}
+
+/* Camadas do cenário, do fundo para a frente. As fontes 4x das peças têm 1024 px de largura
+   no quadro de 1920 px, por isso cada camada usa 53,33cqw de largura. */
+.titulo-camada {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-repeat: repeat-x;
+  image-rendering: pixelated;
+}
+
+.titulo-ceu {
+  inset: 0;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_ceu_com_sol_480x270.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Nuvens: a faixa de 128 × 120 em 4x, andando devagar para a esquerda. */
+.titulo-nuvens {
+  top: 0;
+  height: 44%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_nuvens_tile_128x120.png');
+  background-size: 26.67cqw auto;
+  background-position: 0 0;
+  animation: deriva-nuvens-titulo 90s linear infinite;
+}
+
+@keyframes deriva-nuvens-titulo {
+  from { background-position: 0 0; }
+  to { background-position: -26.67cqw 0; }
+}
+
+.titulo-montanhas {
+  bottom: 29.63%;
+  height: 88.89%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/fundo_pecas_pacote/fundo_distante_montanhas_256x240_4x.png');
+  background-size: 53.33cqw 100%;
+  background-position: left bottom;
+}
+
+.titulo-cidade {
+  bottom: 29.63%;
+  height: 88.89%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/fundo_pecas_pacote/fundo_distante_cidade_256x240_4x.png');
+  background-size: 53.33cqw 100%;
+  background-position: left bottom;
+}
+
+.titulo-floresta {
+  bottom: 29.63%;
+  height: 88.89%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/fundo_pecas_pacote/fundo_colinas_floresta_256x240_4x.png');
+  background-size: 53.33cqw 100%;
+  background-position: left bottom;
+}
+
+/* Chão: a peça 1024 × 320 (4x) fica encostada na parte de baixo da tela. */
+.titulo-chao {
+  bottom: 0;
+  height: 29.63%;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/pedacos_de_chao_pacote/chao_normal_256x80_4x.png');
+  background-size: 53.33cqw 100%;
+  background-position: left bottom;
+}
+
+/* Cena de demonstração do título: canvas 480 × 270 ampliado com pixel nítido. */
+.demo-titulo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.titulo-byte {
+  position: absolute;
+  left: 9.4%;
+  bottom: 21.3%;
+  width: 8.33%;
+  image-rendering: pixelated;
+}
+
+.titulo-logo {
+  position: absolute;
+  left: 20.05%;
+  top: 1.5%;
+  width: 59.4%;
+  image-rendering: pixelated;
+}
+
+.titulo-menu {
+  position: absolute;
+  left: 34.1%;
+  top: 41.2%;
+  width: 31.8%;
+  display: grid;
+  gap: 1.2%;
+}
+
+/* Botões com as artes de 624 × 128 (4x): normal, selecionado e pressionado. */
+.botao-titulo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 624 / 128;
+  padding: 0;
+  border: 0;
+  background: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_jogar_normal_156x32_4x.png') center / 100% 100% no-repeat;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#botao-titulo-como {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_como_jogar_normal_156x32_4x.png');
+}
+
+#botao-titulo-sobre {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_sobre_normal_156x32_4x.png');
+}
+
+.botao-titulo.selecionado {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_jogar_selecionado_156x32_4x.png');
+}
+
+#botao-titulo-como.selecionado {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_como_jogar_selecionado_156x32_4x.png');
+}
+
+#botao-titulo-sobre.selecionado {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_sobre_selecionado_156x32_4x.png');
+}
+
+.botao-titulo:active {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_jogar_pressionado_156x32_4x.png');
+}
+
+#botao-titulo-como:active {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_como_jogar_pressionado_156x32_4x.png');
+}
+
+#botao-titulo-sobre:active {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_sobre_pressionado_156x32_4x.png');
+}
+
+.botao-titulo:focus-visible {
+  outline: none;
+}
+
+/* Cursor animado (2 quadros de 10 × 11), em escala 3x. A posição vertical é ajustada pelo script. */
+.titulo-cursor {
+  position: absolute;
+  left: 30.5%;
+  width: 1.5625%;
+  aspect-ratio: 10 / 11;
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_cursor_2f_10x11.png');
+  background-size: 200% 100%;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  animation: pisca-cursor-titulo 0.6s steps(2) infinite;
+  transition: top 0.12s steps(3);
+}
+
+@keyframes pisca-cursor-titulo {
+  from { background-position: 0 0; }
+  to { background-position: 100% 0; }
+}
+
+.titulo-dica,
+.titulo-versao {
+  position: absolute;
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  color: #f9fafb;
+  text-shadow: 2px 2px 0 #0b0f1a;
+}
+
+.titulo-dica {
+  left: 0;
+  right: 0;
+  bottom: 4.5%;
+  text-align: center;
+  font-size: 1.4cqw;
+  line-height: 1.6;
+}
+
+.titulo-versao {
+  right: 2%;
+  bottom: 1.5%;
+  font-size: 1.2cqw;
+  color: #d6e4f0;
+}
+
+/* Painel de ajuda e sobre: aberto pelos botões Como jogar e Sobre. */
+.titulo-painel {
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  top: 24%;
+  z-index: 7;
+  display: grid;
+  gap: 2.5cqw;
+  padding: 2.5cqw;
+  border: 2px solid #64748b;
+  border-radius: 12px;
+  background-color: #20242b;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
+  font-family: 'Press Start 2P', monospace;
+  color: #f9fafb;
+}
+
+.titulo-painel[hidden] {
+  display: none;
+}
+
+.titulo-painel h2 {
+  margin: 0;
+  font-size: 2.2cqw;
+  text-align: center;
+  color: #7dd3fc;
+}
+
+.titulo-painel-texto p {
+  margin: 0 0 1.2cqw;
+  font-size: 1.2cqw;
+  line-height: 1.9;
+}
+
+.botao-painel {
+  justify-self: center;
+  min-height: 44px;
+  padding: 10px 24px;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  background-color: #29313d;
+  color: #f9fafb;
+  font: inherit;
+  font-size: 1.2cqw;
+  cursor: pointer;
+}
+
+.botao-painel:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 3px;
+}
+
+/* Tela de níveis: canvas 480 × 270 ampliado com pixel nítido. */
+.tela-niveis {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  background-color: #0b1f33;
+  overflow: hidden;
+}
+
+.tela-niveis[hidden] {
+  display: none;
+}
+
+.canvas-niveis {
+  display: block;
+  width: min(100%, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  image-rendering: pixelated;
+}
+
+/* Rótulo "NÍVEL 0X" da tela do nível: cobre o rótulo fixo da arte, com o número da fase. */
+/* A largura acompanha o texto (ex.: Nível 1 - Laboratório das Variáveis), com a aba original como mínimo. */
+.rotulo-nivel {
+  position: absolute;
+  left: 8.4%;
+  top: 4.9%;
+  min-width: 17.3%;
+  height: 6.3%;
+  padding: 0 1.5cqw;
+  white-space: nowrap;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 3px solid #7dd3fc;
+  background-color: #172a3d;
+  color: #7dd3fc;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.3cqw;
+}
+
+/* Terminal do totem: canvas 480 × 270 ampliado com pixel nítido, sobre o jogo pausado. */
+.tela-terminal {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  background-color: rgb(4 6 12 / 80%);
+}
+
+.tela-terminal[hidden] {
+  display: none;
+}
+
+.canvas-terminal {
+  display: block;
+  width: min(100%, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  image-rendering: pixelated;
+}
+
+/* Desafio do banco de perguntas: painel sobre o jogo parado, no estilo do terminal. */
+.tela-desafio {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  overflow-y: auto;
+  background-color: rgb(4 6 12 / 80%);
+}
+
+.tela-desafio[hidden] {
+  display: none;
+}
+
+.painel-desafio {
+  display: grid;
+  gap: clamp(8px, 1.8vh, 16px);
+  width: min(640px, 100%);
+  padding: clamp(14px, 3vh, 28px);
+  border: 3px solid #28384f;
+  border-radius: 4px;
+  background-color: #0b1424;
+  box-shadow: 0 8px 0 #04060c, 0 20px 60px rgb(0 0 0 / 45%);
+  color: #e1e8f5;
+}
+
+.painel-desafio p,
+.painel-desafio h2,
+.painel-desafio pre {
+  margin: 0;
+}
+
+.categoria-desafio {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(8px, 1.6vh, 11px);
+  color: #3ce6ff;
+  text-transform: uppercase;
+}
+
+.titulo-desafio {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(11px, 2.4vh, 16px);
+  line-height: 1.5;
+  color: #ffd646;
+  text-shadow: 2px 2px 0 #04060c;
+}
+
+.enunciado-desafio {
+  font-size: clamp(14px, 2.6vh, 18px);
+  line-height: 1.45;
+}
+
+.codigo-desafio {
+  padding: clamp(8px, 1.6vh, 14px) 16px;
+  border: 1px solid #28384f;
+  background-color: #04060c;
+  font-family: 'CozetteTerm', ui-monospace, monospace;
+  font-size: clamp(16px, 3.2vh, 24px);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  color: #e1e8f5;
+}
+
+.codigo-desafio .lacuna {
+  color: #ffa046;
+}
+
+.codigo-desafio .lacuna.preenchida {
+  color: #5aff8c;
+}
+
+.alternativas-desafio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.alternativa-desafio,
+.botao-continuar-desafio {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 2px solid #28384f;
+  border-radius: 4px;
+  background-color: #1b2a44;
+  color: #e1e8f5;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.alternativa-desafio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.alternativa-desafio .letra {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: #ffd646;
+}
+
+.alternativa-desafio code {
+  font-family: 'CozetteTerm', ui-monospace, monospace;
+  font-size: clamp(16px, 3vh, 22px);
+}
+
+.alternativa-desafio:hover:not(:disabled) {
+  border-color: #3ce6ff;
+}
+
+.alternativa-desafio:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.alternativa-desafio.certa {
+  border-color: #5aff8c;
+  background-color: #12371f;
+  opacity: 1;
+}
+
+.alternativa-desafio.errada {
+  border-color: #ff606e;
+  background-color: #3d151b;
+  opacity: 1;
+}
+
+.alternativa-desafio:focus-visible,
+.botao-continuar-desafio:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 3px;
+}
+
+.resultado-desafio {
+  display: grid;
+  gap: 4px;
+  font-size: clamp(13px, 2.4vh, 16px);
+  line-height: 1.45;
+}
+
+.resultado-desafio[hidden] {
+  display: none;
+}
+
+.resultado-desafio.acerto strong {
+  color: #5aff8c;
+}
+
+.resultado-desafio.erro strong {
+  color: #ff606e;
+}
+
+.botao-continuar-desafio {
+  justify-self: end;
+  padding-inline: 24px;
+  border-color: #5aff8c;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+}
+
+.botao-continuar-desafio[hidden] {
+  display: none;
 }

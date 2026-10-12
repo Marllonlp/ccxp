@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Base do jogo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,25 +15,37 @@
 </head>
 
 <body>
-  <section id="aviso-orientacao" class="orientation-prompt" aria-labelledby="titulo-orientacao">
-    <div class="orientation-card">
-      <p class="orientation-icon" aria-hidden="true">↻</p>
-      <h1 id="titulo-orientacao">Vire o celular</h1>
-      <p>Para começar o jogo, use a tela na horizontal.</p>
-      <button type="button" id="botao-orientacao">Usar tela horizontal</button>
-    </div>
-  </section>
-
   <main class="game-shell">
+    <section id="aviso-orientacao" class="orientation-prompt" aria-labelledby="titulo-orientacao" role="dialog" aria-modal="true">
+      <div class="orientation-card">
+        <p class="orientation-icon" aria-hidden="true">↻</p>
+        <h1 id="titulo-orientacao">Vire o celular</h1>
+        <p id="texto-orientacao">Para jogar, use a tela na horizontal. Você pode girar o aparelho manualmente.</p>
+        <button type="button" id="botao-orientacao">Usar tela horizontal</button>
+      </div>
+    </section>
+
     <header class="page-header">
       <h1>Base do jogo</h1>
       <p id="game-status" role="status">Carregando a área de teste…</p>
     </header>
 
     <section class="game-area" aria-label="Área de teste do jogo">
-      <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Área de teste com um retângulo vermelho">
+      <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Fase de plataforma com Byte, inimigos e checkpoints">
         Seu navegador não oferece suporte ao Canvas.
       </canvas>
+
+      <div id="game-hud" class="game-hud" hidden>
+        <div class="hud-stats">
+          <div class="hud-lives">
+            <canvas id="hud-vidas" width="114" height="32" role="img" aria-label="3 de 3 vidas"></canvas>
+          </div>
+          <div class="hud-coins">
+            <canvas id="hud-moedas" width="74" height="32" role="img" aria-label="0 de 10 moedas"></canvas>
+          </div>
+        </div>
+        <p id="hud-mensagem" class="hud-message" role="status" hidden></p>
+      </div>
 
       <button type="button" id="botao-pausar" class="pause-button" aria-controls="menu-pausa">
         Pausar
@@ -42,27 +54,98 @@
       <section id="menu-pausa" class="pause-menu" hidden aria-labelledby="titulo-pausa">
         <h2 id="titulo-pausa">Jogo pausado</h2>
         <button type="button" id="botao-retomar">Retomar</button>
+        <button type="button" id="botao-som-pausa" aria-controls="menu-som">Som</button>
         <button type="button" id="botao-reiniciar" disabled>Reiniciar fase</button>
       </section>
 
-      <!-- Tela inicial: aparece ao abrir o jogo e quando as vidas acabam. -->
+      <section id="menu-som" class="pause-menu menu-som" hidden aria-labelledby="titulo-som">
+        <h2 id="titulo-som">Som</h2>
+        <div class="linha-volume">
+          <label for="volume-musica">Música</label>
+          <input type="range" id="volume-musica" min="0" max="100" value="50" />
+          <output id="valor-musica" for="volume-musica">50%</output>
+        </div>
+        <div class="linha-volume">
+          <label for="volume-efeitos">Efeitos</label>
+          <input type="range" id="volume-efeitos" min="0" max="100" value="50" />
+          <output id="valor-efeitos" for="volume-efeitos">50%</output>
+        </div>
+        <button type="button" id="botao-voltar-som">Voltar</button>
+      </section>
+
+      <!-- Tela de título: aparece ao abrir o jogo, antes da primeira partida. -->
+      <section id="tela-titulo" class="tela-titulo" aria-labelledby="titulo-jogo">
+        <div class="tela-titulo-palco">
+          <div class="titulo-camada titulo-ceu"></div>
+          <div class="titulo-camada titulo-nuvens"></div>
+          <div class="titulo-camada titulo-montanhas"></div>
+          <div class="titulo-camada titulo-cidade"></div>
+          <div class="titulo-camada titulo-floresta"></div>
+          <div class="titulo-camada titulo-chao"></div>
+          <canvas id="canvas-demo-titulo" class="demo-titulo" aria-hidden="true"></canvas>
+          <h1 id="titulo-jogo" class="sr-only">As aventuras de Byte</h1>
+          <img class="titulo-logo" src="./assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_logo_308x98_4x.png" alt="" />
+          <div class="titulo-menu" role="group" aria-label="Menu principal">
+            <button type="button" id="botao-titulo-jogar" class="botao-titulo"><span class="sr-only">Jogar</span></button>
+            <button type="button" id="botao-titulo-como" class="botao-titulo"><span class="sr-only">Como jogar</span></button>
+            <button type="button" id="botao-titulo-sobre" class="botao-titulo"><span class="sr-only">Sobre</span></button>
+          </div>
+          <div id="cursor-titulo" class="titulo-cursor" aria-hidden="true"></div>
+          <p class="titulo-dica">SETAS: ESCOLHER &nbsp;&nbsp; ENTER: CONFIRMAR</p>
+          <p class="titulo-versao">v1.0</p>
+
+          <section id="painel-titulo" class="titulo-painel" hidden aria-labelledby="titulo-painel">
+            <h2 id="titulo-painel"></h2>
+            <div id="texto-painel" class="titulo-painel-texto"></div>
+            <button type="button" id="botao-fechar-painel" class="botao-painel">Voltar</button>
+          </section>
+        </div>
+      </section>
+
+      <!-- Tela de níveis: desenhada em canvas 480 × 270 pelo módulo telaNiveis.js. -->
+      <section id="tela-niveis" class="tela-niveis" aria-label="Seleção de níveis" hidden>
+        <canvas id="canvas-niveis" class="canvas-niveis" role="img" aria-label="Seleção de níveis"></canvas>
+      </section>
+
+      <!-- Terminal do totem: mini editor de Python, desenhado em canvas 480 × 270. -->
+      <section id="tela-terminal" class="tela-terminal" aria-label="Terminal do totem" hidden>
+        <canvas id="canvas-terminal" class="canvas-terminal" role="img" aria-label="Terminal do totem"></canvas>
+      </section>
+
+      <!-- Desafio do banco de perguntas: aparece nos corações, sentinelas e vãos com desafio. -->
+      <section id="tela-desafio" class="tela-desafio" role="dialog" aria-modal="true" aria-labelledby="titulo-desafio" hidden>
+        <div class="painel-desafio">
+          <p class="categoria-desafio"></p>
+          <h2 id="titulo-desafio" class="titulo-desafio"></h2>
+          <p class="enunciado-desafio"></p>
+          <pre class="codigo-desafio"></pre>
+          <div class="alternativas-desafio" role="group" aria-label="Alternativas"></div>
+          <p class="resultado-desafio" role="status" hidden></p>
+          <button type="button" class="botao-continuar-desafio" hidden>Continuar</button>
+        </div>
+      </section>
+
+      <!-- Tela do nível: aparece antes de cada partida e quando as vidas acabam. -->
       <!-- A arte de fundo já traz o painel e os títulos; os botões e o texto são desenhados aqui. -->
-      <section id="tela-inicio" class="tela-inicio" aria-labelledby="titulo-inicio">
+      <!-- A arte de fundo já traz o painel e os títulos; os botões e o texto são desenhados aqui. -->
+      <section id="tela-inicio" class="tela-inicio" aria-labelledby="titulo-inicio" hidden>
         <div class="tela-inicio-palco">
           <img class="tela-inicio-fundo" src="./assets/characters/Imagens_Personagens/02_cenario/tela_inicio_pacote/tela_inicio_fundo_sem_botoes_1920x1080.png" alt="" />
           <h2 id="titulo-inicio" class="sr-only">Nível 01: Byte</h2>
+          <p id="rotulo-nivel-inicio" class="rotulo-nivel">NÍVEL 01</p>
           <img class="tela-inicio-byte" src="./assets/characters/Imagens_Personagens/01_byte/02_byte_parado.gif" alt="Byte parado" />
           <div class="tela-inicio-texto">
-            <!-- Texto provisório: será substituído pelo conteúdo do modo de ensino. -->
-            <p>Texto genérico do nível. O modo de ensino ainda não foi integrado.</p>
+            <!-- Texto provisório: vem de cada fase em level.js até o modo de ensino ser integrado. -->
+            <p id="texto-nivel-inicio">Texto de exemplo do nível.</p>
           </div>
           <button type="button" id="botao-jogar" class="botao-inicio botao-jogar">▶ JOGAR</button>
-          <button type="button" id="botao-sair" class="botao-inicio botao-sair" disabled title="Ainda não disponível">✕ SAIR</button>
+          <button type="button" id="botao-sair" class="botao-inicio botao-sair">✕ SAIR</button>
         </div>
+        <button type="button" id="botao-som-inicio" class="pause-button" aria-controls="menu-som">♪ Som</button>
       </section>
     </section>
 
-    <section class="mobile-controls" aria-labelledby="controls-title">
+    <section class="mobile-controls" aria-labelledby="controls-title" hidden>
       <h2 id="controls-title">Controles de celular</h2>
       <div class="controls-layout">
         <div class="action-controls">
@@ -74,7 +157,7 @@
           <button type="button" data-action="direita" class="botao-direita" aria-label="Mover para direita"></button>
         </div>
       </div>
-      <p class="controls-note">Área reservada. Os controles serão conectados na integração da equipe.</p>
+      <p class="controls-note">Segure as setas para andar. Toque em pular ou segure agachar.</p>
     </section>
 
     <noscript>Ative o JavaScript no navegador para executar o jogo.</noscript>
