@@ -106,7 +106,6 @@ body {
   background-color: #dfe7fd;
 }
 
-.pause-button,
 .pause-menu button {
   min-height: 44px;
   padding: 10px 16px;
@@ -125,6 +124,22 @@ body {
   top: max(12px, env(safe-area-inset-top));
   right: max(12px, env(safe-area-inset-right));
   z-index: 1;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  cursor: pointer;
+  touch-action: manipulation;
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/09_pause_normal.png);
+}
+
+.pause-button:active {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/08_pause_pressionado.png);
 }
 
 .pause-menu {
