@@ -5,6 +5,7 @@
 import { inputState } from './input.js';
 import { registrarEfeito } from './audio.js';
 
+
 export class AnimacaoGIF {
   constructor(caminho) {
     this.caminho = caminho;
