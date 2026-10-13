@@ -392,7 +392,8 @@ body {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/13_cima_normal.png);
 }
 
-.botao-pulo:active {
+.botao-pulo:active,
+.botao-pulo.pressionado {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/14_cima_pressionado.png);
 }
 
