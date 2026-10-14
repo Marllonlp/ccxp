@@ -38,6 +38,10 @@ Para saltar novamente, solte e acione outra vez a tecla ou o botão de pulo. O p
 
 Os controles de toque aceitam andar e pular ao mesmo tempo. Soltar o botão, cancelar o toque ou pausar limpa as ações para evitar movimento preso.
 
+No celular, **Como jogar** explica os comandos de toque. O terminal apresenta trechos e linhas com botões maiores: toque em um trecho para adicioná-lo, selecione uma linha e use **Subir**, **Descer** ou **Remover**. Use **Testar código** para conferir a solução e **Dica** para receber ajuda. O progresso de cada missão continua disponível ao fechar e reabrir o terminal na mesma página.
+
+A luta do chefe usa os mesmos controles de movimento e o mesmo menu de pausa das fases. Ao perder todas as vidas, **Tentar de novo** reinicia a luta e **Voltar aos níveis** abre a seleção de fases, inclusive por toque. O botão **Pular introdução** permite avançar sem teclado.
+
 ## Adaptação às telas
 
 O cenário ocupa a área disponível da janela, com escala uniforme para personagens, inimigos e plataformas. A câmera mostra mais cenário em telas largas e acompanha os saltos nas plataformas altas. As coordenadas do mapa e a física permanecem iguais em todas as telas.

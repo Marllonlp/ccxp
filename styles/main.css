@@ -195,8 +195,8 @@ body {
   top: max(12px, env(safe-area-inset-top));
   right: max(12px, env(safe-area-inset-right));
   z-index: 1;
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: none;
   background-color: transparent;
@@ -216,7 +216,7 @@ body {
 .pause-menu {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 7;
   display: grid;
   place-content: center;
   align-content: safe center;
@@ -373,7 +373,7 @@ body {
 
 /* O som mantém a mesma moldura da pausa e cobre os controles da tela anterior. */
 .menu-som {
-  z-index: 4;
+  z-index: 8;
   background-color: #0b1730;
 }
 
@@ -1068,7 +1068,7 @@ body {
   right: 0;
   bottom: 4.5%;
   text-align: center;
-  font-size: 1.4cqw;
+  font-size: clamp(9px, 1.4cqw, 16px);
   line-height: 1.6;
 }
 
@@ -1109,14 +1109,18 @@ body {
 
 /* Painel de ajuda e sobre: aberto pelos botões Como jogar e Sobre. */
 .titulo-painel {
-  position: absolute;
-  left: 30%;
-  right: 30%;
-  top: 24%;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 7;
-  display: grid;
-  gap: 2.5cqw;
-  padding: 2.5cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(600px, calc(100vw - 40px));
+  max-height: calc(100dvh - 40px);
+  padding: 20px;
+  overflow: hidden;
   border: 2px solid #64748b;
   border-radius: 12px;
   background-color: #20242b;
@@ -1130,20 +1134,28 @@ body {
 }
 
 .titulo-painel h2 {
+  flex-shrink: 0;
   margin: 0;
-  font-size: 2.2cqw;
+  font-size: clamp(14px, 2.2cqw, 20px);
+  line-height: 1.5;
   text-align: center;
   color: #7dd3fc;
 }
 
+.titulo-painel-texto {
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .titulo-painel-texto p {
-  margin: 0 0 1.2cqw;
-  font-size: 1.2cqw;
-  line-height: 1.9;
+  margin: 0 0 12px;
+  font: 16px/1.6 system-ui, sans-serif;
 }
 
 .botao-painel {
   justify-self: center;
+  align-self: center;
+  flex-shrink: 0;
   min-height: 44px;
   padding: 10px 24px;
   border: 1px solid #64748b;
@@ -1151,7 +1163,7 @@ body {
   background-color: #29313d;
   color: #f9fafb;
   font: inherit;
-  font-size: 1.2cqw;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -1232,6 +1244,190 @@ body {
   width: min(100%, calc(100vh * 16 / 9));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
+}
+
+/* A edição por toque compartilha as missões e os testes do terminal em canvas. */
+.terminal-toque {
+  display: none;
+  width: min(1000px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 2px solid #44ddf2;
+  background: #1b254b;
+  color: #e1e8f5;
+  font: 16px/1.5 system-ui, sans-serif;
+}
+
+.terminal-toque-cabecalho {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  padding-inline-start: 56px;
+  border-bottom: 2px solid #33466b;
+  background: #111a36;
+}
+
+.terminal-toque h2,
+.terminal-toque h3 {
+  margin: 0;
+  color: #ffd646;
+  font: 12px/1.8 'Press Start 2P', monospace;
+}
+
+.terminal-toque h2 {
+  color: #83e9f5;
+}
+
+.terminal-toque-corpo {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 2fr);
+  gap: 20px;
+  padding: 16px;
+}
+
+.terminal-toque-missao,
+.terminal-toque-editor {
+  min-width: 0;
+}
+
+.terminal-toque-editor {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.terminal-toque p {
+  margin: 8px 0;
+}
+
+.terminal-toque .terminal-toque-ajuda {
+  margin: 0;
+  color: #b8cee1;
+  font-size: 14px;
+}
+
+.terminal-toque summary {
+  min-height: 44px;
+  padding-block: 10px;
+  color: #83e9f5;
+  cursor: pointer;
+}
+
+.terminal-toque button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+  border: 2px solid #486780;
+  border-radius: 0;
+  background: #111e37;
+  color: #f5f8ff;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.terminal-toque button:focus-visible,
+.terminal-toque summary:focus-visible,
+.terminal-toque button.selecionada {
+  outline: 2px solid #ffd646;
+  outline-offset: -2px;
+  border-color: #ffd646;
+}
+
+.terminal-toque button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.terminal-toque code {
+  font: 16px/1.5 ui-monospace, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#terminal-linhas {
+  min-height: 54px;
+  max-height: min(32dvh, 240px);
+  margin: 0;
+  padding: 6px 6px 6px 36px;
+  overflow-y: auto;
+  background: #0b1424;
+}
+
+#terminal-linhas li {
+  padding-block: 3px;
+}
+
+#terminal-linhas button {
+  width: 100%;
+  text-align: left;
+}
+
+#terminal-linhas:empty::before {
+  content: 'Seu código aparece aqui.';
+  color: #b8cee1;
+  font-size: 14px;
+}
+
+#terminal-trechos,
+.terminal-toque-edicao,
+.terminal-toque-acoes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.terminal-toque-edicao {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  font-size: 14px;
+}
+
+#terminal-trechos button {
+  border-left: 4px solid #83e9f5;
+  text-align: left;
+}
+
+#terminal-trechos .trecho-entrada {
+  border-left-color: #ffa046;
+}
+
+#terminal-trechos .trecho-decisao {
+  border-left-color: #ec78ff;
+}
+
+#terminal-testar {
+  border-color: #5aff8c;
+  background: #12371f;
+}
+
+#terminal-resultado {
+  padding-inline: 10px;
+  background: #0b1424;
+}
+
+#terminal-resultado:empty {
+  display: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .canvas-terminal {
+    display: none;
+  }
+
+  .terminal-toque {
+    display: block;
+  }
+
+  .tela-inicio-texto {
+    padding: 10px;
+    font: 16px/1.5 system-ui, sans-serif;
+  }
 }
 
 /* Desafio do banco de perguntas: painel sobre o jogo parado, no estilo do terminal. */
@@ -1442,4 +1638,47 @@ body {
   width: min(100%, calc(100vh * 16 / 9));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
+}
+
+.game-shell[data-estado='chefe'] .mobile-controls {
+  z-index: 6;
+}
+
+.game-shell[data-estado='chefe'] #botao-pausar {
+  z-index: 7;
+}
+
+.chefe-fim {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(4 6 12 / 80%);
+}
+
+.chefe-fim h2 {
+  margin: 0;
+  color: #ffd646;
+  font: 18px/1.6 'Press Start 2P', monospace;
+  text-align: center;
+}
+
+.botao-sobre-canvas {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 2px solid #44ddf2;
+  background: #111a36;
+  color: #f5f8ff;
+  font: 14px/1.5 system-ui, sans-serif;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.botao-sobre-canvas:focus-visible {
+  outline: 2px solid #ffd646;
+  outline-offset: 3px;
 }

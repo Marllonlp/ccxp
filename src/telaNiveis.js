@@ -1,5 +1,6 @@
 // Tela de seleção de níveis. Desenha tudo em 480 × 270 pixels; o CSS amplia o canvas com pixel nítido.
 // Posições, tempos e regras seguem INSTRUCOES_TELA_NIVEIS.md da pasta tela_niveis_editavel_pacote.
+import { pontoNoCanvas } from './viewport.js';
 
 const PASTA = './assets/characters/Imagens_Personagens/02_cenario/tela_niveis_editavel_pacote/';
 const TOTAL_CARTOES = 5;
@@ -211,14 +212,6 @@ export function criarTelaNiveis(canvas, { onEscolher, onVoltar, onSair, implemen
     }
   }
 
-  function pontoNoCanvas(evento) {
-    const area = canvas.getBoundingClientRect();
-    return {
-      x: (evento.clientX - area.left) * 480 / area.width,
-      y: (evento.clientY - area.top) * 270 / area.height,
-    };
-  }
-
   function cartaoEm(ponto) {
     for (let i = 0; i < niveis.length; i++) {
       const x = 27 + 86 * i;
@@ -238,7 +231,7 @@ export function criarTelaNiveis(canvas, { onEscolher, onVoltar, onSair, implemen
 
   canvas.addEventListener('mousemove', (evento) => {
     if (!visivel) return;
-    const ponto = pontoNoCanvas(evento);
+    const ponto = pontoNoCanvas(canvas, evento, 480, 270);
     hoverVoltar = voltarEm(ponto);
     hoverSair = sairEm(ponto);
     const indice = cartaoEm(ponto);
@@ -250,7 +243,7 @@ export function criarTelaNiveis(canvas, { onEscolher, onVoltar, onSair, implemen
 
   canvas.addEventListener('click', (evento) => {
     if (!visivel) return;
-    const ponto = pontoNoCanvas(evento);
+    const ponto = pontoNoCanvas(canvas, evento, 480, 270);
     if (sairEm(ponto)) {
       pressionarSair();
       return;
