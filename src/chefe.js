@@ -5,6 +5,7 @@
 import { inputState, limparAcoes } from './input.js';
 import { desenharVidas } from './player.js';
 import { carregarFonte, escrever, escreverCartela, quebrar } from './cutscene.js';
+import { pontoNoCanvas } from './viewport.js';
 
 const LARGURA = 480;
 const ALTURA = 270;
@@ -26,6 +27,7 @@ const BALAO_MS = 500;
 const VITORIA_MS = 1800;
 const MORTE_BYTE_MS = 1000;
 const PACOTE_CHAO_Y = CHAO - 12;
+const TOTEM_TROCA_MS = 300;
 
 // Arquivos da pasta da luta, pelo nome usado no código. Sprites com N quadros lado a lado: "_Nf".
 const ARQUIVOS = {
@@ -110,7 +112,7 @@ function quadroDe(tempo, msPorFrame, quadros, loop) {
  * - onSair(): o jogador desistiu depois de perder todas as vidas.
  * Devolve { iniciar(), parar() }.
  */
-export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, onSair }) {
+export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, onSair, onAtualizarInterface = () => {} }) {
   canvas.width = LARGURA;
   canvas.height = ALTURA;
   const ctx = canvas.getContext('2d');
@@ -123,6 +125,45 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   let s = null;
   let dialogo = null;
   let puloAnterior = false;
+  let pausado = false;
+  let controlesAnteriores = false;
+  let inicializacao = 0;
+  const menuFim = canvas.parentElement.querySelector('#chefe-fim');
+  const botaoTentar = menuFim.querySelector('#chefe-tentar');
+
+  function podeControlar() {
+    return rodando && !pausado && !dialogo && !s.terminalAberto && s.byte.vidas > 0 && s.estado !== 'fim';
+  }
+
+  function atualizarInterfaceChefe() {
+    const mostrarFim = rodando && s.estado === 'fim';
+    const mudouFim = menuFim.hidden === mostrarFim;
+    const controles = podeControlar();
+    menuFim.hidden = !mostrarFim;
+    if (mudouFim && mostrarFim) {
+      limparAcoes();
+      botaoTentar.focus({ preventScroll: true });
+    }
+    if (mudouFim || controles !== controlesAnteriores) {
+      controlesAnteriores = controles;
+      onAtualizarInterface();
+    }
+  }
+
+  function reiniciar() {
+    novaPartida();
+    pausado = false;
+    ultimoQuadro = performance.now();
+    atualizarInterfaceChefe();
+  }
+
+  function sair() {
+    parar();
+    onSair();
+  }
+
+  botaoTentar.addEventListener('click', reiniciar);
+  menuFim.querySelector('#chefe-sair').addEventListener('click', sair);
 
   // --- Acesso aos dados -----------------------------------------------------
 
@@ -160,6 +201,8 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       opacidade: 1,
       pacotes: [],
       pacotesLiberados: 0,
+      gotas: [],
+      gotasLiberadas: 0,
       bugs: [],
       bugsNascidos: 0,
       laser: null,
@@ -167,6 +210,10 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       notebook: null,
       terminalAberto: false,
       venceu: false,
+      totem: 0,
+      totemTrocaT: -Infinity,
+      bugsVulneravel: 0,
+      trocasTotem: 0,
       byte: {
         x: cfg().arena.byte_inicio[0],
         pes: CHAO,
@@ -203,6 +250,7 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     else if (nome === 'laser_baixo') entrar('laser', 'baixo');
     else if (nome === 'laser_alto') entrar('laser', 'alto');
     else if (nome === 'bugzinhos') entrar('bugzinhos', valor);
+    else if (nome === 'chuva') entrar('chuva', valor);
     else if (nome === 'vulneravel') entrar('vulneravel', null);
     else throw new Error(`Passo de luta desconhecido: ${nome}`);
   }
@@ -214,10 +262,17 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     if (estado === 'laser') {
       s.laser = { centro: cfg().ataques.laser[arg].feixe_centro_y };
     }
+    if (estado === 'vulneravel') {
+      // O totem não fica num lugar só: a cada janela ele aparece em outro canto da arena.
+      moverTotem();
+      s.bugsVulneravel = 0;
+      s.trocasTotem = 0;
+    }
     if (estado === 'dano') s.vida = Math.max(0, s.vida - 1);
     if (estado === 'derrota') {
       // O chefe cai solto e o notebook sai do colo dele.
       s.pacotes = [];
+      s.gotas = [];
       s.bugs = [];
       s.laser = null;
       s.chefeDescY = 0;
@@ -307,14 +362,42 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
         }
         break;
       }
-      case 'vulneravel':
+      case 'chuva': {
+        // Pacotes caem do teto: primeiro o aviso no chão, depois a queda. Metade mira no Byte.
+        const n = s.arg;
+        const chuva = ataques.chuva;
+        if (s.gotasLiberadas < n && t >= s.gotasLiberadas * chuva.intervalo_ms) {
+          const mira = s.gotasLiberadas % 2 === 0;
+          const x = mira ? s.byte.x + LARGURA_BYTE / 2 - 6 : 10 + Math.random() * (LARGURA - 32);
+          s.gotas.push({ x: Math.max(0, Math.min(LARGURA - 12, x)), y: chuva.nasce_em_y, vy: 0, t: 0 });
+          s.gotasLiberadas += 1;
+        }
+        if (s.gotasLiberadas >= n && s.gotas.length === 0) {
+          s.gotasLiberadas = 0;
+          proximoPasso();
+        }
+        break;
+      }
+      case 'vulneravel': {
         // O tempo só corre fora do terminal (atualizar() não chega aqui com o terminal aberto).
+        const extra = cfg().fases[s.fase].vulneravel ?? {};
+        // Bugzinhos continuam vindo enquanto o Byte corre até o totem.
+        if (extra.bugzinhos_a_cada_ms > 0 && t >= (s.bugsVulneravel + 1) * extra.bugzinhos_a_cada_ms) {
+          s.bugs.push({ x: ataques.bugzinhos.nasce_em_x, y: ataques.bugzinhos.y, morto: false, t: 0 });
+          s.bugsVulneravel += 1;
+        }
+        // Na última fase o totem ainda pula de lugar no meio da janela.
+        if (extra.totem_troca_a_cada_ms > 0 && t >= (s.trocasTotem + 1) * extra.totem_troca_a_cada_ms) {
+          moverTotem();
+          s.trocasTotem += 1;
+        }
         if (t >= cfg().vulneravel.duracao_ms) {
           // Tempo esgotado: o chefe volta a PARADO e repete a fase.
           s.passo = 0;
           proximoPasso();
         }
         break;
+      }
       case 'mensagem':
         if (t >= MENSAGEM_PATCH_MS) entrar('dano', null);
         break;
@@ -386,6 +469,13 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       p.y += (PACOTE_CHAO_Y - p.y) * (1 - Math.pow(0.85, dt / 0.08));
     }
     s.pacotes = s.pacotes.filter((p) => p.x > -12);
+    for (const g of s.gotas) {
+      g.t += dt * 1000;
+      if (g.t < ataques.chuva.aviso_ms) continue;
+      g.vy += ataques.chuva.gravidade * dt;
+      g.y += g.vy * dt;
+    }
+    s.gotas = s.gotas.filter((g) => g.y < PACOTE_CHAO_Y);
     for (const bug of s.bugs) {
       bug.t += dt * 1000;
       if (!bug.morto) bug.x += ataques.bugzinhos.vx * dt;
@@ -474,6 +564,13 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
         break;
       }
     }
+    for (const g of s.gotas) {
+      if (g.y > 0 && sobrepoe(corpo, { x: g.x, y: g.y, w: 12, h: 12 })) {
+        s.gotas = s.gotas.filter((q) => q !== g);
+        sofrerDano();
+        break;
+      }
+    }
     const [dx, dy, dw, dh] = chefe.hitbox_corpo_contato;
     if (sobrepoe(corpo, { x: chefeX() + dx, y: chefeY() + dy, w: dw, h: dh })) sofrerDano();
   }
@@ -491,15 +588,40 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       s.t = 0;
       s.laser = null;
       s.pacotes = [];
+      s.gotas = [];
       s.bugs = [];
     }
   }
 
   // --- Terminal e patches --------------------------------------------------
 
+  /** Posição atual do totem. A primeira da lista é a do guia (chão, à esquerda). */
+  function posicaoTotem() {
+    const totem = cfg().arena.totem;
+    return totem.posicoes?.[s.totem] ?? totem;
+  }
+
+  /** Leva o totem para outra posição: nunca a atual nem a mais perto do Byte. */
+  function moverTotem() {
+    const posicoes = cfg().arena.totem.posicoes;
+    if (!posicoes || posicoes.length < 3) return;
+    const centroByte = s.byte.x + LARGURA_BYTE / 2;
+    const distancia = (i) => Math.abs(posicoes[i].x + 16 - centroByte);
+    const outras = posicoes.map((_, i) => i).filter((i) => i !== s.totem);
+    const maisPerto = outras.reduce((a, b) => (distancia(b) < distancia(a) ? b : a));
+    const opcoes = outras.filter((i) => i !== maisPerto);
+    s.totem = opcoes[Math.floor(Math.random() * opcoes.length)];
+    s.totemTrocaT = s.total;
+  }
+
   function dentroDoTotem() {
-    const [x0, y0, x1, y1] = cfg().arena.totem.area_interacao;
-    return sobrepoe(corpoByte(), { x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+    // A área de interação do guia é relativa à posição original do totem: ela acompanha o totem.
+    const totem = cfg().arena.totem;
+    const { x, y } = posicaoTotem();
+    const [x0, y0, x1, y1] = totem.area_interacao;
+    const dx = x - totem.x;
+    const dy = y - totem.y;
+    return sobrepoe(corpoByte(), { x: x0 + dx, y: y0 + dy, w: x1 - x0, h: y1 - y0 });
   }
 
   function podeAbrirTerminal() {
@@ -550,6 +672,11 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       else desenharSprite('bugzinho_andando_4f', quadroSprite('bugzinho_andando_4f', bug.t, 120, true), bug.x, bug.y);
     }
     for (const p of s.pacotes) desenharSprite('pacote_2f', quadroSprite('pacote_2f', p.t, 80, true), p.x, p.y);
+    for (const g of s.gotas) {
+      // Aviso no chão até o pacote cair (ele atravessa as plataformas).
+      desenharSprite('laser_aviso_2f', quadroSprite('laser_aviso_2f', s.total, 120, true), g.x - 2, CHAO - 4);
+      if (g.t >= cfg().ataques.chuva.aviso_ms) desenharSprite('pacote_2f', quadroSprite('pacote_2f', g.t, 80, true), g.x, g.y);
+    }
     desenharByte();
     if (podeAbrirTerminal()) desenharBotaoTerminal();
     ctx.restore();
@@ -559,14 +686,16 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     if (s.estado === 'mensagem' && s.mensagem) desenharMensagemPatch();
     if (dialogo) desenharDialogo();
     if (s.estado === 'vitoria') escreverCartela(ctx, 'VITÓRIA!', (LARGURA - 8 * 24) / 2, 110, 24, '#FFD646', '#C9A227');
-    if (s.estado === 'fim') desenharFimDeJogo();
+    atualizarInterfaceChefe();
   }
 
   function desenharCenario() {
     ctx.drawImage(recursos.sprites.arena.img, 0, 0);
-    const totem = cfg().arena.totem;
-    desenharSprite('totem_4f', quadroSprite('totem_4f', s.total, 150, true), totem.x, totem.y);
     for (const p of cfg().arena.plataformas) desenharSprite('plataforma_2f', quadroSprite('plataforma_2f', s.total, 500, true), p.x, p.y);
+    // Logo depois de trocar de lugar, o totem pisca.
+    if (s.total - s.totemTrocaT < TOTEM_TROCA_MS && Math.floor(s.total / 50) % 2 === 0) return;
+    const totem = posicaoTotem();
+    desenharSprite('totem_4f', quadroSprite('totem_4f', s.total, 150, true), totem.x, totem.y);
   }
 
   function desenharChefe() {
@@ -576,7 +705,7 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     const tremor = s.estado === 'dano' ? (Math.floor(s.t / 50) % 2 === 0 ? 3 : -3) : 0;
     let nome = 'chefe_parado_6f';
     let quadro = quadroSprite(nome, s.total, ms.parado, true);
-    if (s.estado === 'pacotes') {
+    if (s.estado === 'pacotes' || s.estado === 'chuva') {
       nome = 'chefe_ataque_6f';
       quadro = quadroSprite(nome, s.t, ms.ataque, false);
     } else if (s.estado === 'vulneravel') {
@@ -651,8 +780,9 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   }
 
   function botaoTerminal() {
-    const totem = cfg().arena.totem;
-    return { x: totem.x + 16 - 75, y: totem.y - 37 };
+    const totem = posicaoTotem();
+    // Centrado no totem, sem sair da arena nem cobrir a barra do chefe.
+    return { x: Math.max(2, Math.min(LARGURA - 152, totem.x + 16 - 75)), y: Math.max(28, totem.y - 37) };
   }
 
   function desenharBotaoTerminal() {
@@ -709,14 +839,6 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     escrever(ctx, 'APLICADO!', caixa.x + 10, caixa.y + 44, 8, '#5AFF8C');
   }
 
-  function desenharFimDeJogo() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.fillRect(0, 0, LARGURA, ALTURA);
-    escreverCartela(ctx, 'FIM DE JOGO', (LARGURA - 11 * 24) / 2, 96, 24, '#FF6078', '#4A0B18');
-    escrever(ctx, 'ENTER: TENTAR DE NOVO', 120, 150, 8, '#FFFFFF');
-    escrever(ctx, 'ESC: SAIR', 176, 170, 8, '#8C92A6');
-  }
-
   // --- Diálogo --------------------------------------------------------------
 
   function abrirDialogo(quem, texto, aoFechar) {
@@ -752,6 +874,8 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
 
   function aoTecla(evento) {
     if (!rodando) return;
+    if (pausado) return;
+    if (evento.target.closest?.('#chefe-fim') && ['Enter', ' '].includes(evento.key)) return;
     if (s.terminalAberto) {
       terminal.tratarTecla(evento);
       return;
@@ -759,11 +883,10 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     if (s.estado === 'fim') {
       if (evento.key === 'Enter') {
         evento.preventDefault();
-        novaPartida();
+        reiniciar();
       } else if (evento.key === 'Escape') {
         evento.preventDefault();
-        parar();
-        onSair();
+        sair();
       }
       return;
     }
@@ -779,14 +902,12 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   }
 
   function aoClicar(evento) {
-    if (!rodando) return;
+    if (!rodando || pausado) return;
     if (dialogo) {
       avancarDialogo();
       return;
     }
-    const area = canvas.getBoundingClientRect();
-    const x = ((evento.clientX - area.left) * LARGURA) / area.width;
-    const y = ((evento.clientY - area.top) * ALTURA) / area.height;
+    const { x, y } = pontoNoCanvas(canvas, evento, LARGURA, ALTURA);
     const botao = botaoTerminal();
     if (podeAbrirTerminal() && x >= botao.x && x < botao.x + 150 && y >= botao.y && y < botao.y + 28) abrirTerminal();
   }
@@ -795,15 +916,19 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     if (!rodando) return;
     const dt = Math.min(0.05, (agora - ultimoQuadro) / 1000);
     ultimoQuadro = agora;
-    atualizar(dt);
-    if (dialogo && !s.terminalAberto) dialogo.letras = Math.min(dialogo.total, dialogo.letras + dt * 50);
-    desenhar();
+    if (!pausado) {
+      atualizar(dt);
+      if (dialogo && !s.terminalAberto) dialogo.letras = Math.min(dialogo.total, dialogo.letras + dt * 50);
+      desenhar();
+    }
     requestAnimationFrame(quadro);
   }
 
   function parar() {
+    inicializacao += 1;
     if (!rodando) return;
     rodando = false;
+    limparAcoes();
     window.removeEventListener('keydown', aoTecla);
     canvas.removeEventListener('click', aoClicar);
     if (retornosAnteriores) terminal.definirRetornos(retornosAnteriores);
@@ -813,21 +938,42 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       telaTerminal.hidden = true;
       terminal.fechar();
     }
+    atualizarInterfaceChefe();
   }
 
   return {
     /** Começa a luta: a faixa de apresentação e depois a primeira fase. */
     async iniciar() {
       if (rodando) return;
+      const tentativa = ++inicializacao;
+      pausado = false;
       if (!recursos) recursos = await carregarRecursos(pasta);
+      if (tentativa !== inicializacao) return;
       novaPartida();
       retornosAnteriores = terminal.definirRetornos({ onFechar: aoFecharTerminal, onResolvido: aoResolverPatch });
       rodando = true;
       ultimoQuadro = performance.now();
+      atualizarInterfaceChefe();
+      onAtualizarInterface();
       window.addEventListener('keydown', aoTecla);
       canvas.addEventListener('click', aoClicar);
       requestAnimationFrame(quadro);
     },
     parar,
+    reiniciar,
+    podeControlar,
+    pronto: () => rodando,
+    podePausar: () => rodando && s.estado !== 'fim' && !s.terminalAberto,
+    pausar() {
+      pausado = true;
+      limparAcoes();
+      atualizarInterfaceChefe();
+    },
+    retomar() {
+      pausado = false;
+      ultimoQuadro = performance.now();
+      limparAcoes();
+      atualizarInterfaceChefe();
+    },
   };
 }

@@ -100,8 +100,11 @@ const VIDAS_FASE_1 = [
 const moedaSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif');
 const vidaItemSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/06_vida_item.gif');
 
-export function limparColetaveis() {
-  for (const item of [...moedas, ...vidasItens]) item.coletado = false;
+/** Restaura as moedas salvas e repõe os corações para uma nova tentativa. */
+export function limparColetaveis(moedasColetadas = []) {
+  const coletadas = new Set(moedasColetadas);
+  for (const moeda of moedas) moeda.coletado = coletadas.has(moeda.id);
+  for (const vida of vidasItens) vida.coletado = false;
 }
 
 // Campo de patrulha: início e fim delimitam toda a área ocupada pelo robô.
@@ -219,7 +222,7 @@ export const infoFases = FASES.map(({ nome, subtitulo, titulo, texto }) => ({ no
 export const quantidadeFases = FASES.length;
 
 /** Carrega a fase de índice `indice` (0 = primeira): cenário, vãos, checkpoints, meta e início. */
-export function carregarFase(indice) {
+export function carregarFase(indice, moedasColetadas = []) {
   const fase = FASES[indice];
   indiceFase = indice;
   // Cópias: as pontes construídas durante a partida não alteram o desenho original da fase.
@@ -233,8 +236,9 @@ export function carregarFase(indice) {
     ativo: false,
   }));
   plantas = fase.plantas.map((planta) => ({ ...planta }));
-  moedas = fase.moedas.map((moeda) => ({ ...moeda, coletado: false }));
-  vidasItens = fase.vidasItens.map((vida) => ({ ...vida, coletado: false }));
+  moedas = fase.moedas.map((moeda) => ({ ...moeda }));
+  vidasItens = fase.vidasItens.map((vida) => ({ ...vida }));
+  limparColetaveis(moedasColetadas);
   patrulhasSentinelas = fase.patrulhas.map((patrulha) => ({ ...patrulha }));
   LARGURA_FASE = fase.larguraFase;
   posicaoInicial = { ...fase.posicaoInicial };
@@ -409,6 +413,24 @@ function carregarImagem(arquivo) {
 }
 
 const plataformaTerra = carregarImagem('plataforma_terra_96x24_1f.png');
+
+// Outros estilos de plataforma (cristal, metal, holo). Cada largura tem a sua peça desenhada,
+// então a imagem só é esticada quando a largura da colisão não existe no pacote.
+// As peças são carregadas já ao abrir o jogo, para a plataforma não trocar de visual no meio da fase,
+// e só o primeiro quadro é usado: a plataforma fica sempre igual, sem piscar.
+const LARGURAS_PLATAFORMA = [32, 48, 64, 80, 96, 128];
+const QUADROS_PLATAFORMA = { terra: 1, cristal: 1, metal: 2, holo: 4 };
+const pecasPlataforma = new Map();
+for (const [estilo, quadros] of Object.entries(QUADROS_PLATAFORMA)) {
+  for (const tamanho of LARGURAS_PLATAFORMA) {
+    pecasPlataforma.set(`${estilo}_${tamanho}`, { imagem: carregarImagem(`plataforma_${estilo}_${tamanho}x24_${quadros}f.png`), tamanho });
+  }
+}
+
+function pecaPlataforma(estilo, largura) {
+  const tamanho = LARGURAS_PLATAFORMA.includes(largura) ? largura : 96;
+  return pecasPlataforma.get(`${estilo}_${tamanho}`) ?? null;
+}
 
 const totens = {
   antena: {
@@ -622,17 +644,32 @@ function desenharMundo(ctx, limiteInferior) {
   }
 }
 
-/** Plataforma flutuante: a peça de terra é esticada até a largura da colisão. */
+/**
+ * Plataforma flutuante. Sem estilo, a peça de terra é esticada até a largura da colisão;
+ * com estilo (cristal, metal, holo), usa sempre o primeiro quadro da peça da mesma largura.
+ */
 function desenharPlataforma(ctx, obstaculo) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(
-    plataformaTerra,
-    obstaculo.x,
-    obstaculo.y - SOBRA_PLATAFORMA,
-    obstaculo.width,
-    ALTURA_PLATAFORMA,
-  );
+  const peca = obstaculo.estilo ? pecaPlataforma(obstaculo.estilo, obstaculo.width) : null;
+  if (peca) {
+    // Enquanto a peça não carrega, não desenha nada: assim a plataforma nunca troca de visual.
+    if (pecaCarregada(peca.imagem)) {
+      ctx.drawImage(
+        peca.imagem,
+        0, 0, peca.tamanho, ALTURA_PLATAFORMA,
+        obstaculo.x, obstaculo.y - SOBRA_PLATAFORMA, obstaculo.width, ALTURA_PLATAFORMA,
+      );
+    }
+  } else {
+    ctx.drawImage(
+      plataformaTerra,
+      obstaculo.x,
+      obstaculo.y - SOBRA_PLATAFORMA,
+      obstaculo.width,
+      ALTURA_PLATAFORMA,
+    );
+  }
   ctx.restore();
 }
 

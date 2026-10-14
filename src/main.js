@@ -2,7 +2,7 @@
 import { startGame } from './game.js';
 import { Player, desenharVidas } from './player.js';
 import { Planta, Sentinela } from './enemies.js';
-import { inputState, setInput, configurarControlesToque, limparAcoes } from './input.js';
+import { inputState, setInput, configurarControlesToque, limparAcoes, tecladoPrincipal } from './input.js';
 import {
   LIMITE_QUEDA,
   obterPosicaoInicial,
@@ -15,7 +15,6 @@ import {
   aplicarCameraMundo,
   patrulhasSentinelas,
   plantas,
-  moedas,
   limparColetaveis,
   carregarFase,
   indiceFaseAtual,
@@ -31,7 +30,7 @@ import {
 } from './level.js';
 import { resolverColisoes, verificarEspaco, verificarColetaveis } from './collisions.js';
 import { registrarEfeito, registrarGanhoMusica, removerGanhoMusica, definirVolume } from './audio.js';
-import { calcularVisao, ajustarCanvas } from './viewport.js';
+import { calcularVisao, ajustarCanvas, pontoNoCanvas } from './viewport.js';
 import { criarTelaNiveis } from './telaNiveis.js';
 import { iniciarDemoTitulo } from './demoTitulo.js';
 import { abrirPortasDaMissao } from './mecanicas.js';
@@ -54,7 +53,6 @@ const contextoMoedas = canvasMoedas.getContext('2d');
 const moedaHUD = new Image();
 moedaHUD.src = 'assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif';
 const mensagemHUD = document.getElementById('hud-mensagem');
-const tecladoPrincipal = window.matchMedia('(hover: hover) and (pointer: fine)');
 const retratoMovel = window.matchMedia('(orientation: portrait) and (pointer: coarse)');
 let visao = calcularVisao(960, 540);
 let pixelRatio = 1;
@@ -63,6 +61,8 @@ const botaoPausar = document.getElementById('botao-pausar');
 const menuPausa = document.getElementById('menu-pausa');
 const botaoRetomar = document.getElementById('botao-retomar');
 const botaoReiniciar = document.getElementById('botao-reiniciar');
+const botaoMenuPausa = document.getElementById('botao-menu-pausa');
+const rotuloNivelPausa = document.getElementById('pausa-nivel');
 const telaInicio = document.getElementById('tela-inicio');
 const botaoJogar = document.getElementById('botao-jogar');
 const botaoSair = document.getElementById('botao-sair');
@@ -78,6 +78,8 @@ const painelTitulo = document.getElementById('painel-titulo');
 const tituloPainel = document.getElementById('titulo-painel');
 const textoPainel = document.getElementById('texto-painel');
 const botaoFecharPainel = document.getElementById('botao-fechar-painel');
+const botaoApagarDados = document.getElementById('botao-apagar-dados');
+const botaoConfirmarApagar = document.getElementById('botao-confirmar-apagar');
 let indiceTitulo = 0;
 
 const telaNiveis = document.getElementById('tela-niveis');
@@ -95,7 +97,7 @@ fetch(PASTA_NIVEIS + 'niveis.json')
   .then((json) => { dadosJsonNiveis = json.niveis ?? []; })
   .catch((erro) => console.error('Falha ao carregar niveis.json:', erro));
 
-// Progresso: níveis liberados e estrelas de cada um. Fica salvo no navegador.
+// Progresso: níveis, estrelas e IDs das moedas coletadas por fase. Fica salvo no navegador.
 const CHAVE_PROGRESSO = 'byte-progresso';
 function carregarProgresso() {
   try {
@@ -104,6 +106,11 @@ function carregarProgresso() {
       return {
         liberados: Math.min(Math.max(salvo.liberados, 1), NIVEIS_NA_TELA),
         estrelas: Array.isArray(salvo.estrelas) ? salvo.estrelas : [],
+        moedasColetadas: Array.from({ length: quantidadeFases }, (_, indice) => (
+          Array.isArray(salvo.moedasColetadas?.[indice])
+            ? [...new Set(salvo.moedasColetadas[indice].filter((id) => typeof id === 'string'))]
+            : []
+        )),
         intro_nivel1_vista: salvo.intro_nivel1_vista === true,
         chefe_derrotado: salvo.chefe_derrotado === true,
       };
@@ -111,7 +118,7 @@ function carregarProgresso() {
   } catch {
     // Progresso ilegível ou sem armazenamento: começa do primeiro nível.
   }
-  return { liberados: 1, estrelas: [], intro_nivel1_vista: false, chefe_derrotado: false };
+  return { liberados: 1, estrelas: [], moedasColetadas: [], intro_nivel1_vista: false, chefe_derrotado: false };
 }
 function salvarProgresso() {
   try {
@@ -159,6 +166,7 @@ const lutaChefe = criarChefe(document.getElementById('canvas-chefe'), {
   telaTerminal,
   onVitoria: () => aoVencerChefe(),
   onSair: () => sairDoChefe(),
+  onAtualizarInterface: atualizarInterface,
 });
 
 function abrirTerminal() {
@@ -417,10 +425,17 @@ let mensagemAte = 0;
 // - jogando, pausado: partida em andamento ou com o menu de pausa aberto.
 // - terminal, desafio: jogo parado com o terminal do totem ou uma pergunta do banco aberta.
 let estadoDaPartida = 'inicio';
+let estadoAntesDaPausa = 'jogando';
 
 function atualizarInterface() {
   hud.hidden = ['inicio', 'cutscene', 'chefe'].includes(estadoDaPartida);
-  controlesToque.hidden = estadoDaPartida !== 'jogando' && estadoDaPartida !== 'chefe';
+  controlesToque.hidden = estadoDaPartida !== 'jogando'
+    && !(estadoDaPartida === 'chefe' && lutaChefe.podeControlar());
+  botaoPausar.hidden = estadoDaPartida !== 'jogando'
+    && !(estadoDaPartida === 'chefe' && lutaChefe.podePausar());
+  const contextoChefe = estadoDaPartida === 'chefe'
+    || (estadoDaPartida === 'pausado' && estadoAntesDaPausa === 'chefe');
+  botaoReiniciar.disabled = contextoChefe && !lutaChefe.pronto();
   gameShell.dataset.estado = estadoDaPartida;
 }
 
@@ -438,12 +453,12 @@ function atualizarHUD() {
     contextoMoedas.imageSmoothingEnabled = false;
     contextoMoedas.drawImage(moedaHUD, 0, 8, 16, 16);
   }
-  const moedasColetadas = moedas.filter((moeda) => moeda.coletado).length;
+  const moedasColetadas = progresso.moedasColetadas.reduce((total, daFase) => total + daFase.length, 0);
   contextoMoedas.fillStyle = '#f3f4f6';
   contextoMoedas.font = 'bold 16px system-ui, sans-serif';
   contextoMoedas.textBaseline = 'middle';
   contextoMoedas.fillText(String(moedasColetadas), 24, 16);
-  const rotuloMoedas = `${moedasColetadas} de ${moedas.length} moedas`;
+  const rotuloMoedas = `Moedas coletadas: ${moedasColetadas}`;
   if (canvasMoedas.getAttribute('aria-label') !== rotuloMoedas) {
     canvasMoedas.setAttribute('aria-label', rotuloMoedas);
   }
@@ -465,7 +480,7 @@ function redimensionarJogo() {
   ajustarCanvas(canvasMoedas, { largura: 74, altura: 32 }, pixelRatio);
   margemSuperior = Math.max(72, hud.querySelector('.hud-stats').getBoundingClientRect().bottom + 12);
   document.querySelector('.game-area').inert = retratoMovel.matches;
-  if (retratoMovel.matches && estadoDaPartida === 'jogando') pausarPartida();
+  if (retratoMovel.matches) pausarPartida();
   if (retratoMovel.matches && document.activeElement !== avisoOrientacao) {
     avisoOrientacao.focus({ preventScroll: true });
   } else if (!retratoMovel.matches && document.activeElement === avisoOrientacao) {
@@ -481,10 +496,10 @@ function reposicionar(ponto) {
   player.retornar(ponto.x, ponto.y);
 }
 
-/** Zera a partida: vidas, checkpoints e posição inicial. Não mexe nos menus. */
+/** Reinicia vidas, checkpoints e posição, preservando as moedas salvas. */
 function prepararNovaPartida() {
   limparCheckpoints();
-  limparColetaveis();
+  limparColetaveis(progresso.moedasColetadas[indiceFaseAtual()]);
   limparPontes();
   inimigos = criarInimigos();
   poderes = [];
@@ -498,7 +513,7 @@ function prepararNovaPartida() {
   mensagemAte = 0;
 }
 
-/** Esconde a tela inicial e os menus, e começa a partida do zero. */
+/** Esconde a tela inicial e os menus, e começa uma nova tentativa da fase. */
 function iniciarPartida() {
   if (retratoMovel.matches) return;
   prepararNovaPartida();
@@ -506,7 +521,6 @@ function iniciarPartida() {
   telaTitulo.hidden = true;
   telaInicio.hidden = true;
   menuPausa.hidden = true;
-  botaoPausar.hidden = false;
   atualizarInterface();
   redimensionarJogo();
   controleDoJogo.start();
@@ -519,7 +533,6 @@ function mostrarTelaInicio() {
   estadoDaPartida = 'inicio';
   controleDoJogo.stop();
   limparAcoes();
-  botaoPausar.hidden = true;
   menuPausa.hidden = true;
   telaTitulo.hidden = true;
   telaNiveis.hidden = true;
@@ -570,7 +583,6 @@ function mostrarNiveis() {
   estadoDaPartida = 'niveis';
   controleDoJogo.stop();
   limparAcoes();
-  botaoPausar.hidden = true;
   menuPausa.hidden = true;
   telaTitulo.hidden = true;
   telaInicio.hidden = true;
@@ -583,7 +595,7 @@ function mostrarNiveis() {
 /** Carrega a fase escolhida e abre a tela do nível. Níveis bloqueados ou sem fase não abrem. */
 function escolherNivel(indice) {
   if (indice >= progresso.liberados || indice >= quantidadeFases) return;
-  carregarFase(indice);
+  carregarFase(indice, progresso.moedasColetadas[indice]);
   mostrarTelaInicio();
 }
 
@@ -612,7 +624,6 @@ function iniciarChefe() {
   estadoDaPartida = 'chefe';
   controleDoJogo.stop();
   limparAcoes();
-  botaoPausar.hidden = true;
   menuPausa.hidden = true;
   telaTitulo.hidden = true;
   telaInicio.hidden = true;
@@ -641,10 +652,13 @@ function sairDoChefe() {
 
 /** Abre a tela de título, com o botão Jogar selecionado. Usada ao carregar a página. */
 function mostrarTitulo() {
+  if (!telaChefe.hidden) {
+    lutaChefe.parar();
+    telaChefe.hidden = true;
+  }
   estadoDaPartida = 'titulo';
   controleDoJogo.stop();
   limparAcoes();
-  botaoPausar.hidden = true;
   menuPausa.hidden = true;
   telaInicio.hidden = true;
   telaNiveis.hidden = true;
@@ -652,6 +666,7 @@ function mostrarTitulo() {
   telaTitulo.hidden = false;
   pararMusicaFundo();
   selecionarBotaoTitulo(0);
+  atualizarInterface();
 }
 
 /** Marca o botão do título e posiciona o cursor ao lado dele. */
@@ -667,13 +682,29 @@ function selecionarBotaoTitulo(indice) {
   cursorTitulo.style.top = `${topo}%`;
 }
 
-function abrirPainelTitulo(conteudo) {
-  const linhas = conteudo === 'como'
-    ? ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'P ou ESC: pausar', 'R: reiniciar a fase']
-    : ['As aventuras de Byte', 'Versão 1.0', 'Jogo de plataforma em desenvolvimento.'];
+const PAINEIS_TITULO = {
+  como: {
+    titulo: 'Como jogar',
+    linhas: ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'P ou ESC: pausar', 'R: reiniciar a fase'],
+    linhasToque: [
+      'Segure as setas da esquerda para andar.',
+      'Toque na seta para cima, à direita, para pular. Você pode andar e pular ao mesmo tempo.',
+      'Segure a seta para baixo para agachar.',
+      'Toque em Pausar para retomar, ajustar o som ou reiniciar.',
+      'No terminal, toque nos trechos de código. Selecione uma linha para movê-la ou removê-la.',
+    ],
+  },
+  sobre: { titulo: 'Sobre', linhas: ['As aventuras de Byte', 'Versão 1.0', 'Jogo de plataforma em desenvolvimento.'] },
+  apagar: { titulo: 'Apagar dados', linhas: ['Isso apaga os níveis liberados, as estrelas, as moedas e o chefe derrotado.', 'O jogo volta para o Nível 1. Não dá para desfazer.'] },
+};
 
-  tituloPainel.textContent = conteudo === 'como' ? 'Como jogar' : 'Sobre';
-  textoPainel.replaceChildren(...linhas.map((linha) => {
+function abrirPainelTitulo(conteudo) {
+  const { titulo, linhas, linhasToque } = PAINEIS_TITULO[conteudo];
+  painelTitulo.dataset.conteudo = conteudo;
+  tituloPainel.textContent = titulo;
+  botaoConfirmarApagar.hidden = conteudo !== 'apagar';
+  const instrucoes = !tecladoPrincipal.matches && linhasToque ? linhasToque : linhas;
+  textoPainel.replaceChildren(...instrucoes.map((linha) => {
     const paragrafo = document.createElement('p');
     paragrafo.textContent = linha;
     return paragrafo;
@@ -682,14 +713,37 @@ function abrirPainelTitulo(conteudo) {
   botaoFecharPainel.focus({ preventScroll: true });
 }
 
+function atualizarInstrucoes() {
+  document.querySelector('.titulo-dica').textContent = tecladoPrincipal.matches
+    ? 'SETAS: ESCOLHER · ENTER: CONFIRMAR' : 'TOQUE EM UMA OPÇÃO PARA CONTINUAR';
+  if (!painelTitulo.hidden) abrirPainelTitulo(painelTitulo.dataset.conteudo);
+}
+
 function fecharPainelTitulo() {
   painelTitulo.hidden = true;
   botoesTitulo[indiceTitulo].focus({ preventScroll: true });
 }
 
+/** Apaga o progresso salvo e recarrega a página, para nenhuma tela ficar com dados antigos na memória. */
+function apagarDadosDoJogo() {
+  try {
+    localStorage.removeItem(CHAVE_PROGRESSO);
+  } catch {
+    // Sem armazenamento disponível: não há nada salvo para apagar.
+  }
+  location.reload();
+}
+
 function reiniciarJogo() {
   // Na tela de título ou na tela inicial não há fase em andamento para reiniciar.
   if (estadoDaPartida === 'inicio' || estadoDaPartida === 'titulo' || estadoDaPartida === 'niveis') return;
+  if (estadoDaPartida === 'chefe' || (estadoDaPartida === 'pausado' && estadoAntesDaPausa === 'chefe')) {
+    estadoDaPartida = 'chefe';
+    menuPausa.hidden = true;
+    lutaChefe.reiniciar();
+    atualizarInterface();
+    return;
+  }
 
   iniciarPartida();
   mensagem = 'Fase reiniciada';
@@ -753,6 +807,11 @@ const dependenciasDoJogo = {
         player.vidas = Math.min(3, player.vidas + 1);
         mensagem = player.vidas === 3 ? 'Vida recuperada' : 'Coração coletado';
       } else {
+        const moedasDaFase = progresso.moedasColetadas[indiceFaseAtual()] ??= [];
+        if (!moedasDaFase.includes(coletavel.id)) {
+          moedasDaFase.push(coletavel.id);
+          salvarProgresso();
+        }
         mensagem = 'Moeda coletada';
       }
       mensagemAte = performance.now() + 1000;
@@ -806,7 +865,11 @@ redimensionarJogo();
 new ResizeObserver(redimensionarJogo).observe(gameShell);
 window.addEventListener('resize', redimensionarJogo);
 retratoMovel.addEventListener('change', redimensionarJogo);
-tecladoPrincipal.addEventListener('change', redimensionarJogo);
+tecladoPrincipal.addEventListener('change', () => {
+  atualizarInstrucoes();
+  redimensionarJogo();
+});
+atualizarInstrucoes();
 
 // Chamada pelo jogo quando as vidas acabam: toca o som de derrota e volta à tela inicial.
 function aguardarEscolhaDoJogador() {
@@ -816,14 +879,17 @@ function aguardarEscolhaDoJogador() {
 }
 
 function pausarPartida() {
-  if (estadoDaPartida !== 'jogando') return;
+  if (estadoDaPartida !== 'jogando' && estadoDaPartida !== 'chefe') return;
 
+  estadoAntesDaPausa = estadoDaPartida;
   estadoDaPartida = 'pausado';
-  controleDoJogo.stop();
+  if (estadoAntesDaPausa === 'chefe') lutaChefe.pausar();
+  else controleDoJogo.stop();
   limparAcoes();
   pausarMusicaFundo();
-  botaoPausar.hidden = true;
   menuPausa.hidden = false;
+  rotuloNivelPausa.textContent = estadoAntesDaPausa === 'chefe'
+    ? 'Chefe final' : textosDoNivel(indiceFaseAtual()).nome;
   atualizarInterface();
   botaoRetomar.focus({ preventScroll: true });
 }
@@ -832,12 +898,14 @@ function retomarPartida() {
   if (estadoDaPartida !== 'pausado' || retratoMovel.matches) return;
 
   limparAcoes();
-  estadoDaPartida = 'jogando';
+  estadoDaPartida = estadoAntesDaPausa;
   menuPausa.hidden = true;
-  botaoPausar.hidden = false;
   atualizarInterface();
-  controleDoJogo.start();
-  retomarMusicaFundo();
+  if (estadoDaPartida === 'chefe') lutaChefe.retomar();
+  else {
+    controleDoJogo.start();
+    retomarMusicaFundo();
+  }
   botaoPausar.focus({ preventScroll: true });
 }
 
@@ -861,7 +929,6 @@ function tocarIntroNivel1(aoTerminar) {
   estadoDaPartida = 'cutscene';
   controleDoJogo.stop();
   limparAcoes();
-  botaoPausar.hidden = true;
   menuPausa.hidden = true;
   telaTitulo.hidden = true;
   telaInicio.hidden = true;
@@ -906,11 +973,20 @@ botaoTituloJogar.addEventListener('click', iniciarPeloTitulo);
 botaoTituloComo.addEventListener('click', () => abrirPainelTitulo('como'));
 botaoTituloSobre.addEventListener('click', () => abrirPainelTitulo('sobre'));
 botaoFecharPainel.addEventListener('click', fecharPainelTitulo);
+botaoApagarDados.addEventListener('click', () => abrirPainelTitulo('apagar'));
+botaoConfirmarApagar.addEventListener('click', apagarDadosDoJogo);
 window.addEventListener('resize', () => {
   if (estadoDaPartida === 'titulo') selecionarBotaoTitulo(indiceTitulo);
 });
 botaoPausar.addEventListener('click', pausarPartida);
 botaoRetomar.addEventListener('click', retomarPartida);
+// Menu: larga a fase pausada e volta para a tela de título.
+botaoMenuPausa.addEventListener('click', () => {
+  menuSom.hidden = true;
+  mostrarTitulo();
+  atualizarInterface();
+  botoesTitulo[0].focus({ preventScroll: true });
+});
 
 /** Abre o painel de som. `botao` é o que abriu o painel e recebe o foco de volta ao fechar. */
 function abrirMenuSom(botao) {
@@ -928,15 +1004,14 @@ botaoSomInicio.addEventListener('click', () => abrirMenuSom(botaoSomInicio));
 botaoSomPausa.addEventListener('click', () => abrirMenuSom(botaoSomPausa));
 botaoVoltarSom.addEventListener('click', fecharMenuSom);
 
-controleMusica.addEventListener('input', () => {
-  valorMusica.textContent = `${controleMusica.value}%`;
-  definirVolume('musica', controleMusica.value / 100);
-});
-
-controleEfeitos.addEventListener('input', () => {
-  valorEfeitos.textContent = `${controleEfeitos.value}%`;
-  definirVolume('efeitos', controleEfeitos.value / 100);
-});
+for (const [tipo, controle, rotulo] of [
+  ['musica', controleMusica, valorMusica], ['efeitos', controleEfeitos, valorEfeitos],
+]) {
+  controle.addEventListener('input', () => {
+    rotulo.textContent = `${controle.value}%`;
+    definirVolume(tipo, controle.value / 100);
+  });
+}
 
 if (botaoReiniciar) {
   botaoReiniciar.disabled = false;
@@ -947,9 +1022,7 @@ if (botaoReiniciar) {
 // Na tela inicial, nenhum atalho age: só o botão Jogar.
 canvas.addEventListener('click', (evento) => {
   if (!areaBotaoTerminal || estadoDaPartida !== 'jogando') return;
-  const area = canvas.getBoundingClientRect();
-  const x = (evento.clientX - area.left) * visao.largura / area.width;
-  const y = (evento.clientY - area.top) * visao.altura / area.height;
+  const { x, y } = pontoNoCanvas(canvas, evento, visao.largura, visao.altura);
   const b = areaBotaoTerminal;
   if (x >= b.x && x < b.x + b.largura && y >= b.y && y < b.y + b.altura) abrirTerminal();
 });
@@ -957,9 +1030,19 @@ canvas.addEventListener('click', (evento) => {
 window.addEventListener('keydown', (evento) => {
   // Os controles de instalação usam o comportamento nativo de Enter e espaço.
   if (evento.target.closest?.('.pwa-controls')) return;
+  // Os botões Apagar dados e Tela cheia não estão no menu de setas: Enter neles usa o clique nativo.
+  if (evento.target === botaoApagarDados) return;
+  if (evento.target.id === 'botao-tela-cheia' && (evento.key === 'Enter' || evento.key === ' ')) return;
   if (retratoMovel.matches) return;
   // Cutscene em andamento: ela trata as próprias teclas.
-  if (estadoDaPartida === 'cutscene' || estadoDaPartida === 'chefe') return;
+  if (estadoDaPartida === 'cutscene') return;
+  if (estadoDaPartida === 'chefe') {
+    if (lutaChefe.podePausar() && ['p', 'P', 'Escape'].includes(evento.key)) {
+      evento.preventDefault();
+      pausarPartida();
+    }
+    return;
+  }
   // F8 (teste): revê a introdução do Nível 1 a partir da tela de níveis ou da tela do nível.
   if (evento.key === 'F8' && (estadoDaPartida === 'inicio' || estadoDaPartida === 'niveis')) {
     evento.preventDefault();
