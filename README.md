@@ -18,7 +18,9 @@ Há **quatro plantas inimigas**: duas no chão (**x = 1820 e 3120**), uma sobre 
 
 Use o botão **Pausar** para interromper a partida e abrir o menu. Enquanto o jogo está pausado, o personagem e a simulação ficam parados. O botão **Retomar** fecha o menu e continua a partida de onde parou.
 
-Os níveis liberados e as estrelas ficam salvos no navegador. A posição do personagem e os checkpoints valem apenas para a partida atual: recarregar a página reinicia a fase.
+Os níveis liberados, as estrelas e as moedas coletadas ficam salvos no navegador. O contador de moedas mostra o total acumulado em todas as fases. Cada moeda é salva ao ser coletada e não reaparece ao voltar à fase, reiniciá-la ou recarregar a página. Use **Apagar dados** na tela de título para zerar esse progresso.
+
+A posição do personagem e os checkpoints valem apenas para a partida atual: recarregar a página reinicia a fase.
 
 ## Controles
 
@@ -104,7 +106,7 @@ O acesso por IP local com HTTP permite testar o jogo no celular, mas não a inst
 - A orientação preferida é horizontal; o aviso para girar o celular continua atendendo aos navegadores que não aplicam essa preferência.
 - Ao minimizar o jogo ou bloquear a tela durante uma partida, o jogo e a música pausam. Use **Retomar** ao voltar.
 - Uma nova versão é baixada em um cache separado. Se algum arquivo falhar, a versão anterior continua ativa. Quando o download terminar, a tela de título informa que há uma atualização pronta.
-- Para aplicar uma atualização, feche **todas as abas e janelas do jogo**, inclusive a PWA instalada, e abra novamente. A versão não é trocada durante uma partida. Só após a ativação o cache antigo é removido; níveis e estrelas em `localStorage` são preservados.
+- Para aplicar uma atualização, feche **todas as abas e janelas do jogo**, inclusive a PWA instalada, e abra novamente. A versão não é trocada durante uma partida. Só após a ativação o cache antigo é removido; níveis, estrelas e moedas em `localStorage` são preservados.
 
 O armazenamento é local ao dispositivo e ao endereço usado. Limpar os dados do site remove cache e progresso; os endereços de preview da Vercel têm armazenamento separado do endereço principal. O modo offline continua disponível enquanto os arquivos permanecerem armazenados pelo navegador.
 
