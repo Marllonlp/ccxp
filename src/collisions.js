@@ -38,6 +38,7 @@ export function resolverColisoes(player, deltaTime) {
   // --- Eixo horizontal: impede atravessar paredes ---
   player.y = yAnterior;
   for (const obstaculo of obstaculos) {
+    if (obstaculo.ativo === false) continue;
     if (!interseca(
       player.x, player.y, player.largura, player.altura,
       obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height,
@@ -56,6 +57,7 @@ export function resolverColisoes(player, deltaTime) {
   player.noChao = false;
 
   for (const obstaculo of obstaculos) {
+    if (obstaculo.ativo === false) continue;
     if (!interseca(
       player.x, player.y, player.largura, player.altura,
       obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height,
@@ -63,9 +65,12 @@ export function resolverColisoes(player, deltaTime) {
 
     if (player.vy > 0) {
       // Descendo: pousa sobre a superfície e ganha apoio.
+      const velocidadeDeQueda = player.vy;
       player.y = obstaculo.y - player.altura;
       player.vy = 0;
       player.noChao = true;
+      // Mecânicas reagem ao pouso (trampolim lança, plataforma quebradiça começa a quebrar).
+      obstaculo.aoPousar?.(player, velocidadeDeQueda);
     } else if (player.vy < 0) {
       // Subindo: bate a cabeça e perde o impulso, sem ficar preso.
       player.y = obstaculo.y + obstaculo.height;
@@ -83,6 +88,7 @@ export function resolverColisoes(player, deltaTime) {
  */
 export function verificarEspaco(x, y, largura, altura) {
   for (const obstaculo of obstaculos) {
+    if (obstaculo.ativo === false) continue;
     if (interseca(
       x, y, largura, altura,
       obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height,

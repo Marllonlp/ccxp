@@ -1,4 +1,4 @@
-// Terminal do totem: mini editor de Python em que o jogador monta o programa arrastando trechos.
+// Terminal do totem: mini editor de Python em que o jogador monta o programa com cliques nos trechos.
 // Desenhado em 480 × 270 pixels (o CSS amplia com pixel nítido), como a tela de níveis.
 // Posições, cores e regras seguem INSTRUCOES_TERMINAL_PYTHON.md da pasta terminal_python_pacote.
 
@@ -73,8 +73,8 @@ for (const tipo of Object.keys(CORES_TIPO)) {
 }
 
 /** Carrega as missões do arquivo missoes.json da pasta do terminal. */
-export async function carregarMissoes() {
-  const resposta = await fetch(PASTA + 'missoes.json');
+export async function carregarMissoes(arquivo = PASTA + 'missoes.json') {
+  const resposta = await fetch(arquivo);
   return (await resposta.json()).missoes;
 }
 
@@ -182,6 +182,8 @@ function quebrarConsole(texto) {
  * - onResolvido(idMissao): a missão foi resolvida.
  */
 export function criarTerminal(canvas, { onFechar, onResolvido }) {
+  // Retornos atuais: a luta do chefe troca temporariamente os retornos e depois os devolve.
+  let retornos = { onFechar, onResolvido };
   canvas.width = LARGURA;
   canvas.height = ALTURA;
   const ctx = canvas.getContext('2d');
@@ -192,11 +194,9 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
   const estadosPorMissao = new Map();
   let ativo = false;
   let rodando = false;
-  let arrasto = null;               // { origem: 'lista'|'editor', trecho, indice, x, y, movido }
   let selecionado = -1;             // linha do editor selecionada (para Tab e Delete)
   let hover = { x: false, testar: false, dica: false, trecho: -1 };
   let pressionado = { ate: 0, alvo: null };
-  let inicioArrasto = null;
 
   function novoEstado(missaoAtual) {
     return {
@@ -238,16 +238,14 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     return ponto.x >= EDITOR.x && ponto.x < EDITOR.x + EDITOR.largura && ponto.y >= EDITOR.y && ponto.y < EDITOR.y + EDITOR.linhas * EDITOR.alturaLinha;
   }
 
-  /** Índice da linha do editor onde um trecho solto cairia (0 a número de linhas). */
-  function indiceDeSoltar(ponto) {
-    const indice = Math.floor((ponto.y - EDITOR.y + EDITOR.alturaLinha / 2) / EDITOR.alturaLinha);
-    return Math.max(0, Math.min(indice, estado.linhas.length));
+  /** Onde o próximo trecho da lista entra: logo abaixo da linha selecionada, ou no fim do editor. */
+  function pontoDeInsercao() {
+    return selecionado >= 0 ? selecionado + 1 : estado.linhas.length;
   }
 
-  /** Nível de indentação pela posição horizontal do trecho solto (0 a 3). */
-  function indentDeSoltar(ponto) {
-    const indent = Math.round((ponto.x - 8 - EDITOR.xCodigo) / EDITOR.passoIndent);
-    return Math.max(0, Math.min(indent, EDITOR.maxIndent));
+  function moverLinha(de, para) {
+    const [linha] = estado.linhas.splice(de, 1);
+    estado.linhas.splice(para, 0, linha);
   }
 
   function indiceDoTrechoNaLista(ponto) {
@@ -301,7 +299,7 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     escreverNoConsole(`${missao.testes.length}/${missao.testes.length} testes passaram!`, COR.resumo);
     if (!estado.resolvido) {
       estado.resolvido = true;
-      onResolvido(missao.id);
+      retornos.onResolvido(missao.id);
     }
   }
 
@@ -383,16 +381,12 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
       escreverCodigo(ctx, trechoPorId(linha.id).codigo, EDITOR.xCodigo + EDITOR.passoIndent * linha.indent, topo + 1);
     });
 
-    // Área de soltar e cursor
-    const soltarEm = arrasto && arrasto.sobreEditor ? indiceDeSoltar(arrasto) : null;
-    if (soltarEm !== null) {
-      tracejado(ctx, EDITOR.x, EDITOR.y + EDITOR.alturaLinha * soltarEm, EDITOR.x + EDITOR.largura, EDITOR.y + EDITOR.alturaLinha * soltarEm, COR.zonaSoltar);
-    }
-    const proxima = estado.linhas.length;
-    if (proxima < EDITOR.linhas) {
-      const topo = EDITOR.y + EDITOR.alturaLinha * proxima;
+    // Ponto de inserção: o próximo clique na lista entra aqui.
+    const inserirEm = pontoDeInsercao();
+    if (inserirEm < EDITOR.linhas) {
+      const topo = EDITOR.y + EDITOR.alturaLinha * inserirEm;
       tracejado(ctx, EDITOR.x, topo + 13, EDITOR.x + EDITOR.largura, topo + 13, COR.zonaSoltar);
-      if (Math.floor(agora / 400) % 2 === 0 && !arrasto) {
+      if (Math.floor(agora / 400) % 2 === 0) {
         ctx.fillStyle = COR.cursor;
         ctx.fillRect(EDITOR.xCodigo, topo + 1, 2, 11);
       }
@@ -401,7 +395,6 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     // Trechos na lista
     const itens = trechosNaLista().slice(0, LISTA.maxItens);
     itens.forEach((trecho, i) => {
-      if (arrasto && arrasto.origem === 'lista' && arrasto.trecho.id === trecho.id) return;
       const topo = LISTA.y + LISTA.passo * i;
       const tipo = imagens.cartucho[trecho.tipo] || imagens.cartucho.outro;
       const img = tipo[hover.trecho === i ? 'hover' : 'normal'];
@@ -421,13 +414,6 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     ultimas.forEach((linha, i) => {
       escreverComSombra(ctx, linha.texto, CONSOLE.x, CONSOLE.y + CONSOLE.passo * i, linha.cor);
     });
-
-    // Trecho sendo arrastado acompanha o ponteiro
-    if (arrasto && arrasto.movido) {
-      const tipo = imagens.cartucho[arrasto.trecho.tipo] || imagens.cartucho.outro;
-      if (pronta(tipo.hover)) ctx.drawImage(tipo.hover, arrasto.x - 57, arrasto.y - 9);
-      escreverCodigo(ctx, arrasto.trecho.codigo, arrasto.x - 49, arrasto.y - 7, LISTA.maxCaracteres);
-    }
   }
 
   function animar() {
@@ -449,12 +435,11 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     if (!ativo) return;
     if (PERMITIR_FECHAR_TERMINAL) {
       ativo = false;
-      arrasto = null;
-      onFechar();
+      retornos.onFechar();
     }
   }
 
-  // Mouse
+  // Mouse: clique põe o trecho da lista no editor, seleciona uma linha e move a linha selecionada.
   canvas.addEventListener('mousemove', (evento) => {
     if (!ativo) return;
     const ponto = pontoNoCanvas(evento);
@@ -464,13 +449,22 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
       dica: dentro(ponto, BOTAO_DICA),
       trecho: indiceDoTrechoNaLista(ponto),
     };
-    if (arrasto) {
-      arrasto.x = ponto.x;
-      arrasto.y = ponto.y;
-      arrasto.sobreEditor = emEditor(ponto);
-      if (!arrasto.movido && Math.hypot(ponto.x - arrasto.inicioX, ponto.y - arrasto.inicioY) > 3) arrasto.movido = true;
-    }
   });
+
+  /** Clique no editor: seleciona a linha; clicar na selecionada desfaz a seleção; clicar em outra linha move a selecionada para lá. */
+  function clicarNoEditor(ponto) {
+    const indice = indiceDaLinhaEditor(ponto);
+    if (indice === -1 || selecionado === indice) {
+      selecionado = -1;
+      return;
+    }
+    if (selecionado === -1) {
+      selecionado = indice;
+      return;
+    }
+    moverLinha(selecionado, indice);
+    selecionado = indice;
+  }
 
   canvas.addEventListener('mousedown', (evento) => {
     if (!ativo) return;
@@ -492,41 +486,13 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     }
     const indiceLista = indiceDoTrechoNaLista(ponto);
     if (indiceLista !== -1) {
-      const trecho = trechosNaLista()[indiceLista];
-      arrasto = { origem: 'lista', trecho, x: ponto.x, y: ponto.y, inicioX: ponto.x, inicioY: ponto.y, movido: false, sobreEditor: false };
+      const indice = pontoDeInsercao();
+      // Com o editor cheio, o clique não faz nada.
+      if (inserirNoEditor(trechosNaLista()[indiceLista], indice, 0)) selecionado = indice;
       return;
     }
-    const indiceEditor = indiceDaLinhaEditor(ponto);
-    if (indiceEditor !== -1) {
-      selecionado = indiceEditor;
-      const linha = estado.linhas[indiceEditor];
-      arrasto = { origem: 'editor', indice: indiceEditor, trecho: trechoPorId(linha.id), x: ponto.x, y: ponto.y, inicioX: ponto.x, inicioY: ponto.y, movido: false, sobreEditor: true };
-    }
-  });
-
-  canvas.addEventListener('mouseup', (evento) => {
-    if (!ativo || !arrasto) return;
-    const ponto = pontoNoCanvas(evento);
-    const a = arrasto;
-    arrasto = null;
-    if (!a.movido) return;
-
-    if (a.origem === 'lista') {
-      if (emEditor(ponto)) inserirNoEditor(a.trecho, indiceDeSoltar(ponto), indentDeSoltar(ponto));
-      return;
-    }
-
-    // Linha do editor: reordena se foi solta no editor; volta à lista se foi solta fora.
-    const linha = estado.linhas[a.indice];
-    estado.linhas.splice(a.indice, 1);
-    if (emEditor(ponto)) {
-      let destino = indiceDeSoltar(ponto);
-      if (destino > a.indice) destino -= 1;
-      estado.linhas.splice(destino, 0, { id: linha.id, indent: indentDeSoltar(ponto) });
-      selecionado = destino;
-    } else {
-      selecionado = -1;
-    }
+    if (emEditor(ponto)) clicarNoEditor(ponto);
+    else selecionado = -1;
   });
 
   // Teclado
@@ -542,6 +508,15 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
       const linha = estado.linhas[selecionado];
       const novo = linha.indent + (evento.shiftKey ? -1 : 1);
       linha.indent = Math.max(0, Math.min(novo, EDITOR.maxIndent));
+      return true;
+    }
+    if ((evento.key === 'ArrowUp' || evento.key === 'ArrowDown') && selecionado >= 0) {
+      evento.preventDefault();
+      const para = selecionado + (evento.key === 'ArrowUp' ? -1 : 1);
+      if (para >= 0 && para < estado.linhas.length) {
+        moverLinha(selecionado, para);
+        selecionado = para;
+      }
       return true;
     }
     if ((evento.key === 'Delete' || evento.key === 'Backspace') && selecionado >= 0) {
@@ -560,16 +535,24 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
       if (!estadosPorMissao.has(missao.id)) estadosPorMissao.set(missao.id, novoEstado(missao));
       estado = estadosPorMissao.get(missao.id);
       selecionado = -1;
-      arrasto = null;
       ativo = true;
       iniciarAnimacao();
     },
     fechar() {
       ativo = false;
-      arrasto = null;
     },
     ativo: () => ativo,
     tratarTecla,
+    /** Troca os retornos (fechar e resolver). Devolve os anteriores para restaurá-los depois. */
+    definirRetornos(novos) {
+      const anteriores = retornos;
+      retornos = novos;
+      return anteriores;
+    },
+    /** Esquece o progresso de todas as missões (a luta recomeça com os patches zerados). */
+    esquecerMissoes() {
+      estadosPorMissao.clear();
+    },
   };
 }
 
