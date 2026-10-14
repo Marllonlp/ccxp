@@ -1,0 +1,103 @@
+{
+  "observacao": "Roteiro da ADA, seguindo exercicios_python_5_niveis_revisado.pdf. Cada página tem no máximo 138 caracteres (3 linhas de 46). 'destaque' = índices (começando em 0) das linhas do código que ficam amarelas. 'guias' = mostrar as guias de recuo. Código: até 5 linhas de 25 caracteres, contando 4 por recuo. Página {\"acao\":\"olhar_para_tela\",\"ms\":2000} = pausa cômica: Byte e ADA encaram o jogador em silêncio.",
+  "niveis": [
+    {
+      "nivel": 1,
+      "assunto": "variáveis e print()",
+      "codigo": [
+        ["print(\"Olá, mundo!\")", 0],
+        ["nome = \"Byte\"", 0],
+        ["pontos = 10", 0],
+        ["print(nome, pontos)", 0]
+      ],
+      "paginas": [
+        { "quem": "BYTE", "texto": "QUEM É VOCÊ?? E COMO APARECEU????", "balao": "surpresa" },
+        { "quem": "ADA", "texto": "Isso não importa. Os desenvolvedores decidiram que ia ser assim." },
+        { "acao": "olhar_para_tela", "ms": 2000 },
+        { "quem": "ADA", "texto": "Enfim! Eu sou a ADA, sua assistente de código. Vou te ajudar a recuperar o notebook!" },
+        { "quem": "ADA", "texto": "O primeiro comando do Python é o print(). Ele MOSTRA algo na tela. Este aqui escreve: Olá, mundo!", "destaque": [0] },
+        { "quem": "ADA", "texto": "Uma VARIÁVEL é uma caixinha com nome que guarda um valor. O sinal = coloca o valor dentro dela.", "destaque": [1, 2] },
+        { "quem": "ADA", "texto": "Texto vai entre aspas, como \"Byte\". Número vai sem aspas, como 10.", "destaque": [1, 2] },
+        { "quem": "ADA", "texto": "Para mostrar o que está guardado, use o nome da variável no print, sem aspas. Aqui aparece: Byte 10", "destaque": [3] },
+        { "quem": "BYTE", "texto": "Fácil! A variável guarda e o print mostra." },
+        { "quem": "ADA", "texto": "Isso! Use isso nas perguntas e no totem para seguir em frente. Boa sorte, Byte!", "acenar": true }
+      ]
+    },
+    {
+      "nivel": 2,
+      "assunto": "input() e operações matemáticas",
+      "codigo": [
+        ["a = int(input())", 0],
+        ["b = int(input())", 0],
+        ["soma = a + b", 0],
+        ["print(soma)", 0]
+      ],
+      "paginas": [
+        { "quem": "ADA", "texto": "Agora o programa vai CONVERSAR com o jogador. O input() espera alguém digitar e devolve o que foi escrito.", "destaque": [0, 1] },
+        { "quem": "ADA", "texto": "O input() sempre devolve TEXTO. O int() transforma esse texto em número inteiro, para dar para fazer contas.", "destaque": [0, 1] },
+        { "quem": "ADA", "texto": "Com números, o Python faz contas: + soma, - subtrai, * multiplica e / divide.", "destaque": [2] },
+        { "quem": "ADA", "texto": "Se digitarem 3 e depois 4, a variável soma guarda 7, e o print mostra 7.", "destaque": [2, 3] },
+        { "quem": "BYTE", "texto": "Recebo com input, calculo e mostro com print!" },
+        { "quem": "ADA", "texto": "Exatamente! Boa sorte, Byte!", "acenar": true }
+      ]
+    },
+    {
+      "nivel": 3,
+      "assunto": "condições (if e else)",
+      "codigo": [
+        ["idade = 15", 0],
+        ["if idade >= 18:", 0],
+        ["print(\"Pode dirigir\")", 1],
+        ["else:", 0],
+        ["print(\"Ainda não\")", 1]
+      ],
+      "paginas": [
+        { "quem": "ADA", "texto": "Oi, Byte! Nesta fase você vai usar a ESTRUTURA CONDICIONAL: o famoso if/else." },
+        { "quem": "ADA", "texto": "Ela serve para o programa TOMAR DECISÕES. SE (if) a condição for verdadeira, ele faz uma coisa...", "destaque": [1, 2] },
+        { "quem": "ADA", "texto": "SENÃO (else), ele faz outra coisa. Só um dos dois caminhos é executado!", "destaque": [3, 4] },
+        { "quem": "ADA", "texto": "Para comparar: > maior, < menor, >= maior ou igual, == igual e != diferente. Um = sozinho só guarda valor!", "destaque": [1] },
+        { "quem": "ADA", "texto": "Aqui: se a idade for 18 ou mais, mostra \"Pode dirigir\". Como idade é 15, mostra \"Ainda não\".", "destaque": [0, 1, 3, 4] },
+        { "quem": "ADA", "texto": "Depois do if e do else vêm os dois-pontos (:), e o que fica dentro deles vai RECUADO.", "destaque": [1, 2, 3, 4], "guias": true },
+        { "quem": "BYTE", "texto": "Entendi! O if decide o caminho. Valeu, ADA!", "destaque": [1, 3], "guias": true },
+        { "quem": "ADA", "texto": "Use isso nas perguntas e no totem para seguir em frente. Boa sorte, Byte!", "acenar": true }
+      ]
+    },
+    {
+      "nivel": 4,
+      "assunto": "repetições (for e while)",
+      "codigo": [
+        ["for i in range(3):", 0],
+        ["print(\"Pulo!\")", 1],
+        ["n = 3", 0],
+        ["while n > 0:", 0],
+        ["n = n - 1", 1]
+      ],
+      "paginas": [
+        { "quem": "ADA", "texto": "Nesta fase você vai usar LAÇOS DE REPETIÇÃO. Eles repetem um pedaço do código várias vezes." },
+        { "quem": "ADA", "texto": "O for com range(3) repete 3 vezes tudo o que está RECUADO embaixo dele. Então aparece Pulo! três vezes.", "destaque": [0, 1], "guias": true },
+        { "quem": "ADA", "texto": "Já o while repete ENQUANTO a condição for verdadeira. Aqui, n diminui 1 por vez até chegar a 0.", "destaque": [2, 3, 4], "guias": true },
+        { "quem": "ADA", "texto": "Cuidado: se a condição nunca ficar falsa, o while nunca para! Por isso o n diminui a cada volta.", "destaque": [4], "guias": true },
+        { "quem": "BYTE", "texto": "Repetir sem copiar e colar? Adorei!" },
+        { "quem": "ADA", "texto": "Programador esperto não se repete! Boa sorte, Byte!", "acenar": true }
+      ]
+    },
+    {
+      "nivel": 5,
+      "assunto": "revisão geral e operadores lógicos",
+      "codigo": [
+        ["i = int(input())", 0],
+        ["s = input()", 0],
+        ["if i >= 18 and s == \"ok\":", 0],
+        ["print(\"Entrou!\")", 1]
+      ],
+      "paginas": [
+        { "quem": "ADA", "texto": "Última fase antes do Kernel Panic! Aqui você vai REVISAR tudo: variáveis, input, contas, if/else e laços." },
+        { "quem": "ADA", "texto": "E uma novidade: os OPERADORES LÓGICOS. Com and, as DUAS condições precisam ser verdadeiras.", "destaque": [2] },
+        { "quem": "ADA", "texto": "Com or, basta UMA delas ser verdadeira. E o not inverte: o que é verdadeiro vira falso." },
+        { "quem": "ADA", "texto": "Aqui, só entra quem tem 18 anos ou mais E digitou a senha ok. Se faltar uma das duas, não entra.", "destaque": [0, 1, 2, 3], "guias": true },
+        { "quem": "BYTE", "texto": "Juntando tudo, eu consigo enfrentar qualquer bug!" },
+        { "quem": "ADA", "texto": "Você está pronto. Boa sorte, Byte!", "acenar": true }
+      ]
+    }
+  ]
+}

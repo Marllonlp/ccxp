@@ -40,6 +40,7 @@ import { BANCO_DESAFIOS } from './bancoDesafios.js';
 import { Poder } from './poder.js';
 import { criarCutscene } from './cutscene.js';
 import { criarChefe } from './chefe.js';
+import { criarTutorialAda } from './ada.js';
 
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
@@ -135,6 +136,11 @@ const cutsceneIntro = criarCutscene(document.getElementById('canvas-cutscene'), 
   pasta: './assets/cutscenes/intro_nivel1/',
 });
 const ROTEIRO_INTRO_NIVEL1 = './assets/cutscenes/intro_nivel1/cutscene_intro_nivel1.json';
+
+// Tutorial da ADA: toca no começo de cada nível na primeira vez, e o botão "?" (ou H) o reabre.
+const telaAda = document.getElementById('tela-ada');
+const tutorialAda = criarTutorialAda(document.getElementById('canvas-ada'), { pasta: './assets/ada/' });
+const botaoAjuda = document.getElementById('botao-ajuda');
 
 const seletorNiveis = criarTelaNiveis(document.getElementById('canvas-niveis'), {
   onEscolher: (indice) => escolherNivel(indice),
@@ -944,21 +950,63 @@ function tocarIntroNivel1(aoTerminar) {
   });
 }
 
+/** Mostra o tutorial da ADA do nível `indice` (0 = primeiro). aoTerminar roda ao acabar ou ao pular. */
+function tocarTutorialAda(indice, aoTerminar) {
+  estadoDaPartida = 'tutorial';
+  controleDoJogo.stop();
+  limparAcoes();
+  botaoPausar.hidden = true;
+  menuPausa.hidden = true;
+  telaTitulo.hidden = true;
+  telaInicio.hidden = true;
+  telaNiveis.hidden = true;
+  seletorNiveis.esconder();
+  telaAda.hidden = false;
+  atualizarInterface();
+  tutorialAda.tocar(indice + 1, {
+    aoTerminar: () => {
+      telaAda.hidden = true;
+      aoTerminar();
+    },
+  });
+}
+
+/** Começa a partida do nível atual sempre passando antes pelo tutorial da ADA (ESC pula). */
+function comecarComTutorial() {
+  tocarTutorialAda(indiceFaseAtual(), () => {
+    iniciarMusicaFundo();
+    iniciarPartida();
+  });
+}
+
+/** Botão "?" ou tecla H: a partida fica parada enquanto a ADA explica de novo, e continua de onde estava. */
+function reverTutorial() {
+  if (estadoDaPartida !== 'jogando') return;
+  pausarMusicaFundo();
+  tocarTutorialAda(indiceFaseAtual(), () => {
+    estadoDaPartida = 'jogando';
+    limparAcoes();
+    botaoPausar.hidden = false;
+    atualizarInterface();
+    retomarMusicaFundo();
+    controleDoJogo.start();
+    botaoPausar.focus({ preventScroll: true });
+  });
+}
+botaoAjuda.addEventListener('click', () => {
+  botaoAjuda.blur();
+  reverTutorial();
+});
+
 botaoJogar.addEventListener('click', () => {
   if (retratoMovel.matches) return;
   tocarSomApertarPlay();
-  // Primeira vez no Nível 1: a introdução toca antes da partida, e a música começa depois dela.
-  if (indiceFaseAtual() === 0 && !progresso.intro_nivel1_vista) {
-    tocarIntroNivel1(() => {
-      progresso.intro_nivel1_vista = true;
-      salvarProgresso();
-      iniciarMusicaFundo();
-      iniciarPartida();
-    });
+  // Nível 1: a introdução toca sempre antes; depois a ADA aparece, e a música começa com a partida.
+  if (indiceFaseAtual() === 0) {
+    tocarIntroNivel1(comecarComTutorial);
     return;
   }
-  iniciarMusicaFundo();
-  iniciarPartida();
+  comecarComTutorial();
 });
 
 /** Jogar na tela de título abre a tela de níveis. */

@@ -359,8 +359,12 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     }
 
     const solucao = missao.solucao;
-    const diferenca = solucao.findIndex((passo, i) => !sequencia[i] || sequencia[i].id !== passo.id);
-    if (sequencia.length !== solucao.length || diferenca !== -1) {
+    // `alternativas` (opcional): outras ordens que também funcionam, como duas variáveis
+    // independentes criadas em qualquer ordem. Cada uma é uma lista de ids.
+    const ordens = [solucao.map((passo) => passo.id), ...(missao.alternativas ?? [])];
+    const certa = ordens.some((ordem) => ordem.length === sequencia.length && ordem.every((id, i) => sequencia[i].id === id));
+    if (!certa) {
+      const diferenca = solucao.findIndex((passo, i) => !sequencia[i] || sequencia[i].id !== passo.id);
       const linha = (diferenca === -1 ? sequencia.length : diferenca) + 1;
       escreverNoConsole(`Erro na linha ${linha}: trecho fora do lugar.`, COR.erro);
       escreverNoConsole(`0/${missao.testes.length} testes passaram.`, COR.resumo);
@@ -368,7 +372,8 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     }
 
     // A indentação não é cobrada: com a ordem certa, o editor ajusta cada linha sozinho.
-    solucao.forEach((passo, i) => { sequencia[i].indent = passo.indent; });
+    const recuo = new Map(solucao.map((passo) => [passo.id, passo.indent]));
+    for (const linha of sequencia) linha.indent = recuo.get(linha.id);
 
     for (const teste of missao.testes) {
       escreverNoConsole(`entrada ${teste.entrada} -> ${teste.esperado}   OK`, COR.ok);
