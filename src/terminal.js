@@ -286,12 +286,8 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
       return;
     }
 
-    const indentErrado = solucao.findIndex((passo, i) => sequencia[i].indent !== passo.indent);
-    if (indentErrado !== -1) {
-      escreverNoConsole(`IndentationError na linha ${indentErrado + 1}`, COR.erro);
-      escreverNoConsole(`0/${missao.testes.length} testes passaram.`, COR.resumo);
-      return;
-    }
+    // A indentação não é cobrada: com a ordem certa, o editor ajusta cada linha sozinho.
+    solucao.forEach((passo, i) => { sequencia[i].indent = passo.indent; });
 
     for (const teste of missao.testes) {
       escreverNoConsole(`entrada ${teste.entrada} -> ${teste.esperado}   OK`, COR.ok);
@@ -451,10 +447,18 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     };
   });
 
-  /** Clique no editor: seleciona a linha; clicar na selecionada desfaz a seleção; clicar em outra linha move a selecionada para lá. */
+  /**
+   * Clique no editor: seleciona a linha; clicar na selecionada apaga a linha (o trecho volta para a lista,
+   * o que dá para fazer no celular, sem Delete); clicar em outra linha move a selecionada para lá.
+   */
   function clicarNoEditor(ponto) {
     const indice = indiceDaLinhaEditor(ponto);
-    if (indice === -1 || selecionado === indice) {
+    if (indice === -1) {
+      selecionado = -1;
+      return;
+    }
+    if (selecionado === indice) {
+      estado.linhas.splice(indice, 1);
       selecionado = -1;
       return;
     }

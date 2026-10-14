@@ -36,7 +36,30 @@
         140,
         64,
         213
-      ]
+      ],
+      "posicoes": [
+        {
+          "x": 14,
+          "y": 149,
+          "onde": "chão, à esquerda"
+        },
+        {
+          "x": 86,
+          "y": 90,
+          "onde": "plataforma da esquerda"
+        },
+        {
+          "x": 206,
+          "y": 68,
+          "onde": "plataforma da direita"
+        },
+        {
+          "x": 250,
+          "y": 149,
+          "onde": "chão, perto do chefe"
+        }
+      ],
+      "observacao": "area_interacao é relativa à posição inicial (x 14, y 149) e acompanha o totem quando ele troca de lugar. A cada janela de vulnerabilidade o totem vai para uma posição diferente, longe do Byte."
     },
     "byte_inicio": [
       110,
@@ -134,6 +157,16 @@
       "intervalo_ms": 800,
       "dano_ao_tocar": 1,
       "morre_se_pisado": true
+    },
+    "chuva": {
+      "sprite": "projetil_pacote_erro_2f_12x12",
+      "aviso": "laser_aviso_2f_16x4 no chão, onde o pacote vai cair",
+      "intervalo_ms": 380,
+      "aviso_ms": 550,
+      "nasce_em_y": -12,
+      "gravidade": 700,
+      "mira_no_byte": "metade dos pacotes cai em cima do Byte, o resto em x aleatório",
+      "dano": 1
     }
   },
   "fases": [
@@ -141,34 +174,52 @@
       "fase": 1,
       "vida_do_chefe": 3,
       "sequencia": [
-        "parado:1500",
-        "pacotes:2",
+        "parado:1300",
+        "pacotes:3",
+        "chuva:4",
         "vulneravel"
-      ]
+      ],
+      "vulneravel": {
+        "bugzinhos_a_cada_ms": 0,
+        "totem_troca_a_cada_ms": 0
+      }
     },
     {
       "fase": 2,
       "vida_do_chefe": 2,
       "sequencia": [
-        "parado:1200",
+        "parado:1000",
         "laser_baixo",
-        "bugzinhos:2",
+        "bugzinhos:3",
+        "chuva:5",
+        "pacotes:3",
         "vulneravel"
-      ]
+      ],
+      "vulneravel": {
+        "bugzinhos_a_cada_ms": 2600,
+        "totem_troca_a_cada_ms": 0
+      }
     },
     {
       "fase": 3,
       "vida_do_chefe": 1,
       "sequencia": [
-        "parado:900",
-        "pacotes:3",
+        "parado:800",
+        "chuva:6",
         "laser_alto",
+        "bugzinhos:2",
+        "laser_baixo",
+        "pacotes:4",
         "vulneravel"
-      ]
+      ],
+      "vulneravel": {
+        "bugzinhos_a_cada_ms": 2000,
+        "totem_troca_a_cada_ms": 3200
+      }
     }
   ],
   "vulneravel": {
-    "duracao_ms": 6000,
+    "duracao_ms": 6500,
     "pausa_durante_terminal": true,
     "missoes": "missoes_chefe.json",
     "missao_por_fase": {
@@ -177,7 +228,8 @@
       "3": "patch_3"
     },
     "acerto": "chefe toma 1 de dano (animação dano por 400 ms, barra pisca)",
-    "tempo_esgotado": "chefe volta para 'parado' e repete a sequência da fase atual"
+    "tempo_esgotado": "chefe volta para 'parado' e repete a sequência da fase atual",
+    "observacao": "As missões (missoes_chefe.json) não mudam: a dificuldade extra é só de plataforma. Com o terminal aberto a luta fica pausada."
   },
   "vitoria": [
     "derrota (6 frames) + tremer tela 2 px",
