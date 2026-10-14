@@ -61,7 +61,7 @@ const botaoReiniciar = document.getElementById('botao-reiniciar');
 const telaInicio = document.getElementById('tela-inicio');
 const botaoJogar = document.getElementById('botao-jogar');
 const botaoSair = document.getElementById('botao-sair');
-const botaoOrientacao = document.getElementById('botao-orientacao');
+const avisoOrientacao = document.getElementById('aviso-orientacao');
 
 const telaTitulo = document.getElementById('tela-titulo');
 const botaoTituloJogar = document.getElementById('botao-titulo-jogar');
@@ -367,20 +367,6 @@ function pararMusicaFundo() {
   }
 }
 
-async function solicitarTelaHorizontal() {
-  try {
-    if (screen.orientation?.lock) await screen.orientation.lock('landscape');
-  } catch {
-    // A mensagem abaixo também atende aos navegadores sem bloqueio de orientação.
-  }
-  if (retratoMovel.matches) {
-    document.getElementById('texto-orientacao').textContent = 'Gire o aparelho manualmente para continuar na horizontal.';
-  }
-  redimensionarJogo();
-}
-
-botaoOrientacao?.addEventListener('click', solicitarTelaHorizontal);
-
 const inicio = obterPosicaoInicial();
 const player = new Player(inicio.x, inicio.y);
 // Inimigos da fase carregada: recriados ao começar cada partida, porque cada fase tem os seus.
@@ -456,10 +442,11 @@ function redimensionarJogo() {
   margemSuperior = Math.max(72, hud.querySelector('.hud-stats').getBoundingClientRect().bottom + 12);
   document.querySelector('.game-area').inert = retratoMovel.matches;
   if (retratoMovel.matches && estadoDaPartida === 'jogando') pausarPartida();
-  if (retratoMovel.matches && document.activeElement !== botaoOrientacao) {
-    botaoOrientacao.focus({ preventScroll: true });
-  } else if (!retratoMovel.matches && document.activeElement === botaoOrientacao) {
+  if (retratoMovel.matches && document.activeElement !== avisoOrientacao) {
+    avisoOrientacao.focus({ preventScroll: true });
+  } else if (!retratoMovel.matches && document.activeElement === avisoOrientacao) {
     const proximoFoco = !menuSom.hidden ? controleMusica
+      : estadoDaPartida === 'titulo' ? botoesTitulo[indiceTitulo]
       : estadoDaPartida === 'inicio' ? botaoJogar : botaoRetomar;
     proximoFoco.focus({ preventScroll: true });
   }
