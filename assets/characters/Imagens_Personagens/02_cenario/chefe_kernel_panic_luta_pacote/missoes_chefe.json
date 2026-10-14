@@ -1,0 +1,226 @@
+{
+  "missoes": [
+    {
+      "id": "patch_1",
+      "titulo": "PATCH 1/3",
+      "enunciado": "O escudo (e) do Kernel Panic tem 100 de energia. Tire 25 de cada vez enquanto ele for maior que zero e, no fim, mostre DESLIGOU.",
+      "entrada": "Nenhuma.",
+      "saida": [
+        "Mostre DESLIGOU."
+      ],
+      "exemplos": [
+        {
+          "entrada": "-",
+          "saida": "DESLIGOU"
+        }
+      ],
+      "trechos": [
+        {
+          "id": "a1",
+          "codigo": "e = 100",
+          "tipo": "entrada"
+        },
+        {
+          "id": "a2",
+          "codigo": "while e > 0:",
+          "tipo": "decisao"
+        },
+        {
+          "id": "a3",
+          "codigo": "e = e - 25",
+          "tipo": "outro"
+        },
+        {
+          "id": "a4",
+          "codigo": "print(\"DESLIGOU\")",
+          "tipo": "saida"
+        },
+        {
+          "id": "a5",
+          "codigo": "e = e + 25",
+          "tipo": "outro",
+          "distrator": true
+        }
+      ],
+      "solucao": [
+        {
+          "id": "a1",
+          "indent": 0
+        },
+        {
+          "id": "a2",
+          "indent": 0
+        },
+        {
+          "id": "a3",
+          "indent": 1
+        },
+        {
+          "id": "a4",
+          "indent": 0
+        }
+      ],
+      "testes": [
+        {
+          "entrada": "",
+          "esperado": "DESLIGOU"
+        }
+      ],
+      "dica": "O while repete enquanto a condição for verdadeira. Diminua o escudo dentro do laço (recuado) e mostre a mensagem depois, fora dele."
+    },
+    {
+      "id": "patch_2",
+      "titulo": "PATCH 2/3",
+      "enunciado": "Para bloquear o laser, o sistema pede uma senha (s). Se a senha for byte, mostre LIBERADO. Senão, mostre NEGADO.",
+      "entrada": "Uma palavra (a senha).",
+      "saida": [
+        "Se for byte: LIBERADO.",
+        "Senão: NEGADO."
+      ],
+      "exemplos": [
+        {
+          "entrada": "byte",
+          "saida": "LIBERADO"
+        },
+        {
+          "entrada": "abc",
+          "saida": "NEGADO"
+        }
+      ],
+      "trechos": [
+        {
+          "id": "b1",
+          "codigo": "s = input()",
+          "tipo": "entrada"
+        },
+        {
+          "id": "b2",
+          "codigo": "if s == \"byte\":",
+          "tipo": "decisao"
+        },
+        {
+          "id": "b3",
+          "codigo": "print(\"LIBERADO\")",
+          "tipo": "saida"
+        },
+        {
+          "id": "b4",
+          "codigo": "else:",
+          "tipo": "decisao"
+        },
+        {
+          "id": "b5",
+          "codigo": "print(\"NEGADO\")",
+          "tipo": "saida"
+        },
+        {
+          "id": "b6",
+          "codigo": "if s = \"byte\":",
+          "tipo": "decisao",
+          "distrator": true
+        }
+      ],
+      "solucao": [
+        {
+          "id": "b1",
+          "indent": 0
+        },
+        {
+          "id": "b2",
+          "indent": 0
+        },
+        {
+          "id": "b3",
+          "indent": 1
+        },
+        {
+          "id": "b4",
+          "indent": 0
+        },
+        {
+          "id": "b5",
+          "indent": 1
+        }
+      ],
+      "testes": [
+        {
+          "entrada": "byte",
+          "esperado": "LIBERADO"
+        },
+        {
+          "entrada": "abc",
+          "esperado": "NEGADO"
+        }
+      ],
+      "dica": "Para comparar use == (dois iguais). Um = só serve para guardar um valor numa variável."
+    },
+    {
+      "id": "patch_3",
+      "titulo": "PATCH 3/3",
+      "enunciado": "Último passo! Crie a função rb(s), que devolve o texto s seguido de OFF. Guarde rb(\"KERNEL\") em k e mostre k.",
+      "entrada": "Nenhuma.",
+      "saida": [
+        "Mostre KERNEL OFF."
+      ],
+      "exemplos": [
+        {
+          "entrada": "-",
+          "saida": "KERNEL OFF"
+        }
+      ],
+      "trechos": [
+        {
+          "id": "c1",
+          "codigo": "def rb(s):",
+          "tipo": "decisao"
+        },
+        {
+          "id": "c2",
+          "codigo": "return s + \" OFF\"",
+          "tipo": "saida"
+        },
+        {
+          "id": "c3",
+          "codigo": "k = rb(\"KERNEL\")",
+          "tipo": "entrada"
+        },
+        {
+          "id": "c4",
+          "codigo": "print(k)",
+          "tipo": "saida"
+        },
+        {
+          "id": "c5",
+          "codigo": "print(s)",
+          "tipo": "saida",
+          "distrator": true
+        }
+      ],
+      "solucao": [
+        {
+          "id": "c1",
+          "indent": 0
+        },
+        {
+          "id": "c2",
+          "indent": 1
+        },
+        {
+          "id": "c3",
+          "indent": 0
+        },
+        {
+          "id": "c4",
+          "indent": 0
+        }
+      ],
+      "testes": [
+        {
+          "entrada": "",
+          "esperado": "KERNEL OFF"
+        }
+      ],
+      "dica": "O return fica recuado dentro da função. Depois, sem recuo, chame a função e mostre o resultado."
+    }
+  ]
+}
