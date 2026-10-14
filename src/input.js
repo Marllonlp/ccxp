@@ -3,6 +3,9 @@
 // Os elementos de toque estão em index.html, identificados por data-action.
 // Implemente a captura aqui e conecte a leitura em main.js, conforme o README.
 
+// A mesma detecção orienta os controles, as instruções e o terminal.
+export const tecladoPrincipal = window.matchMedia('(hover: hover) and (pointer: fine)');
+
 export const inputState = {
     esquerda: false,
     direita: false,

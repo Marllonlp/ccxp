@@ -1,6 +1,7 @@
 // Reprodutor de cutscenes. Lê um roteiro JSON (INSTRUCOES_CUTSCENE_INTRO.md) e desenha tudo em 480 × 270 pixels.
 // Cada passo vira uma tarefa e a sequência espera a tarefa terminar. "paralelo" roda junto com o passo principal
 // e para quando ele termina.
+import { tecladoPrincipal } from './input.js';
 
 const LARGURA = 480;
 const ALTURA = 270;
@@ -680,7 +681,7 @@ function desenharCena(ctx, recursos, cena) {
     ctx.fillStyle = `rgba(0, 0, 0, ${cena.escurecer})`;
     ctx.fillRect(0, 0, LARGURA, ALTURA);
   }
-  if (Math.floor(cena.tempo / 600) % 2 === 0) escrever(ctx, 'ESC: PULAR', 388, 6, 8, COR_CINZA);
+  if (tecladoPrincipal.matches && Math.floor(cena.tempo / 600) % 2 === 0) escrever(ctx, 'ESC: PULAR', 388, 6, 8, COR_CINZA);
 }
 
 /**
@@ -696,6 +697,11 @@ export function criarCutscene(canvas, { pasta }) {
   let recursosCarregados = null;
   let execucao = null;
   let contagemPular = null;
+  const botaoPular = canvas.parentElement.querySelector('#botao-pular-intro');
+  botaoPular.addEventListener('click', (evento) => {
+    evento.stopPropagation();
+    pular();
+  });
 
   function avancar() {
     const cena = execucao?.cena;
@@ -776,6 +782,7 @@ export function criarCutscene(canvas, { pasta }) {
 
   async function tocar(urlRoteiro, { aoTerminar }) {
     if (execucao) return;
+    botaoPular.disabled = true;
     let roteiro;
     try {
       const [recursos, json] = await Promise.all([
@@ -789,6 +796,7 @@ export function criarCutscene(canvas, { pasta }) {
       roteiro = json;
       const cena = criarCena(roteiro, recursos);
       execucao = { cena, recursos, raiz: criarSequencia(roteiro.passos ?? [], cena, null), aoTerminar, ultimo: performance.now() };
+      botaoPular.disabled = false;
     } catch (erro) {
       // Sem cutscene, o jogo segue: a tela de partida abre do mesmo jeito.
       console.error('Falha ao carregar a cutscene:', erro);

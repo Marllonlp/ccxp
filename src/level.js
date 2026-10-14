@@ -100,8 +100,11 @@ const VIDAS_FASE_1 = [
 const moedaSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif');
 const vidaItemSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/06_vida_item.gif');
 
-export function limparColetaveis() {
-  for (const item of [...moedas, ...vidasItens]) item.coletado = false;
+/** Restaura as moedas salvas e repõe os corações para uma nova tentativa. */
+export function limparColetaveis(moedasColetadas = []) {
+  const coletadas = new Set(moedasColetadas);
+  for (const moeda of moedas) moeda.coletado = coletadas.has(moeda.id);
+  for (const vida of vidasItens) vida.coletado = false;
 }
 
 // Campo de patrulha: início e fim delimitam toda a área ocupada pelo robô.
@@ -219,7 +222,7 @@ export const infoFases = FASES.map(({ nome, subtitulo, titulo, texto }) => ({ no
 export const quantidadeFases = FASES.length;
 
 /** Carrega a fase de índice `indice` (0 = primeira): cenário, vãos, checkpoints, meta e início. */
-export function carregarFase(indice) {
+export function carregarFase(indice, moedasColetadas = []) {
   const fase = FASES[indice];
   indiceFase = indice;
   // Cópias: as pontes construídas durante a partida não alteram o desenho original da fase.
@@ -233,8 +236,9 @@ export function carregarFase(indice) {
     ativo: false,
   }));
   plantas = fase.plantas.map((planta) => ({ ...planta }));
-  moedas = fase.moedas.map((moeda) => ({ ...moeda, coletado: false }));
-  vidasItens = fase.vidasItens.map((vida) => ({ ...vida, coletado: false }));
+  moedas = fase.moedas.map((moeda) => ({ ...moeda }));
+  vidasItens = fase.vidasItens.map((vida) => ({ ...vida }));
+  limparColetaveis(moedasColetadas);
   patrulhasSentinelas = fase.patrulhas.map((patrulha) => ({ ...patrulha }));
   LARGURA_FASE = fase.larguraFase;
   posicaoInicial = { ...fase.posicaoInicial };

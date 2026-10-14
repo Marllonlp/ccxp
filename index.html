@@ -51,7 +51,7 @@
             <canvas id="hud-vidas" width="114" height="32" role="img" aria-label="3 de 3 vidas"></canvas>
           </div>
           <div class="hud-coins">
-            <canvas id="hud-moedas" width="74" height="32" role="img" aria-label="0 de 10 moedas"></canvas>
+            <canvas id="hud-moedas" width="74" height="32" role="img" aria-label="Moedas coletadas: 0"></canvas>
           </div>
         </div>
         <p id="hud-mensagem" class="hud-message" role="status" hidden></p>
@@ -65,26 +65,63 @@
       </button>
 
       <section id="menu-pausa" class="pause-menu" hidden aria-labelledby="titulo-pausa">
-        <h2 id="titulo-pausa">Jogo pausado</h2>
-        <button type="button" id="botao-retomar">Retomar</button>
-        <button type="button" id="botao-som-pausa" aria-controls="menu-som">Som</button>
-        <button type="button" id="botao-reiniciar" disabled>Reiniciar fase</button>
-        <button type="button" id="botao-menu-pausa">Menu</button>
+        <div class="menu-jogo-painel">
+          <header class="menu-jogo-cabecalho">
+            <div class="menu-jogo-byte" aria-hidden="true">
+              <img src="./assets/characters/Imagens_Personagens/01_byte/02_byte_parado.gif" alt="" />
+            </div>
+            <div>
+              <p class="menu-jogo-legenda" id="pausa-nivel">Nível 01</p>
+              <h2 id="titulo-pausa">Jogo pausado</h2>
+            </div>
+          </header>
+          <div class="menu-jogo-acoes">
+            <button type="button" id="botao-retomar" class="menu-jogo-botao menu-jogo-botao-principal">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h2v2h3v2h3v4H9v2H6v2H4z" /></svg>
+              <span>Retomar</span>
+            </button>
+            <button type="button" id="botao-som-pausa" class="menu-jogo-botao" aria-controls="menu-som">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 6h3V4h2V2h2v12H6v-2H4v-2H1zm9-2h2v2h-2zm2 2h2v4h-2zm-2 4h2v2h-2z" /></svg>
+              <span>Som</span>
+            </button>
+            <button type="button" id="botao-reiniciar" class="menu-jogo-botao" disabled>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1h2v2h6v2h2v2h2v5h-2v2H6v-2H4V9h2v3h5v-2h2V7h-2V5H5v2H1V3h2z" /></svg>
+              <span>Reiniciar fase</span>
+            </button>
+            <button type="button" id="botao-menu-pausa" class="menu-jogo-botao menu-jogo-botao-secundario">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1h2v2h2v2h2v2h2v2h-2v6H9v-5H7v5H3V9H1V7h2V5h2V3h2z" /></svg>
+              <span>Menu principal</span>
+            </button>
+          </div>
+          <p class="menu-jogo-dica"><kbd>P</kbd> ou <kbd>Esc</kbd> para retomar</p>
+        </div>
       </section>
 
       <section id="menu-som" class="pause-menu menu-som" hidden aria-labelledby="titulo-som">
-        <h2 id="titulo-som">Som</h2>
-        <div class="linha-volume">
-          <label for="volume-musica">Música</label>
-          <input type="range" id="volume-musica" min="0" max="100" value="50" />
-          <output id="valor-musica" for="volume-musica">50%</output>
+        <div class="menu-jogo-painel">
+          <header class="menu-jogo-cabecalho">
+            <div>
+              <p class="menu-jogo-legenda">As aventuras de Byte</p>
+              <h2 id="titulo-som">Som</h2>
+            </div>
+          </header>
+          <div class="menu-jogo-volumes">
+            <div class="linha-volume">
+              <label for="volume-musica">Música</label>
+              <output id="valor-musica" for="volume-musica">50%</output>
+              <input type="range" id="volume-musica" min="0" max="100" value="50" />
+            </div>
+            <div class="linha-volume">
+              <label for="volume-efeitos">Efeitos</label>
+              <output id="valor-efeitos" for="volume-efeitos">50%</output>
+              <input type="range" id="volume-efeitos" min="0" max="100" value="50" />
+            </div>
+          </div>
+          <button type="button" id="botao-voltar-som" class="menu-jogo-botao">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h2v4h7v4H8v4H6v-2H4v-2H2V6h2V4h2z" /></svg>
+            <span>Voltar</span>
+          </button>
         </div>
-        <div class="linha-volume">
-          <label for="volume-efeitos">Efeitos</label>
-          <input type="range" id="volume-efeitos" min="0" max="100" value="50" />
-          <output id="valor-efeitos" for="volume-efeitos">50%</output>
-        </div>
-        <button type="button" id="botao-voltar-som">Voltar</button>
       </section>
 
       <!-- Tela de título: aparece ao abrir o jogo, antes da primeira partida. -->
@@ -134,6 +171,39 @@
       <!-- Terminal do totem: mini editor de Python, desenhado em canvas 480 × 270. -->
       <section id="tela-terminal" class="tela-terminal" aria-label="Terminal do totem" hidden>
         <canvas id="canvas-terminal" class="canvas-terminal" role="img" aria-label="Terminal do totem"></canvas>
+        <div class="terminal-toque">
+          <header class="terminal-toque-cabecalho">
+            <h2>Terminal do totem</h2>
+            <button type="button" id="terminal-fechar" aria-label="Fechar terminal">Fechar</button>
+          </header>
+          <div class="terminal-toque-corpo">
+            <section class="terminal-toque-missao" aria-labelledby="terminal-missao-titulo">
+              <h3 id="terminal-missao-titulo"></h3>
+              <p id="terminal-enunciado"></p>
+              <details>
+                <summary>Entrada, saída e exemplos</summary>
+                <div id="terminal-detalhes"></div>
+              </details>
+            </section>
+            <section class="terminal-toque-editor" aria-labelledby="terminal-programa-titulo">
+              <h3 id="terminal-programa-titulo">Seu programa</h3>
+              <p class="terminal-toque-ajuda">Toque nos trechos para montar o código. Selecione uma linha para movê-la ou removê-la.</p>
+              <ol id="terminal-linhas"></ol>
+              <div class="terminal-toque-edicao" role="group" aria-label="Editar linha selecionada">
+                <button type="button" id="terminal-subir">Subir</button>
+                <button type="button" id="terminal-descer">Descer</button>
+                <button type="button" id="terminal-remover">Remover</button>
+              </div>
+              <h3>Trechos disponíveis</h3>
+              <div id="terminal-trechos"></div>
+              <div class="terminal-toque-acoes">
+                <button type="button" id="terminal-testar">Testar código</button>
+                <button type="button" id="terminal-dica">Dica</button>
+              </div>
+              <div id="terminal-resultado" role="status" aria-live="polite"></div>
+            </section>
+          </div>
+        </div>
       </section>
 
       <!-- Desafio do banco de perguntas: aparece nos corações, sentinelas e vãos com desafio. -->
@@ -157,11 +227,19 @@
 
       <section id="tela-cutscene" class="tela-cutscene" aria-label="Introdução do Nível 1" hidden>
         <canvas id="canvas-cutscene" class="canvas-cutscene" role="img" aria-label="Introdução do Nível 1"></canvas>
+        <button type="button" id="botao-pular-intro" class="botao-sobre-canvas">Pular introdução</button>
       </section>
 
       <!-- Luta contra o chefe (nível 5): desenhada em canvas 480 × 270 pelo módulo chefe.js. -->
       <section id="tela-chefe" class="tela-chefe" aria-label="Luta contra o chefe" hidden>
         <canvas id="canvas-chefe" class="canvas-chefe" role="img" aria-label="Luta contra o Kernel Panic"></canvas>
+        <div id="chefe-fim" class="chefe-fim" hidden>
+          <div class="menu-jogo-painel">
+            <h2>Fim de jogo</h2>
+            <button type="button" id="chefe-tentar" class="menu-jogo-botao menu-jogo-botao-principal">Tentar de novo</button>
+            <button type="button" id="chefe-sair" class="menu-jogo-botao">Voltar aos níveis</button>
+          </div>
+        </div>
       </section>
 
       <!-- Tela do nível: aparece antes de cada partida e quando as vidas acabam. -->
@@ -180,7 +258,10 @@
           <button type="button" id="botao-jogar" class="botao-inicio botao-jogar">▶ JOGAR</button>
           <button type="button" id="botao-sair" class="botao-inicio botao-sair">✕ SAIR</button>
         </div>
-        <button type="button" id="botao-som-inicio" class="pause-button" aria-controls="menu-som">♪ Som</button>
+        <button type="button" id="botao-som-inicio" class="botao-som-inicio" aria-controls="menu-som" title="Som">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 6h3V4h2V2h2v12H6v-2H4v-2H1zm9-2h2v2h-2zm2 2h2v4h-2zm-2 4h2v2h-2z" /></svg>
+          <span class="sr-only">Som</span>
+        </button>
       </section>
     </section>
 

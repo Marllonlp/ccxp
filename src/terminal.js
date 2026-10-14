@@ -1,6 +1,8 @@
 // Terminal do totem: mini editor de Python em que o jogador monta o programa com cliques nos trechos.
 // Desenhado em 480 × 270 pixels (o CSS amplia com pixel nítido), como a tela de níveis.
 // Posições, cores e regras seguem INSTRUCOES_TERMINAL_PYTHON.md da pasta terminal_python_pacote.
+import { tecladoPrincipal } from './input.js';
+import { pontoNoCanvas } from './viewport.js';
 
 const PASTA = './assets/characters/Imagens_Personagens/02_cenario/terminal_python_pacote/';
 // Enquanto true, o jogador pode fechar o terminal com X ou ESC (modo de teste, como pede o guia).
@@ -197,6 +199,10 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
   let selecionado = -1;             // linha do editor selecionada (para Tab e Delete)
   let hover = { x: false, testar: false, dica: false, trecho: -1 };
   let pressionado = { ate: 0, alvo: null };
+  const toque = Object.fromEntries([
+    'fechar', 'missao-titulo', 'enunciado', 'detalhes', 'linhas', 'trechos',
+    'subir', 'descer', 'remover', 'testar', 'dica', 'resultado',
+  ].map((nome) => [nome, canvas.parentElement.querySelector(`#terminal-${nome}`)]));
 
   function novoEstado(missaoAtual) {
     return {
@@ -219,15 +225,7 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
   }
 
   function escreverNoConsole(texto, cor) {
-    for (const linha of quebrarConsole(texto)) estado.console.push({ texto: linha, cor });
-  }
-
-  function pontoNoCanvas(evento) {
-    const area = canvas.getBoundingClientRect();
-    return {
-      x: (evento.clientX - area.left) * LARGURA / area.width,
-      y: (evento.clientY - area.top) * ALTURA / area.height,
-    };
+    estado.console.push({ texto, cor });
   }
 
   function dentro(ponto, area) {
@@ -246,6 +244,89 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
   function moverLinha(de, para) {
     const [linha] = estado.linhas.splice(de, 1);
     estado.linhas.splice(para, 0, linha);
+  }
+
+  function moverSelecionada(delta) {
+    const destino = selecionado + delta;
+    if (selecionado < 0 || destino < 0 || destino >= estado.linhas.length) return;
+    moverLinha(selecionado, destino);
+    selecionado = destino;
+  }
+
+  function removerSelecionada() {
+    if (selecionado < 0) return;
+    estado.linhas.splice(selecionado, 1);
+    selecionado = -1;
+  }
+
+  function adicionarTrecho(trecho) {
+    const indice = pontoDeInsercao();
+    if (inserirNoEditor(trecho, indice, 0)) selecionado = indice;
+  }
+
+  // O terminal de toque usa o mesmo estado, ordenação, testes e retornos do canvas.
+  function atualizarToque() {
+    if (!missao || !estado) return;
+    toque.linhas.replaceChildren(...estado.linhas.map((linha, indice) => {
+      const item = document.createElement('li');
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.classList.toggle('selecionada', indice === selecionado);
+      botao.setAttribute('aria-pressed', String(indice === selecionado));
+      const codigo = document.createElement('code');
+      codigo.textContent = trechoPorId(linha.id).codigo;
+      codigo.style.paddingInlineStart = `${linha.indent * 12}px`;
+      botao.append(codigo);
+      botao.addEventListener('click', () => executarAcao(() => { selecionado = indice; }));
+      item.append(botao);
+      return item;
+    }));
+    toque.trechos.replaceChildren(...trechosNaLista().map((trecho) => {
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = `trecho-${trecho.tipo}`;
+      const codigo = document.createElement('code');
+      codigo.textContent = trecho.codigo;
+      botao.append(codigo);
+      botao.addEventListener('click', () => executarAcao(() => adicionarTrecho(trecho)));
+      return botao;
+    }));
+    toque.subir.disabled = selecionado <= 0;
+    toque.descer.disabled = selecionado < 0 || selecionado >= estado.linhas.length - 1;
+    toque.remover.disabled = selecionado < 0;
+    toque.resultado.replaceChildren(...estado.console.map((linha) => {
+      const mensagem = document.createElement('p');
+      mensagem.textContent = linha.texto;
+      mensagem.style.color = linha.cor;
+      return mensagem;
+    }));
+  }
+
+  function executarAcao(acao) {
+    const restaurarFoco = toque.linhas.contains(document.activeElement)
+      || toque.trechos.contains(document.activeElement);
+    acao();
+    atualizarToque();
+    if (restaurarFoco && ativo) {
+      const destino = toque.linhas.querySelectorAll('button')[selecionado]
+        ?? toque.trechos.querySelector('button') ?? toque.testar;
+      destino.focus({ preventScroll: true });
+    }
+  }
+
+  function atualizarMissaoToque() {
+    toque['missao-titulo'].textContent = missao.titulo;
+    toque.enunciado.textContent = missao.enunciado;
+    toque.detalhes.replaceChildren(...[
+      `Entrada: ${missao.entrada}`,
+      ...missao.saida.map((saida) => `Saída: ${saida}`),
+      ...missao.exemplos.map((exemplo) => `Exemplo: ${exemplo.entrada} → ${exemplo.saida}`),
+    ].map((texto) => {
+      const paragrafo = document.createElement('p');
+      paragrafo.textContent = texto;
+      return paragrafo;
+    }));
+    atualizarToque();
   }
 
   function indiceDoTrechoNaLista(ponto) {
@@ -411,14 +492,16 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
 
     // Console: as 3 últimas linhas
     ctx.font = FONTE_TEXTO;
-    const ultimas = estado.console.slice(-CONSOLE.linhasVisiveis);
+    const ultimas = estado.console.flatMap((linha) => (
+      quebrarConsole(linha.texto).map((texto) => ({ ...linha, texto }))
+    )).slice(-CONSOLE.linhasVisiveis);
     ultimas.forEach((linha, i) => {
       escreverComSombra(ctx, linha.texto, CONSOLE.x, CONSOLE.y + CONSOLE.passo * i, linha.cor);
     });
   }
 
   function animar() {
-    if (!ativo) {
+    if (!ativo || !tecladoPrincipal.matches) {
       rodando = false;
       return;
     }
@@ -443,7 +526,7 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
   // Mouse: clique põe o trecho da lista no editor, seleciona uma linha e move a linha selecionada.
   canvas.addEventListener('mousemove', (evento) => {
     if (!ativo) return;
-    const ponto = pontoNoCanvas(evento);
+    const ponto = pontoNoCanvas(canvas, evento, LARGURA, ALTURA);
     hover = {
       x: dentro(ponto, BOTAO_X),
       testar: dentro(ponto, BOTAO_TESTAR),
@@ -463,8 +546,7 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
       return;
     }
     if (selecionado === indice) {
-      estado.linhas.splice(indice, 1);
-      selecionado = -1;
+      removerSelecionada();
       return;
     }
     if (selecionado === -1) {
@@ -475,9 +557,9 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     selecionado = indice;
   }
 
-  canvas.addEventListener('mousedown', (evento) => {
+  canvas.addEventListener('click', (evento) => executarAcao(() => {
     if (!ativo) return;
-    const ponto = pontoNoCanvas(evento);
+    const ponto = pontoNoCanvas(canvas, evento, LARGURA, ALTURA);
     if (dentro(ponto, BOTAO_X)) {
       apertar('x');
       fecharSeNecessario();
@@ -495,13 +577,21 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
     }
     const indiceLista = indiceDoTrechoNaLista(ponto);
     if (indiceLista !== -1) {
-      const indice = pontoDeInsercao();
-      // Com o editor cheio, o clique não faz nada.
-      if (inserirNoEditor(trechosNaLista()[indiceLista], indice, 0)) selecionado = indice;
+      adicionarTrecho(trechosNaLista()[indiceLista]);
       return;
     }
     if (emEditor(ponto)) clicarNoEditor(ponto);
     else selecionado = -1;
+  }));
+
+  toque.fechar.addEventListener('click', fecharSeNecessario);
+  toque.testar.addEventListener('click', () => executarAcao(testar));
+  toque.dica.addEventListener('click', () => executarAcao(dica));
+  toque.subir.addEventListener('click', () => executarAcao(() => moverSelecionada(-1)));
+  toque.descer.addEventListener('click', () => executarAcao(() => moverSelecionada(1)));
+  toque.remover.addEventListener('click', () => executarAcao(removerSelecionada));
+  tecladoPrincipal.addEventListener('change', () => {
+    if (ativo) iniciarAnimacao();
   });
 
   // Teclado
@@ -517,21 +607,17 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
       const linha = estado.linhas[selecionado];
       const novo = linha.indent + (evento.shiftKey ? -1 : 1);
       linha.indent = Math.max(0, Math.min(novo, EDITOR.maxIndent));
+      atualizarToque();
       return true;
     }
     if ((evento.key === 'ArrowUp' || evento.key === 'ArrowDown') && selecionado >= 0) {
       evento.preventDefault();
-      const para = selecionado + (evento.key === 'ArrowUp' ? -1 : 1);
-      if (para >= 0 && para < estado.linhas.length) {
-        moverLinha(selecionado, para);
-        selecionado = para;
-      }
+      executarAcao(() => moverSelecionada(evento.key === 'ArrowUp' ? -1 : 1));
       return true;
     }
     if ((evento.key === 'Delete' || evento.key === 'Backspace') && selecionado >= 0) {
       evento.preventDefault();
-      estado.linhas.splice(selecionado, 1);
-      selecionado = -1;
+      executarAcao(removerSelecionada);
       return true;
     }
     return false;
@@ -545,6 +631,7 @@ export function criarTerminal(canvas, { onFechar, onResolvido }) {
       estado = estadosPorMissao.get(missao.id);
       selecionado = -1;
       ativo = true;
+      atualizarMissaoToque();
       iniciarAnimacao();
     },
     fechar() {
