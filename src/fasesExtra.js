@@ -5,6 +5,8 @@
 //   ['teto', largura]                   bloco suspenso sobre chão (só passa agachado)
 //   ['bloco', largura, altura]          degrau sólido de `altura` px (use em sequência para escadas)
 //   ['plataforma', largura, altura]     plataforma sobre chão, com o topo a `altura` px do chão
+//   ['suspensa', dx, altura, largura]   plataforma solta (não avança o cursor nem cria chão);
+//                                       use larguras do pacote (32, 48, 64, 80, 96 ou 128)
 //   ['mec', tipo, extras]               mecânica do pacote; chão embaixo é criado automaticamente,
 //                                       exceto com extras.sobreVao (fica sobre um vão);
 //                                       extras.dx desloca sem avançar; extras.avancar: false não avança;
@@ -22,13 +24,19 @@
 //  - plantas ficam encostadas num bloco (como um cano), e sentinelas em trechos de chão reto;
 //  - moedas formam arcos sobre vãos e saltos, e vidas ficam depois de trechos difíceis;
 //  - um checkpoint fica em chão calmo, antes da parte difícil.
+//
+// Plataformas suspensas (pulo de ~104 px, Byte com 40 × 66 px, plataformas sólidas por baixo):
+//  - andares a 90, 170 e 210/230 px do chão: sobe-se até 80 px por vez, e a de 90 px não barra quem anda embaixo;
+//  - entre andares diferentes há pelo menos 48 px na horizontal, para a cabeça não bater na de cima;
+//  - nada fica baixo sobre caixas, esteiras, ventiladores, trampolins ou elevadores (o Byte sobe com eles);
+//  - moedas ficam 30 px acima do topo da plataforma.
 import { LARGURAS } from './mecanicas.js';
 
 const CHAO = 480;
 const TOTENS = ['tela', 'obelisco', 'terminal', 'antena'];
 
 /** Monta uma fase a partir da lista de trechos. */
-export function construirFase({ nome, subtitulo, texto, itens }) {
+export function construirFase({ nome, subtitulo, texto, itens, estiloPlataforma }) {
   let cursor = 0;
   const obstaculos = [];
   const vaos = [];
@@ -47,7 +55,7 @@ export function construirFase({ nome, subtitulo, texto, itens }) {
     cursor += largura;
   };
 
-  for (const [operacao, a, b] of itens) {
+  for (const [operacao, a, b, c] of itens) {
     switch (operacao) {
       case 'chao':
         chao(a);
@@ -70,6 +78,9 @@ export function construirFase({ nome, subtitulo, texto, itens }) {
       case 'plataforma':
         chao(a);
         obstaculos.push({ tipo: 'plataforma', x: cursor - a, y: CHAO - b, width: a, height: 20 });
+        break;
+      case 'suspensa':
+        obstaculos.push({ tipo: 'plataforma', x: cursor + a, y: CHAO - b, width: c, height: 20 });
         break;
       case 'mec': {
         const tipo = a;
@@ -137,6 +148,11 @@ export function construirFase({ nome, subtitulo, texto, itens }) {
   }
 
   if (!meta) throw new RangeError(`A fase ${nome} precisa de uma meta.`);
+  if (estiloPlataforma) {
+    for (const obstaculo of obstaculos) {
+      if (obstaculo.tipo === 'plataforma') obstaculo.estilo = estiloPlataforma;
+    }
+  }
   return {
     nome,
     subtitulo,
@@ -208,13 +224,22 @@ export const FASES_EXTRA = [
     nome: 'Nível 03',
     subtitulo: 'Byte',
     texto: 'Plataformas dinâmicas: a esteira empurra, a quebradiça cede, o trampolim lança e a porta só abre com o código certo.',
+    estiloPlataforma: 'cristal',
     itens: [
-      // Trecho de cristal: começa com moedas e a primeira caixa (sobe um degrau).
+      // Trecho de cristal: uma escadinha de cristais com moedas logo no início.
+      ['suspensa', 90, 90, 96], ['moeda', 130, 360],
+      ['suspensa', 240, 170, 64], ['moeda', 248, 280], ['moeda', 276, 280],
       ['cristal', 300],
       ['moeda', 120, 400], ['moeda', 170, 360],
-      ['mec', 'caixa', { blocos: 1 }], ['chao', 200],
+      // Primeira caixa (sobe um degrau), e uma ponte alta de cristal sobre a esteira.
+      ['mec', 'caixa', { blocos: 1 }],
+      ['suspensa', 104, 90, 48],
+      ['suspensa', 220, 170, 96], ['moeda', 232, 280], ['moeda', 260, 280], ['moeda', 288, 280],
+      ['chao', 200],
       // Esteira que empurra para a direita, seguida de chão e de uma sentinela.
       ['mec', 'esteira', { dir: 1 }], ['chao', 200],
+      // Um caminho por cima da sentinela, para quem desce da ponte.
+      ['suspensa', -6, 90, 128], ['moeda', 34, 360], ['moeda', 74, 360],
       ['patrulha', 180], ['chao', 80],
       // Plataforma quebradiça sobre um vão: o jogador precisa pular para fora dela.
       ['checkpoint'],
@@ -222,7 +247,10 @@ export const FASES_EXTRA = [
       ['vao', 110], ['chao', 200],
       // Trampolim: lança para cima, em direção a uma plataforma alta com uma vida.
       ['mec', 'trampolim'], ['chao', 90],
-      ['plataforma', 120, 150], ['vida', 20, 330], ['chao', 160],
+      ['plataforma', 120, 150], ['vida', 20, 330],
+      // Mais um andar acima da plataforma alta, com moedas de prêmio.
+      ['suspensa', 48, 230, 80], ['moeda', 64, 220], ['moeda', 96, 220],
+      ['chao', 160],
       // Dois vãos com um bloco holográfico no meio (liga e desliga).
       ['vao', 80],
       ['mec', 'holografico', { sobreVao: true }],
@@ -232,21 +260,37 @@ export const FASES_EXTRA = [
       ['vao', 120], ['chao', 200],
       // Esteira que empurra para o esmagador: o timing é a combinação do guia.
       ['mec', 'esteira', { dir: 1 }], ['chao', 40],
-      ['esmagadorNaPlataforma', 140], ['chao', 240],
+      ['esmagadorNaPlataforma', 140],
+      // Depois do esmagador, dois cristais em escada até o checkpoint.
+      ['suspensa', 48, 90, 96],
+      ['suspensa', 192, 170, 64], ['moeda', 204, 280], ['moeda', 232, 280],
+      ['chao', 240],
       ['checkpoint'],
       // Caixas empilhadas (duas) como escada de jogo; moedas em arco sobre o vão.
-      ['mec', 'caixa', { blocos: 2 }], ['chao', 200],
+      ['mec', 'caixa', { blocos: 2 }],
+      // Escada de cristais que termina sobre a água: dá para atravessar o vão por cima.
+      ['suspensa', 56, 90, 80],
+      ['suspensa', 184, 170, 64], ['moeda', 208, 280],
+      ['chao', 200],
       ['moeda', 40, 400], ['moeda', 80, 360], ['moeda', 120, 400],
       ['vao', 110], ['chao', 220],
       // Ventilador empurra o jogador para uma plataforma alta.
       ['mec', 'ventilador'], ['chao', 40],
-      ['plataforma', 110, 130], ['chao', 200],
-      // Sentinela sobre o chão reto, e uma planta encostada num bloco.
+      ['plataforma', 110, 130],
+      // O vento leva à plataforma; dela, mais um andar com uma fileira de moedas.
+      ['suspensa', 48, 210, 96], ['moeda', 64, 240], ['moeda', 88, 240], ['moeda', 112, 240],
+      ['chao', 200],
+      // Sentinela sobre o chão reto (com um caminho de cristal por cima), e uma planta encostada num bloco.
+      ['suspensa', 24, 90, 128], ['moeda', 74, 360], ['moeda', 104, 360],
       ['patrulha', 180], ['chao', 80],
       ['bloco', 60, 40], ['planta'], ['chao', 200],
       // Cadeia de plataformas: trampolim de novo, depois uma plataforma com moedas.
       ['mec', 'trampolim'], ['chao', 80],
-      ['plataforma', 120, 150], ['moeda', 30, 330], ['moeda', 60, 300], ['chao', 200],
+      ['plataforma', 120, 150], ['moeda', 30, 330], ['moeda', 60, 300],
+      // Da plataforma alta, um cristal à direita e um degrau sobre a água.
+      ['suspensa', 96, 170, 80], ['moeda', 112, 280], ['moeda', 144, 280],
+      ['suspensa', 232, 90, 64],
+      ['chao', 200],
       ['vao', 100], ['chao', 200],
       // Porta: a missão 3 é resolvida no totem logo antes dela.
       ['checkpoint', { missao: 3 }],
@@ -263,47 +307,79 @@ export const FASES_EXTRA = [
     nome: 'Nível 04',
     subtitulo: 'Byte',
     texto: 'Máquinas: calcule a batida do esmagador, use o vento do ventilador e pise no botão para abrir a porta.',
+    estiloPlataforma: 'metal',
     itens: [
-      // Chão seguro com moedas, e o primeiro esmagador sozinho.
+      // Chão seguro com uma escadinha de metal e moedas, e o primeiro esmagador sozinho.
+      ['suspensa', 80, 90, 80], ['moeda', 112, 360],
+      ['suspensa', 208, 170, 64], ['moeda', 216, 280], ['moeda', 244, 280],
       ['chao', 280],
       ['moeda', 100, 350],
-      ['esmagadorNaPlataforma', 140], ['chao', 220],
-      // Planta encostada num bloco e outro esmagador: o jogador espera a batida.
+      ['esmagadorNaPlataforma', 140],
+      ['suspensa', 50, 90, 96],
+      ['chao', 220],
+      // Planta encostada num bloco (com uma passarela alta por cima) e outro esmagador.
+      ['suspensa', 50, 170, 80], ['moeda', 62, 280], ['moeda', 94, 280],
+      ['suspensa', 178, 90, 64], ['moeda', 202, 360],
       ['bloco', 60, 40], ['planta'], ['chao', 200],
-      ['esmagadorNaPlataforma', 140], ['chao', 200],
+      ['esmagadorNaPlataforma', 140],
+      ['suspensa', 40, 90, 96], ['moeda', 80, 360],
+      ['chao', 200],
       ['checkpoint', { missao: 4 }],
       // Ventilador e uma plataforma que o vento alcança.
       ['mec', 'ventilador'], ['chao', 40],
-      ['plataforma', 110, 90], ['chao', 180],
+      ['plataforma', 110, 90],
+      ['suspensa', 48, 170, 80], ['moeda', 64, 280], ['moeda', 96, 280],
+      ['chao', 180],
       // Botão no chão e porta logo depois: o jogador pisa no botão e corre.
       ['mec', 'botao', { alvo: 'porta-a' }], ['chao', 90],
       ['mec', 'porta', { id: 'porta-a' }], ['chao', 200],
       // Laser sozinho, depois cabo pendurado.
-      ['mec', 'laser'], ['chao', 220],
+      ['mec', 'laser'],
+      // Passarela de metal que passa por cima do cabo.
+      ['suspensa', 50, 90, 96],
+      ['suspensa', 194, 170, 80], ['moeda', 210, 280], ['moeda', 242, 280],
+      ['chao', 220],
       ['mec', 'cabo'], ['chao', 200],
       ['checkpoint'],
-      // Sentinela num trecho reto, depois a esteira de volta a direita.
+      // Sentinela num trecho reto (com passarela por cima), depois a esteira de volta a direita.
+      ['suspensa', 36, 90, 128], ['moeda', 76, 360], ['moeda', 116, 360],
       ['patrulha', 200], ['chao', 80],
-      ['mec', 'esteira', { dir: 1 }], ['chao', 180],
+      ['mec', 'esteira', { dir: 1 }],
+      ['suspensa', 42, 90, 80],
+      ['suspensa', 170, 170, 64], ['moeda', 194, 280],
+      ['chao', 180],
       // Moedas em arco sobre um vão e um elevador que sobe.
       ['moeda', 30, 400], ['moeda', 60, 360], ['moeda', 90, 400],
       ['vao', 100], ['chao', 180],
       ['mec', 'elevador', { sobreVao: true }],
-      ['vao', 100], ['chao', 200],
+      ['vao', 100],
+      // Escada de metal sobre o bloco da planta.
+      ['suspensa', 44, 90, 96],
+      ['suspensa', 188, 170, 80], ['moeda', 204, 280], ['moeda', 236, 280],
+      ['suspensa', 316, 90, 80],
+      ['chao', 200],
       // Segundo botão: uma porta mais longe, com uma planta encostada num bloco.
       ['bloco', 60, 40], ['planta'], ['chao', 180],
       ['mec', 'botao', { alvo: 'porta-b' }], ['chao', 100],
-      ['mec', 'porta', { id: 'porta-b' }], ['chao', 200],
+      ['mec', 'porta', { id: 'porta-b' }],
+      ['suspensa', 60, 90, 96], ['moeda', 100, 360],
+      ['chao', 200],
       ['checkpoint'],
       // Esmagador, ventilador e a subida final de trampolim e plataforma alta.
-      ['esmagadorNaPlataforma', 140], ['chao', 180],
+      ['esmagadorNaPlataforma', 140],
+      ['suspensa', 40, 90, 96], ['moeda', 80, 360],
+      ['chao', 180],
       ['mec', 'ventilador'], ['chao', 40],
       ['plataforma', 110, 90], ['chao', 120],
       ['mec', 'trampolim'], ['chao', 100],
-      ['plataforma', 120, 150], ['vida', 40, 330], ['chao', 140],
+      ['plataforma', 120, 150], ['vida', 40, 330],
+      // O último andar, acima da plataforma alta.
+      ['suspensa', 48, 230, 80], ['moeda', 64, 220], ['moeda', 96, 220],
+      ['chao', 140],
       ['mec', 'quebradica', { base: 40, sobreVao: true }],
       ['vao', 110], ['chao', 200],
-      // Sentinela no chão reto antes da escadaria final.
+      // Sentinela no chão reto antes da escadaria final, com uma passarela por cima.
+      ['suspensa', 16, 90, 128], ['moeda', 56, 360], ['moeda', 96, 360],
       ['patrulha', 160], ['chao', 80],
       ['vida', 60, 380],
       ['bloco', 100, 40], ['bloco', 100, 80],

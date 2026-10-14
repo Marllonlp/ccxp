@@ -92,6 +92,53 @@ body {
   border: 0;
 }
 
+/* Botão de tela cheia: no canto superior esquerdo, acima de todas as telas do jogo. */
+.botao-tela-cheia {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid #7dd3fc;
+  border-radius: 8px;
+  background-color: rgb(11 31 51 / 75%);
+  color: #f3f4f6;
+  cursor: pointer;
+  touch-action: manipulation;
+  opacity: 0.8;
+}
+
+.botao-tela-cheia:hover,
+.botao-tela-cheia:focus-visible {
+  opacity: 1;
+}
+
+.botao-tela-cheia:focus-visible {
+  outline: 3px solid #ffd646;
+  outline-offset: 3px;
+}
+
+.botao-tela-cheia svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.botao-tela-cheia .icone-sair,
+.botao-tela-cheia.ativa .icone-entrar {
+  display: none;
+}
+
+.botao-tela-cheia.ativa .icone-sair {
+  display: block;
+}
+
 .game-area {
   position: relative;
   width: 100%;
@@ -435,9 +482,10 @@ body {
 .game-hud {
   position: absolute;
   top: max(12px, env(safe-area-inset-top));
-  left: max(12px, env(safe-area-inset-left));
+  /* Deixa espaço para o botão de tela cheia no canto. */
+  left: calc(max(12px, env(safe-area-inset-left)) + 52px);
   z-index: 1;
-  max-width: calc(100% - 128px);
+  max-width: calc(100% - 180px);
   display: grid;
   justify-items: start;
   gap: 8px;
@@ -758,6 +806,34 @@ body {
   color: #d6e4f0;
 }
 
+/* Botão discreto no canto da tela de título: abre a confirmação para apagar o progresso salvo. */
+.botao-apagar-dados {
+  position: absolute;
+  left: 2%;
+  bottom: 1.5%;
+  z-index: 6;
+  min-height: 32px;
+  padding: 0.6cqw 1.2cqw;
+  border: 1px solid #7f1d1d;
+  border-radius: 6px;
+  background-color: rgb(32 36 43 / 85%);
+  color: #fca5a5;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1cqw;
+  cursor: pointer;
+}
+
+.botao-apagar-dados:hover,
+.botao-apagar-dados:focus-visible {
+  background-color: #7f1d1d;
+  color: #f9fafb;
+}
+
+.botao-apagar-dados:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 3px;
+}
+
 /* Painel de ajuda e sobre: aberto pelos botões Como jogar e Sobre. */
 .titulo-painel {
   position: absolute;
@@ -804,6 +880,15 @@ body {
   font: inherit;
   font-size: 1.2cqw;
   cursor: pointer;
+}
+
+.botao-painel[hidden] {
+  display: none;
+}
+
+.botao-perigo {
+  border-color: #b91c1c;
+  background-color: #7f1d1d;
 }
 
 .botao-painel:focus-visible {

@@ -63,6 +63,7 @@ const botaoPausar = document.getElementById('botao-pausar');
 const menuPausa = document.getElementById('menu-pausa');
 const botaoRetomar = document.getElementById('botao-retomar');
 const botaoReiniciar = document.getElementById('botao-reiniciar');
+const botaoMenuPausa = document.getElementById('botao-menu-pausa');
 const telaInicio = document.getElementById('tela-inicio');
 const botaoJogar = document.getElementById('botao-jogar');
 const botaoSair = document.getElementById('botao-sair');
@@ -78,6 +79,8 @@ const painelTitulo = document.getElementById('painel-titulo');
 const tituloPainel = document.getElementById('titulo-painel');
 const textoPainel = document.getElementById('texto-painel');
 const botaoFecharPainel = document.getElementById('botao-fechar-painel');
+const botaoApagarDados = document.getElementById('botao-apagar-dados');
+const botaoConfirmarApagar = document.getElementById('botao-confirmar-apagar');
 let indiceTitulo = 0;
 
 const telaNiveis = document.getElementById('tela-niveis');
@@ -667,12 +670,16 @@ function selecionarBotaoTitulo(indice) {
   cursorTitulo.style.top = `${topo}%`;
 }
 
-function abrirPainelTitulo(conteudo) {
-  const linhas = conteudo === 'como'
-    ? ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'P ou ESC: pausar', 'R: reiniciar a fase']
-    : ['As aventuras de Byte', 'Versão 1.0', 'Jogo de plataforma em desenvolvimento.'];
+const PAINEIS_TITULO = {
+  como: { titulo: 'Como jogar', linhas: ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'P ou ESC: pausar', 'R: reiniciar a fase'] },
+  sobre: { titulo: 'Sobre', linhas: ['As aventuras de Byte', 'Versão 1.0', 'Jogo de plataforma em desenvolvimento.'] },
+  apagar: { titulo: 'Apagar dados', linhas: ['Isso apaga os níveis liberados, as estrelas e o chefe derrotado.', 'O jogo volta para o Nível 1. Não dá para desfazer.'] },
+};
 
-  tituloPainel.textContent = conteudo === 'como' ? 'Como jogar' : 'Sobre';
+function abrirPainelTitulo(conteudo) {
+  const { titulo, linhas } = PAINEIS_TITULO[conteudo];
+  tituloPainel.textContent = titulo;
+  botaoConfirmarApagar.hidden = conteudo !== 'apagar';
   textoPainel.replaceChildren(...linhas.map((linha) => {
     const paragrafo = document.createElement('p');
     paragrafo.textContent = linha;
@@ -685,6 +692,16 @@ function abrirPainelTitulo(conteudo) {
 function fecharPainelTitulo() {
   painelTitulo.hidden = true;
   botoesTitulo[indiceTitulo].focus({ preventScroll: true });
+}
+
+/** Apaga o progresso salvo e recarrega a página, para nenhuma tela ficar com dados antigos na memória. */
+function apagarDadosDoJogo() {
+  try {
+    localStorage.removeItem(CHAVE_PROGRESSO);
+  } catch {
+    // Sem armazenamento disponível: não há nada salvo para apagar.
+  }
+  location.reload();
 }
 
 function reiniciarJogo() {
@@ -906,11 +923,20 @@ botaoTituloJogar.addEventListener('click', iniciarPeloTitulo);
 botaoTituloComo.addEventListener('click', () => abrirPainelTitulo('como'));
 botaoTituloSobre.addEventListener('click', () => abrirPainelTitulo('sobre'));
 botaoFecharPainel.addEventListener('click', fecharPainelTitulo);
+botaoApagarDados.addEventListener('click', () => abrirPainelTitulo('apagar'));
+botaoConfirmarApagar.addEventListener('click', apagarDadosDoJogo);
 window.addEventListener('resize', () => {
   if (estadoDaPartida === 'titulo') selecionarBotaoTitulo(indiceTitulo);
 });
 botaoPausar.addEventListener('click', pausarPartida);
 botaoRetomar.addEventListener('click', retomarPartida);
+// Menu: larga a fase pausada e volta para a tela de título.
+botaoMenuPausa.addEventListener('click', () => {
+  menuSom.hidden = true;
+  mostrarTitulo();
+  atualizarInterface();
+  botoesTitulo[0].focus({ preventScroll: true });
+});
 
 /** Abre o painel de som. `botao` é o que abriu o painel e recebe o foco de volta ao fechar. */
 function abrirMenuSom(botao) {
@@ -957,6 +983,9 @@ canvas.addEventListener('click', (evento) => {
 window.addEventListener('keydown', (evento) => {
   // Os controles de instalação usam o comportamento nativo de Enter e espaço.
   if (evento.target.closest?.('.pwa-controls')) return;
+  // Os botões Apagar dados e Tela cheia não estão no menu de setas: Enter neles usa o clique nativo.
+  if (evento.target === botaoApagarDados) return;
+  if (evento.target.id === 'botao-tela-cheia' && (evento.key === 'Enter' || evento.key === ' ')) return;
   if (retratoMovel.matches) return;
   // Cutscene em andamento: ela trata as próprias teclas.
   if (estadoDaPartida === 'cutscene' || estadoDaPartida === 'chefe') return;
