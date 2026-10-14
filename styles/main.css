@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('../assets/characters/Imagens_Personagens/02_cenario/tela_niveis_editavel_pacote/PressStart2P-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -114,7 +122,6 @@ body {
   background-color: #dfe7fd;
 }
 
-.pause-button,
 .pause-menu button {
   min-height: 44px;
   padding: 10px 16px;
@@ -133,6 +140,22 @@ body {
   top: max(12px, env(safe-area-inset-top));
   right: max(12px, env(safe-area-inset-right));
   z-index: 1;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  cursor: pointer;
+  touch-action: manipulation;
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/09_pause_normal.png);
+}
+
+.pause-button:active {
+  background-image: url(../assets/characters/Imagens_Personagens/03_botoes/08_pause_pressionado.png);
 }
 
 .pause-menu {
@@ -377,7 +400,8 @@ body {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/13_cima_normal.png);
 }
 
-.botao-pulo:active {
+.botao-pulo:active,
+.botao-pulo.pressionado {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/14_cima_pressionado.png);
 }
 
@@ -490,6 +514,62 @@ body {
 
 .tela-titulo[hidden] {
   display: none;
+}
+
+.pwa-controls {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 6;
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  width: min(260px, 35vw);
+  font: 12px/1.4 system-ui, sans-serif;
+  text-align: right;
+  color: #f3f4f6;
+}
+
+.pwa-controls button,
+.pwa-controls summary {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 2px solid #7dd3fc;
+  border-radius: 8px;
+  background: #0b1f33;
+  color: #f3f4f6;
+  font: 600 14px/1.4 system-ui, sans-serif;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.pwa-controls button:focus-visible,
+.pwa-controls summary:focus-visible {
+  outline: 3px solid #ffd646;
+  outline-offset: 3px;
+}
+
+.pwa-controls p {
+  margin: 0;
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: #0b1f33ed;
+}
+
+.pwa-controls p:empty {
+  display: none;
+}
+
+.pwa-controls details p {
+  margin-top: 6px;
+}
+
+@media (max-height: 500px) {
+  .pwa-controls {
+    top: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: min(240px, 32vw);
+  }
 }
 
 .tela-titulo-palco {
