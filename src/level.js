@@ -199,7 +199,7 @@ const FASES = [
     nome: 'Nível 01',
     subtitulo: 'Byte',
     titulo: 'Laboratório das Variáveis',
-    texto: 'Guardar valores com =, atualizar o que foi guardado e diferenciar números, textos e True/False.',
+    texto: 'Mostrar mensagens com print() e guardar valores em variáveis com =. Texto vai entre aspas; número, sem aspas.',
     larguraFase: 3420,
     posicaoInicial: { x: 40, y: 414 },
     obstaculos: OBSTACULOS_FASE_1,
