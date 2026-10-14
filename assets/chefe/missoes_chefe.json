@@ -145,37 +145,39 @@
     {
       "id": "patch_3",
       "titulo": "PATCH 3/3",
-      "enunciado": "Último passo! Crie a função rb(s), que devolve o texto s seguido de OFF. Guarde rb(\"KERNEL\") em k e mostre k.",
+      "enunciado": "Último passo! O Kernel Panic tem 3 núcleos. Use for para mostrar ZAP 3 vezes e, no fim, OFF.",
       "entrada": "Nenhuma.",
       "saida": [
-        "Mostre KERNEL OFF."
+        "Mostre ZAP três vezes.",
+        "Depois mostre OFF."
       ],
       "exemplos": [
         {
           "entrada": "-",
-          "saida": "KERNEL OFF"
+          "saida": "ZAP ZAP ZAP OFF"
         }
       ],
       "trechos": [
         {
           "id": "c1",
-          "codigo": "def rb(s):",
+          "codigo": "for i in range(3):",
           "tipo": "decisao"
         },
         {
           "id": "c2",
-          "codigo": "return s + \" OFF\"",
+          "codigo": "print(\"ZAP\")",
           "tipo": "saida"
         },
         {
           "id": "c3",
-          "codigo": "k = rb(\"KERNEL\")",
-          "tipo": "entrada"
+          "codigo": "print(\"OFF\")",
+          "tipo": "saida"
         },
         {
           "id": "c4",
-          "codigo": "print(k)",
-          "tipo": "saida"
+          "codigo": "for i in range(2):",
+          "tipo": "decisao",
+          "distrator": true
         }
       ],
       "solucao": [
@@ -190,19 +192,15 @@
         {
           "id": "c3",
           "indent": 0
-        },
-        {
-          "id": "c4",
-          "indent": 0
         }
       ],
       "testes": [
         {
-          "entrada": "",
-          "esperado": "KERNEL OFF"
+          "entrada": "-",
+          "esperado": "ZAP ZAP ZAP OFF"
         }
       ],
-      "dica": "O return fica recuado dentro da função. Depois, sem recuo, chame a função e mostre o resultado."
+      "dica": "O for com range(3) repete 3 vezes o que está recuado embaixo dele. O print do OFF fica fora do laço."
     }
   ]
 }

@@ -209,6 +209,33 @@ body {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/09_pause_normal.png);
 }
 
+/* Botão "?" ao lado do Pausar: reabre o tutorial da ADA. Só aparece durante a partida. */
+.botao-ajuda {
+  position: absolute;
+  top: calc(max(12px, env(safe-area-inset-top)) + 6px);
+  right: calc(max(12px, env(safe-area-inset-right)) + 64px);
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid #5affb4;
+  border-radius: 50%;
+  background-color: rgb(11 31 51 / 80%);
+  color: #5affb4;
+  font: 16px 'Press Start 2P', monospace;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.botao-ajuda:focus-visible {
+  outline: 3px solid #ffd646;
+  outline-offset: 3px;
+}
+
+.game-shell:not([data-estado='jogando']) .botao-ajuda {
+  display: none;
+}
+
 .pause-button:active {
   background-image: url(../assets/characters/Imagens_Personagens/03_botoes/08_pause_pressionado.png);
 }

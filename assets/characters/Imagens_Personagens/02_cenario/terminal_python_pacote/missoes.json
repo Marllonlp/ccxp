@@ -3,58 +3,55 @@
     {
       "id": 1,
       "titulo": "MISSÃO 1",
-      "enunciado": "João está aprendendo Python e precisa de um programa que diga se um número inteiro é par ou ímpar.",
-      "entrada": "Um número inteiro N.",
+      "enunciado": "Monte o cartão do jogador: guarde o nome Byte e os pontos 10 em variáveis e mostre os dois.",
+      "entrada": "Nenhuma.",
       "saida": [
-        "Se N for divisível por 2, mostre PAR.",
-        "Senão, mostre IMPAR."
+        "Mostre o nome: Byte.",
+        "Depois mostre os pontos: 10."
       ],
       "exemplos": [
         {
-          "entrada": "4",
-          "saida": "PAR"
-        },
-        {
-          "entrada": "7",
-          "saida": "IMPAR"
+          "entrada": "-",
+          "saida": "Byte 10"
         }
       ],
       "trechos": [
         {
           "id": "t1",
-          "codigo": "print(\"IMPAR\")",
-          "tipo": "saida"
+          "codigo": "nome = \"Byte\"",
+          "tipo": "outro"
         },
         {
           "id": "t2",
-          "codigo": "if n % 2 == 0:",
-          "tipo": "decisao"
+          "codigo": "pontos = 10",
+          "tipo": "outro"
         },
         {
           "id": "t3",
-          "codigo": "n = int(input())",
-          "tipo": "entrada"
-        },
-        {
-          "id": "t4",
-          "codigo": "else:",
-          "tipo": "decisao"
-        },
-        {
-          "id": "t5",
-          "codigo": "print(\"PAR\")",
+          "codigo": "print(nome)",
           "tipo": "saida"
         },
         {
-          "id": "t6",
-          "codigo": "print(n)",
+          "id": "t4",
+          "codigo": "print(pontos)",
+          "tipo": "saida"
+        },
+        {
+          "id": "t5",
+          "codigo": "print(\"nome\")",
           "tipo": "saida",
+          "distrator": true
+        },
+        {
+          "id": "t6",
+          "codigo": "nome = Byte",
+          "tipo": "outro",
           "distrator": true
         }
       ],
       "solucao": [
         {
-          "id": "t3",
+          "id": "t1",
           "indent": 0
         },
         {
@@ -62,76 +59,85 @@
           "indent": 0
         },
         {
-          "id": "t5",
-          "indent": 1
+          "id": "t3",
+          "indent": 0
         },
         {
           "id": "t4",
           "indent": 0
-        },
-        {
-          "id": "t1",
-          "indent": 1
         }
+      ],
+      "alternativas": [
+        [
+          "t2",
+          "t1",
+          "t3",
+          "t4"
+        ],
+        [
+          "t1",
+          "t3",
+          "t2",
+          "t4"
+        ]
       ],
       "testes": [
         {
-          "entrada": "4",
-          "esperado": "PAR"
-        },
-        {
-          "entrada": "7",
-          "esperado": "IMPAR"
-        },
-        {
-          "entrada": "0",
-          "esperado": "PAR"
+          "entrada": "-",
+          "esperado": "Byte 10"
         }
       ],
-      "dica": "Use o operador % (resto da divisão). Se n % 2 for 0, o número é par. Lembre: o que fica dentro do if/else vai recuado."
+      "dica": "Crie cada variável com = antes de usar. Texto vai entre aspas. No print, use o nome da variável sem aspas."
     },
     {
       "id": 2,
       "titulo": "MISSÃO 2",
-      "enunciado": "Maria quer somar dois números digitados pelo jogador e mostrar o resultado.",
-      "entrada": "Dois números inteiros, a e b, um por linha.",
+      "enunciado": "Leia a idade do jogador e mostre quantos anos ele terá daqui a 5 anos.",
+      "entrada": "A idade n (número inteiro).",
       "saida": [
-        "Mostre a soma de a e b."
+        "Mostre n + 5."
       ],
       "exemplos": [
         {
-          "entrada": "2 3",
-          "saida": "5"
+          "entrada": "10",
+          "saida": "15"
         },
         {
-          "entrada": "10 -4",
-          "saida": "6"
+          "entrada": "12",
+          "saida": "17"
         }
       ],
       "trechos": [
         {
           "id": "t1",
-          "codigo": "a = int(input())",
+          "codigo": "n = int(input())",
           "tipo": "entrada"
         },
         {
           "id": "t2",
-          "codigo": "b = int(input())",
-          "tipo": "entrada"
-        },
-        {
-          "id": "t3",
-          "codigo": "soma = a + b",
+          "codigo": "futura = n + 5",
           "tipo": "outro"
         },
         {
-          "id": "t4",
-          "codigo": "print(soma)",
+          "id": "t3",
+          "codigo": "print(futura)",
           "tipo": "saida"
         },
         {
+          "id": "t4",
+          "codigo": "n = input()",
+          "tipo": "entrada",
+          "distrator": true
+        },
+        {
           "id": "t5",
-          "codigo": "print(a)",
+          "codigo": "futura = n - 5",
+          "tipo": "outro",
+          "distrator": true
+        },
+        {
+          "id": "t6",
+          "codigo": "print(\"futura\")",
           "tipo": "saida",
           "distrator": true
         }
@@ -148,77 +154,74 @@
         {
           "id": "t3",
           "indent": 0
-        },
-        {
-          "id": "t4",
-          "indent": 0
         }
       ],
       "testes": [
         {
-          "entrada": "2 3",
-          "esperado": "5"
+          "entrada": "10",
+          "esperado": "15"
         },
         {
-          "entrada": "10 -4",
-          "esperado": "6"
+          "entrada": "12",
+          "esperado": "17"
         },
         {
-          "entrada": "0 0",
-          "esperado": "0"
+          "entrada": "30",
+          "esperado": "35"
         }
       ],
-      "dica": "Leia o primeiro número, depois o segundo. A soma é a + b. Use print para mostrar o resultado."
+      "dica": "Leia com int(input()) para ter um número. Some 5 com + e guarde em futura antes de mostrar."
     },
     {
       "id": 3,
       "titulo": "MISSÃO 3",
-      "enunciado": "Pedro quer saber qual de dois números é o maior.",
-      "entrada": "Dois números inteiros, a e b.",
+      "enunciado": "Leia a idade e diga se a pessoa é maior de idade (18 anos ou mais) ou menor.",
+      "entrada": "A idade n (número inteiro).",
       "saida": [
-        "Se a for maior que b, mostre a.",
-        "Senão, mostre b."
+        "Se n for 18 ou mais, mostre MAIOR.",
+        "Senão, mostre MENOR."
       ],
       "exemplos": [
         {
-          "entrada": "3 5",
-          "saida": "5"
+          "entrada": "20",
+          "saida": "MAIOR"
         },
         {
-          "entrada": "7 2",
-          "saida": "7"
+          "entrada": "15",
+          "saida": "MENOR"
         }
       ],
       "trechos": [
         {
           "id": "t1",
-          "codigo": "a = int(input())",
+          "codigo": "n = int(input())",
           "tipo": "entrada"
         },
         {
           "id": "t2",
-          "codigo": "b = int(input())",
-          "tipo": "entrada"
-        },
-        {
-          "id": "t3",
-          "codigo": "if a > b:",
+          "codigo": "if n >= 18:",
           "tipo": "decisao"
         },
         {
-          "id": "t4",
-          "codigo": "print(a)",
+          "id": "t3",
+          "codigo": "print(\"MAIOR\")",
           "tipo": "saida"
         },
         {
-          "id": "t5",
+          "id": "t4",
           "codigo": "else:",
           "tipo": "decisao"
         },
         {
-          "id": "t6",
-          "codigo": "print(b)",
+          "id": "t5",
+          "codigo": "print(\"MENOR\")",
           "tipo": "saida"
+        },
+        {
+          "id": "t6",
+          "codigo": "if n > 18:",
+          "tipo": "decisao",
+          "distrator": true
         }
       ],
       "solucao": [
@@ -232,50 +235,46 @@
         },
         {
           "id": "t3",
-          "indent": 0
-        },
-        {
-          "id": "t4",
           "indent": 1
         },
         {
-          "id": "t5",
+          "id": "t4",
           "indent": 0
         },
         {
-          "id": "t6",
+          "id": "t5",
           "indent": 1
         }
       ],
       "testes": [
         {
-          "entrada": "3 5",
-          "esperado": "5"
+          "entrada": "20",
+          "esperado": "MAIOR"
         },
         {
-          "entrada": "7 2",
-          "esperado": "7"
+          "entrada": "18",
+          "esperado": "MAIOR"
         },
         {
-          "entrada": "4 4",
-          "esperado": "4"
+          "entrada": "15",
+          "esperado": "MENOR"
         }
       ],
-      "dica": "Compare os dois números com >. O que fica depois de if e de else precisa estar recuado."
+      "dica": ">= quer dizer maior ou igual: com 18 anos já é MAIOR. Depois do if vem o caminho do SIM; depois do else, o do NÃO."
     },
     {
       "id": 4,
       "titulo": "MISSÃO 4",
-      "enunciado": "Lia quer uma contagem regressiva até zero, e depois um aviso de fim.",
+      "enunciado": "Use while para contar de n até 1 e, no fim, mostrar COMECOU!",
       "entrada": "Um número inteiro positivo n.",
       "saida": [
         "Mostre n, n-1, ..., 1, um por linha.",
-        "Depois mostre FIM."
+        "Depois mostre COMECOU!"
       ],
       "exemplos": [
         {
           "entrada": "3",
-          "saida": "3 2 1 FIM"
+          "saida": "3 2 1 COMECOU!"
         }
       ],
       "trechos": [
@@ -301,8 +300,14 @@
         },
         {
           "id": "t5",
-          "codigo": "print(\"FIM\")",
+          "codigo": "print(\"COMECOU!\")",
           "tipo": "saida"
+        },
+        {
+          "id": "t6",
+          "codigo": "n = n + 1",
+          "tipo": "outro",
+          "distrator": true
         }
       ],
       "solucao": [
@@ -330,67 +335,84 @@
       "testes": [
         {
           "entrada": "3",
-          "esperado": "3 2 1 FIM"
+          "esperado": "3 2 1 COMECOU!"
         },
         {
           "entrada": "1",
-          "esperado": "1 FIM"
+          "esperado": "1 COMECOU!"
         },
         {
           "entrada": "0",
-          "esperado": "FIM"
+          "esperado": "COMECOU!"
         }
       ],
-      "dica": "O while repete enquanto n for maior que zero. Dentro dele, mostre n e depois diminua n em 1."
+      "dica": "O while repete enquanto n for maior que zero. Dentro dele, mostre n e diminua n em 1. O último print fica fora do laço."
     },
     {
       "id": 5,
       "titulo": "MISSÃO 5",
-      "enunciado": "Sofia quer somar todos os números de 1 até um valor n.",
-      "entrada": "Um número inteiro n (n ≥ 1).",
+      "enunciado": "Leia a idade i e a senha s. Libere só quem tem 18 ou mais E a senha byte.",
+      "entrada": "Idade i, depois senha s.",
       "saida": [
-        "Mostre a soma de 1 até n."
+        "a = i >= 18 e b = s == \"byte\".",
+        "a and b: LIBERADO. Senão, NEGADO."
       ],
       "exemplos": [
         {
-          "entrada": "3",
-          "saida": "6"
+          "entrada": "20 byte",
+          "saida": "LIBERADO"
         },
         {
-          "entrada": "5",
-          "saida": "15"
+          "entrada": "15 byte",
+          "saida": "NEGADO"
         }
       ],
       "trechos": [
         {
           "id": "t1",
-          "codigo": "n = int(input())",
+          "codigo": "i = int(input())",
           "tipo": "entrada"
         },
         {
           "id": "t2",
-          "codigo": "i = total = 0",
-          "tipo": "outro"
+          "codigo": "s = input()",
+          "tipo": "entrada"
         },
         {
           "id": "t3",
-          "codigo": "while i < n:",
-          "tipo": "decisao"
+          "codigo": "a = i >= 18",
+          "tipo": "outro"
         },
         {
           "id": "t4",
-          "codigo": "i = i + 1",
+          "codigo": "b = s == \"byte\"",
           "tipo": "outro"
         },
         {
           "id": "t5",
-          "codigo": "total = total + i",
-          "tipo": "outro"
+          "codigo": "if a and b:",
+          "tipo": "decisao"
         },
         {
           "id": "t6",
-          "codigo": "print(total)",
+          "codigo": "print(\"LIBERADO\")",
           "tipo": "saida"
+        },
+        {
+          "id": "t7",
+          "codigo": "else:",
+          "tipo": "decisao"
+        },
+        {
+          "id": "t8",
+          "codigo": "print(\"NEGADO\")",
+          "tipo": "saida"
+        },
+        {
+          "id": "t9",
+          "codigo": "if a or b:",
+          "tipo": "decisao",
+          "distrator": true
         }
       ],
       "solucao": [
@@ -408,32 +430,62 @@
         },
         {
           "id": "t4",
-          "indent": 1
+          "indent": 0
         },
         {
           "id": "t5",
-          "indent": 1
+          "indent": 0
         },
         {
           "id": "t6",
+          "indent": 1
+        },
+        {
+          "id": "t7",
           "indent": 0
+        },
+        {
+          "id": "t8",
+          "indent": 1
         }
+      ],
+      "alternativas": [
+        [
+          "t1",
+          "t2",
+          "t4",
+          "t3",
+          "t5",
+          "t6",
+          "t7",
+          "t8"
+        ],
+        [
+          "t1",
+          "t3",
+          "t2",
+          "t4",
+          "t5",
+          "t6",
+          "t7",
+          "t8"
+        ]
       ],
       "testes": [
         {
-          "entrada": "3",
-          "esperado": "6"
+          "entrada": "20 byte",
+          "esperado": "LIBERADO"
         },
         {
-          "entrada": "5",
-          "esperado": "15"
+          "entrada": "15 byte",
+          "esperado": "NEGADO"
         },
         {
-          "entrada": "1",
-          "esperado": "1"
+          "entrada": "20 abc",
+          "esperado": "NEGADO"
         }
       ],
-      "dica": "O while repete enquanto i for menor que n. Dentro dele, aumente i e some i ao total. O print fica depois do while."
+      "dica": "Com and, as DUAS condições precisam ser verdadeiras; com or, bastaria uma. Crie a e b antes do if."
     }
   ]
 }

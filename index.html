@@ -57,6 +57,9 @@
         <p id="hud-mensagem" class="hud-message" role="status" hidden></p>
       </div>
 
+      <!-- Ajuda: reabre o tutorial da ADA do nível durante a partida (tecla H). -->
+      <button type="button" id="botao-ajuda" class="botao-ajuda" aria-label="Rever o tutorial da ADA" title="Rever o tutorial da ADA (H)">?</button>
+
       <button type="button" id="botao-pausar" class="pause-button" aria-controls="menu-pausa">
         <span class="sr-only">Pausar</span>
       </button>
@@ -217,6 +220,11 @@
       </section>
 
       <!-- Cutscene de introdução do Nível 1: desenhada em canvas 480 × 270 pelo módulo cutscene.js. -->
+      <!-- Tutorial da ADA no começo de cada nível: desenhado em canvas 480 × 270 pelo módulo ada.js. -->
+      <section id="tela-ada" class="tela-cutscene" aria-label="Tutorial da ADA" hidden>
+        <canvas id="canvas-ada" class="canvas-cutscene" role="img" aria-label="A ADA explica o conteúdo de Python do nível"></canvas>
+      </section>
+
       <section id="tela-cutscene" class="tela-cutscene" aria-label="Introdução do Nível 1" hidden>
         <canvas id="canvas-cutscene" class="canvas-cutscene" role="img" aria-label="Introdução do Nível 1"></canvas>
         <button type="button" id="botao-pular-intro" class="botao-sobre-canvas">Pular introdução</button>
