@@ -18,7 +18,7 @@ Há **quatro plantas inimigas**: duas no chão (**x = 1820 e 3120**), uma sobre 
 
 Use o botão **Pausar** para interromper a partida e abrir o menu. Enquanto o jogo está pausado, o personagem e a simulação ficam parados. O botão **Retomar** fecha o menu e continua a partida de onde parou.
 
-O progresso fica apenas na partida atual. Recarregar a página reinicia o personagem e os checkpoints.
+Os níveis liberados e as estrelas ficam salvos no navegador. A posição do personagem e os checkpoints valem apenas para a partida atual: recarregar a página reinicia a fase.
 
 ## Controles
 
@@ -77,6 +77,42 @@ python3 -m http.server 8000 --bind 0.0.0.0
 No Windows, substitua `python3` por `py`. Consulte o IP local do computador com `hostname -I` no Linux ou `ipconfig` no Windows. No celular, abra `http://IP_DO_COMPUTADOR:8000`, substituindo `IP_DO_COMPUTADOR` pelo endereço encontrado.
 
 No celular, `localhost` aponta para o próprio celular; por isso, o endereço precisa usar o IP do computador que está executando o servidor.
+
+## PWA e publicação na Vercel
+
+A versão de produção pode ser instalada e usada offline depois do primeiro download completo. A Vercel continua sendo a hospedagem: `vercel.json` executa `node scripts/build-pwa.mjs` e publica a pasta `dist`, com HTTPS no endereço do projeto. O build requer Node.js 22 ou posterior e usa apenas módulos nativos, sem dependências de execução.
+
+O build copia HTML, CSS, JavaScript, manifesto e recursos de `assets` para `dist`. Inclui também as variantes de arte dos pacotes, para cobrir os caminhos montados dinamicamente pelo jogo. Apenas os arquivos do jogo são publicados. A lista de cache, a integridade de cada arquivo e a versão são geradas automaticamente a partir do conteúdo. Não edite `dist` nem altere números de versão manualmente.
+
+### Testar a PWA localmente
+
+```bash
+node scripts/build-pwa.mjs
+python3 -m http.server 8001 --bind 127.0.0.1 --directory dist
+```
+
+Abra `http://localhost:8001` e aguarde **“Pronto para jogar offline”** na tela de título. Depois, desligue a conexão pelo modo Offline do DevTools e recarregue o jogo. A primeira visita precisa de internet até esse aviso aparecer, incluindo o download de imagens, sons, fontes e dados de missões e níveis.
+
+O servidor da raiz na porta 8000 continua sendo o modo de desenvolvimento, sem registrar service worker. Use portas diferentes para desenvolvimento e teste da PWA; assim, o cache de produção não esconde as alterações locais. Se já houver um worker registrado na porta usada para desenvolvimento, remova-o em DevTools → Application → Service Workers → Unregister e limpe o Cache Storage desse endereço.
+
+O acesso por IP local com HTTP permite testar o jogo no celular, mas não a instalação e o cache offline da PWA. Para esse teste, use o endereço HTTPS da Vercel.
+
+### Instalar e atualizar
+
+- Nos navegadores compatíveis, o botão **Instalar jogo** aparece na tela de título quando a instalação está disponível. Também é possível usar a opção de instalação do navegador.
+- No iPhone/iPad, use **Compartilhar → Adicionar à Tela de Início**. O jogo mostra essa orientação quando está aberto no navegador.
+- A orientação preferida é horizontal; o aviso para girar o celular continua atendendo aos navegadores que não aplicam essa preferência.
+- Ao minimizar o jogo ou bloquear a tela durante uma partida, o jogo e a música pausam. Use **Retomar** ao voltar.
+- Uma nova versão é baixada em um cache separado. Se algum arquivo falhar, a versão anterior continua ativa. Quando o download terminar, a tela de título informa que há uma atualização pronta.
+- Para aplicar uma atualização, feche **todas as abas e janelas do jogo**, inclusive a PWA instalada, e abra novamente. A versão não é trocada durante uma partida. Só após a ativação o cache antigo é removido; níveis e estrelas em `localStorage` são preservados.
+
+O armazenamento é local ao dispositivo e ao endereço usado. Limpar os dados do site remove cache e progresso; os endereços de preview da Vercel têm armazenamento separado do endereço principal. O modo offline continua disponível enquanto os arquivos permanecerem armazenados pelo navegador.
+
+### Validação antes de publicar
+
+Confira a instalação, o nome e o ícone do aplicativo; a abertura offline; as telas de níveis e missões; os sprites e sons; o retorno após minimizar; e uma atualização com duas abas abertas. Teste também em Android e iPhone/iPad reais. No Chrome, o painel Application permite inspecionar Manifest, Service Workers e Cache Storage.
+
+Os ícones PNG prontos ficam em `assets/icons/` e são publicados diretamente. O projeto não exige instalação de pacotes.
 
 ## Estado atual do jogo
 
