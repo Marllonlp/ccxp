@@ -155,17 +155,39 @@ body {
   background-color: #dfe7fd;
 }
 
-.pause-menu button {
-  min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid #64748b;
-  border-radius: 6px;
-  background-color: #29313d;
-  color: #f9fafb;
-  font: inherit;
-  font-weight: 600;
+.botao-som-inicio {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid #44ddf2;
+  border-radius: 0;
+  background: #1b254b;
+  box-shadow: inset 0 3px 0 #33466b, inset 0 -4px 0 #111a36;
+  color: #f5f8ff;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.botao-som-inicio svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+}
+
+.botao-som-inicio:hover,
+.botao-som-inicio:focus-visible {
+  outline: 2px solid #ffd646;
+  outline-offset: 3px;
+}
+
+.botao-som-inicio:active {
+  box-shadow: inset 0 3px 0 #111a36;
 }
 
 .pause-button {
@@ -198,51 +220,234 @@ body {
   display: grid;
   place-content: center;
   align-content: safe center;
-  gap: 8px;
-  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   overflow-y: auto;
-  background-color: rgb(32 36 43 / 90%);
+  background-color: rgb(6 12 28 / 76%);
+  font-family: 'Press Start 2P', monospace;
   text-align: center;
+}
+
+.menu-jogo-painel {
+  position: relative;
+  display: grid;
+  gap: 24px;
+  width: min(420px, calc(100vw - 48px));
+  padding: 26px;
+  border: 2px solid #44ddf2;
+  background: #1b254b;
+  box-shadow: 0 0 0 4px #0c0e1c, 0 6px 0 4px #0c0e1c, inset 0 0 0 4px #111a36;
+}
+
+.menu-jogo-painel::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid #33466b;
+  pointer-events: none;
+}
+
+.menu-jogo-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #33466b;
+  text-align: left;
+}
+
+.menu-jogo-byte {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border: 2px solid #44ddf2;
+  background: linear-gradient(#2869a6 0 78%, #52c96b 78% 84%, #13383e 84%);
+  box-shadow: 0 0 0 2px #0c0e1c;
+}
+
+.menu-jogo-byte img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.menu-jogo-legenda {
+  margin: 0 0 12px;
+  color: #83d7eb;
+  font-size: 8px;
+  line-height: 1.6;
+  text-transform: uppercase;
 }
 
 .pause-menu h2 {
   margin: 0;
-  font-size: 18px;
+  color: #ffd646;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.7;
+  text-shadow: 2px 2px 0 #0c0e1c;
+  text-transform: uppercase;
 }
 
-.pause-menu button:disabled {
+.menu-jogo-acoes {
+  display: grid;
+  gap: 12px;
+}
+
+.menu-jogo-botao {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 18px;
+  border: 2px solid #0c0e1c;
+  border-radius: 0;
+  background: #2a4464;
+  box-shadow: 0 0 0 1px #589ab5, inset 0 3px 0 #496384, inset 0 -5px 0 #16283f;
+  color: #f5f8ff;
+  font: 10px/1.7 'Press Start 2P', monospace;
+  text-align: left;
+  text-shadow: 2px 2px 0 #0c0e1c;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.menu-jogo-botao svg {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+}
+
+.menu-jogo-botao-principal {
+  background: #3bd451;
+  box-shadow: 0 0 0 1px #65ed7c, inset 0 3px 0 #8cf58a, inset 0 -6px 0 #167738;
+}
+
+.menu-jogo-botao-secundario {
+  background: #212f4c;
+  color: #b8cee1;
+  box-shadow: 0 0 0 1px #466a89, inset 0 3px 0 #354966, inset 0 -5px 0 #101c32;
+}
+
+.menu-jogo-botao:hover:not(:disabled),
+.menu-jogo-botao:focus-visible {
+  outline: 2px solid #ffd646;
+  outline-offset: 3px;
+  color: #fff;
+}
+
+.menu-jogo-botao:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 1px #44ddf2, inset 0 3px 0 rgb(0 0 0 / 25%);
+}
+
+.menu-jogo-botao:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.pause-button:focus-visible,
-.pause-menu button:focus-visible {
+.pause-button:focus-visible {
   outline: 3px solid #bde0fe;
   outline-offset: 3px;
 }
 
-/* Painel de som: fica acima da tela inicial (z-index 3) e opaco, para não mostrar os botões de trás. */
+.menu-jogo-dica {
+  margin: 0;
+  color: #a0b6d0;
+  font-size: 7px;
+  line-height: 2;
+}
+
+.menu-jogo-dica kbd {
+  padding: 4px;
+  border-bottom: 2px solid #486780;
+  color: #e1effa;
+  font: inherit;
+}
+
+/* O som mantém a mesma moldura da pausa e cobre os controles da tela anterior. */
 .menu-som {
   z-index: 4;
-  background-color: #20242b;
+  background-color: #0b1730;
+}
+
+.menu-som .menu-jogo-cabecalho {
+  justify-content: flex-start;
+}
+
+.menu-jogo-volumes {
+  display: grid;
+  gap: 20px;
 }
 
 .menu-som .linha-volume {
   display: grid;
-  grid-template-columns: 90px minmax(0, 1fr) 56px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  width: min(86vw, 360px);
-  margin: 0 auto;
+  gap: 4px 12px;
+  font-size: 10px;
+  line-height: 1.8;
   text-align: left;
 }
 
 .menu-som input[type='range'] {
+  grid-column: 1 / -1;
+  appearance: none;
   width: 100%;
-  accent-color: #38bdf8;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.menu-som input[type='range']::-webkit-slider-runnable-track {
+  height: 10px;
+  border: 2px solid #0c0e1c;
+  background: #0e1832;
+  box-shadow: 0 0 0 1px #486780;
+}
+
+.menu-som input[type='range']::-moz-range-track {
+  height: 6px;
+  border: 2px solid #0c0e1c;
+  background: #0e1832;
+  box-shadow: 0 0 0 1px #486780;
+}
+
+.menu-som input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 24px;
+  margin-top: -9px;
+  border: 2px solid #0c0e1c;
+  border-radius: 0;
+  background: #44ddf2;
+  box-shadow: inset 0 3px 0 #b4f5ff, inset 0 -4px 0 #2387ac;
+}
+
+.menu-som input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 20px;
+  border: 2px solid #0c0e1c;
+  border-radius: 0;
+  background: #44ddf2;
+  box-shadow: inset 0 3px 0 #b4f5ff, inset 0 -4px 0 #2387ac;
+}
+
+.menu-som input[type='range']:focus-visible {
+  outline: 2px solid #ffd646;
+  outline-offset: 2px;
 }
 
 .menu-som output {
+  color: #83e9f5;
   text-align: right;
 }
 
@@ -524,13 +729,81 @@ body {
   width: 74px;
 }
 
-@media (max-height: 360px) and (orientation: landscape) {
-  .pause-menu {
-    gap: 4px;
+@media (max-height: 500px) {
+  .menu-jogo-painel {
+    gap: 14px;
+    padding: 18px;
   }
 
-  .pause-menu button {
-    padding-block: 6px;
+  .menu-jogo-cabecalho {
+    padding-bottom: 12px;
+  }
+
+  .menu-jogo-byte {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .pause-menu h2 {
+    font-size: 14px;
+  }
+
+  .menu-jogo-legenda {
+    margin-bottom: 8px;
+  }
+
+  .menu-jogo-acoes {
+    gap: 8px;
+  }
+
+  .menu-jogo-botao {
+    min-height: 44px;
+    padding-block: 8px;
+  }
+
+  .menu-jogo-volumes {
+    gap: 10px;
+  }
+
+  .menu-jogo-dica {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .menu-jogo-dica {
+    display: none;
+  }
+}
+
+@media (max-height: 360px) {
+  .pause-menu {
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  .menu-jogo-painel {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .menu-jogo-cabecalho {
+    padding-bottom: 8px;
+  }
+
+  .menu-jogo-byte {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .menu-jogo-legenda {
+    margin-bottom: 4px;
+    font-size: 7px;
+  }
+
+  .pause-menu h2 {
+    font-size: 12px;
   }
 }
 

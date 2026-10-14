@@ -63,6 +63,7 @@ const menuPausa = document.getElementById('menu-pausa');
 const botaoRetomar = document.getElementById('botao-retomar');
 const botaoReiniciar = document.getElementById('botao-reiniciar');
 const botaoMenuPausa = document.getElementById('botao-menu-pausa');
+const rotuloNivelPausa = document.getElementById('pausa-nivel');
 const telaInicio = document.getElementById('tela-inicio');
 const botaoJogar = document.getElementById('botao-jogar');
 const botaoSair = document.getElementById('botao-sair');
@@ -850,6 +851,7 @@ function pausarPartida() {
   pausarMusicaFundo();
   botaoPausar.hidden = true;
   menuPausa.hidden = false;
+  rotuloNivelPausa.textContent = textosDoNivel(indiceFaseAtual()).nome;
   atualizarInterface();
   botaoRetomar.focus({ preventScroll: true });
 }

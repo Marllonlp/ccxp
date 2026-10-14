@@ -62,26 +62,63 @@
       </button>
 
       <section id="menu-pausa" class="pause-menu" hidden aria-labelledby="titulo-pausa">
-        <h2 id="titulo-pausa">Jogo pausado</h2>
-        <button type="button" id="botao-retomar">Retomar</button>
-        <button type="button" id="botao-som-pausa" aria-controls="menu-som">Som</button>
-        <button type="button" id="botao-reiniciar" disabled>Reiniciar fase</button>
-        <button type="button" id="botao-menu-pausa">Menu</button>
+        <div class="menu-jogo-painel">
+          <header class="menu-jogo-cabecalho">
+            <div class="menu-jogo-byte" aria-hidden="true">
+              <img src="./assets/characters/Imagens_Personagens/01_byte/02_byte_parado.gif" alt="" />
+            </div>
+            <div>
+              <p class="menu-jogo-legenda" id="pausa-nivel">Nível 01</p>
+              <h2 id="titulo-pausa">Jogo pausado</h2>
+            </div>
+          </header>
+          <div class="menu-jogo-acoes">
+            <button type="button" id="botao-retomar" class="menu-jogo-botao menu-jogo-botao-principal">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h2v2h3v2h3v4H9v2H6v2H4z" /></svg>
+              <span>Retomar</span>
+            </button>
+            <button type="button" id="botao-som-pausa" class="menu-jogo-botao" aria-controls="menu-som">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 6h3V4h2V2h2v12H6v-2H4v-2H1zm9-2h2v2h-2zm2 2h2v4h-2zm-2 4h2v2h-2z" /></svg>
+              <span>Som</span>
+            </button>
+            <button type="button" id="botao-reiniciar" class="menu-jogo-botao" disabled>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1h2v2h6v2h2v2h2v5h-2v2H6v-2H4V9h2v3h5v-2h2V7h-2V5H5v2H1V3h2z" /></svg>
+              <span>Reiniciar fase</span>
+            </button>
+            <button type="button" id="botao-menu-pausa" class="menu-jogo-botao menu-jogo-botao-secundario">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1h2v2h2v2h2v2h2v2h-2v6H9v-5H7v5H3V9H1V7h2V5h2V3h2z" /></svg>
+              <span>Menu principal</span>
+            </button>
+          </div>
+          <p class="menu-jogo-dica"><kbd>P</kbd> ou <kbd>Esc</kbd> para retomar</p>
+        </div>
       </section>
 
       <section id="menu-som" class="pause-menu menu-som" hidden aria-labelledby="titulo-som">
-        <h2 id="titulo-som">Som</h2>
-        <div class="linha-volume">
-          <label for="volume-musica">Música</label>
-          <input type="range" id="volume-musica" min="0" max="100" value="50" />
-          <output id="valor-musica" for="volume-musica">50%</output>
+        <div class="menu-jogo-painel">
+          <header class="menu-jogo-cabecalho">
+            <div>
+              <p class="menu-jogo-legenda">As aventuras de Byte</p>
+              <h2 id="titulo-som">Som</h2>
+            </div>
+          </header>
+          <div class="menu-jogo-volumes">
+            <div class="linha-volume">
+              <label for="volume-musica">Música</label>
+              <output id="valor-musica" for="volume-musica">50%</output>
+              <input type="range" id="volume-musica" min="0" max="100" value="50" />
+            </div>
+            <div class="linha-volume">
+              <label for="volume-efeitos">Efeitos</label>
+              <output id="valor-efeitos" for="volume-efeitos">50%</output>
+              <input type="range" id="volume-efeitos" min="0" max="100" value="50" />
+            </div>
+          </div>
+          <button type="button" id="botao-voltar-som" class="menu-jogo-botao">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h2v4h7v4H8v4H6v-2H4v-2H2V6h2V4h2z" /></svg>
+            <span>Voltar</span>
+          </button>
         </div>
-        <div class="linha-volume">
-          <label for="volume-efeitos">Efeitos</label>
-          <input type="range" id="volume-efeitos" min="0" max="100" value="50" />
-          <output id="valor-efeitos" for="volume-efeitos">50%</output>
-        </div>
-        <button type="button" id="botao-voltar-som">Voltar</button>
       </section>
 
       <!-- Tela de título: aparece ao abrir o jogo, antes da primeira partida. -->
@@ -172,7 +209,10 @@
           <button type="button" id="botao-jogar" class="botao-inicio botao-jogar">▶ JOGAR</button>
           <button type="button" id="botao-sair" class="botao-inicio botao-sair">✕ SAIR</button>
         </div>
-        <button type="button" id="botao-som-inicio" class="pause-button" aria-controls="menu-som">♪ Som</button>
+        <button type="button" id="botao-som-inicio" class="botao-som-inicio" aria-controls="menu-som" title="Som">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 6h3V4h2V2h2v12H6v-2H4v-2H1zm9-2h2v2h-2zm2 2h2v4h-2zm-2 4h2v2h-2z" /></svg>
+          <span class="sr-only">Som</span>
+        </button>
       </section>
     </section>
 
