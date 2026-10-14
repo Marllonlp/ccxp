@@ -26,16 +26,21 @@ import {
   verificarDesafioPonte,
   construirPonte,
   limparPontes,
+  mecanicasDaFase,
+  reiniciarMecanicas,
 } from './level.js';
 import { resolverColisoes, verificarEspaco, verificarColetaveis } from './collisions.js';
 import { registrarEfeito, registrarGanhoMusica, removerGanhoMusica, definirVolume } from './audio.js';
 import { calcularVisao, ajustarCanvas } from './viewport.js';
 import { criarTelaNiveis } from './telaNiveis.js';
 import { iniciarDemoTitulo } from './demoTitulo.js';
+import { abrirPortasDaMissao } from './mecanicas.js';
 import { criarTerminal, carregarMissoes } from './terminal.js';
 import { criarJanelaDesafio } from './desafio.js';
 import { BANCO_DESAFIOS } from './bancoDesafios.js';
 import { Poder } from './poder.js';
+import { criarCutscene } from './cutscene.js';
+import { criarChefe } from './chefe.js';
 
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
@@ -99,12 +104,14 @@ function carregarProgresso() {
       return {
         liberados: Math.min(Math.max(salvo.liberados, 1), NIVEIS_NA_TELA),
         estrelas: Array.isArray(salvo.estrelas) ? salvo.estrelas : [],
+        intro_nivel1_vista: salvo.intro_nivel1_vista === true,
+        chefe_derrotado: salvo.chefe_derrotado === true,
       };
     }
   } catch {
     // Progresso ilegível ou sem armazenamento: começa do primeiro nível.
   }
-  return { liberados: 1, estrelas: [] };
+  return { liberados: 1, estrelas: [], intro_nivel1_vista: false, chefe_derrotado: false };
 }
 function salvarProgresso() {
   try {
@@ -114,6 +121,13 @@ function salvarProgresso() {
   }
 }
 let progresso = carregarProgresso();
+
+// Cutscene de introdução do Nível 1 (roteiro em cutscene_intro_nivel1.json).
+const telaCutscene = document.getElementById('tela-cutscene');
+const cutsceneIntro = criarCutscene(document.getElementById('canvas-cutscene'), {
+  pasta: './assets/cutscenes/intro_nivel1/',
+});
+const ROTEIRO_INTRO_NIVEL1 = './assets/cutscenes/intro_nivel1/cutscene_intro_nivel1.json';
 
 const seletorNiveis = criarTelaNiveis(document.getElementById('canvas-niveis'), {
   onEscolher: (indice) => escolherNivel(indice),
@@ -134,7 +148,17 @@ let totemProximo = null;
 let areaBotaoTerminal = null;
 const terminal = criarTerminal(document.getElementById('canvas-terminal'), {
   onFechar: () => fecharTerminal(),
-  onResolvido: () => {},
+  onResolvido: (idMissao) => abrirPortasDaMissao(mecanicasDaFase, idMissao),
+});
+
+// Luta contra o Kernel Panic (fim do último nível). Usa o mesmo terminal, com as missões do chefe.
+const telaChefe = document.getElementById('tela-chefe');
+const lutaChefe = criarChefe(document.getElementById('canvas-chefe'), {
+  pasta: './assets/chefe/',
+  terminal,
+  telaTerminal,
+  onVitoria: () => aoVencerChefe(),
+  onSair: () => sairDoChefe(),
 });
 
 function abrirTerminal() {
@@ -395,8 +419,8 @@ let mensagemAte = 0;
 let estadoDaPartida = 'inicio';
 
 function atualizarInterface() {
-  hud.hidden = estadoDaPartida === 'inicio';
-  controlesToque.hidden = estadoDaPartida !== 'jogando';
+  hud.hidden = ['inicio', 'cutscene', 'chefe'].includes(estadoDaPartida);
+  controlesToque.hidden = estadoDaPartida !== 'jogando' && estadoDaPartida !== 'chefe';
   gameShell.dataset.estado = estadoDaPartida;
 }
 
@@ -464,6 +488,7 @@ function prepararNovaPartida() {
   limparPontes();
   inimigos = criarInimigos();
   poderes = [];
+  reiniciarMecanicas();
   const pontoInicial = obterPosicaoInicial();
   player.vidas = 3;
   player.tempoInvulneravel = 0;
@@ -552,6 +577,7 @@ function mostrarNiveis() {
   pararMusicaFundo();
   telaNiveis.hidden = false;
   seletorNiveis.mostrar(montarDadosNiveis(), Math.min(progresso.liberados, quantidadeFases) - 1);
+  atualizarInterface();
 }
 
 /** Carrega a fase escolhida e abre a tela do nível. Níveis bloqueados ou sem fase não abrem. */
@@ -564,6 +590,11 @@ function escolherNivel(indice) {
 /** Vitória: toca o som, guarda as estrelas (vidas restantes), libera a próxima fase e volta à tela de níveis. */
 function concluirFase() {
   const concluida = indiceFaseAtual();
+  // Último nível: o Kernel Panic aparece antes da conclusão, até ser derrotado.
+  if (concluida === quantidadeFases - 1 && !progresso.chefe_derrotado) {
+    iniciarChefe();
+    return;
+  }
   controleDoJogo.stop();
   limparAcoes();
   somVitoria.currentTime = 0;
@@ -573,6 +604,38 @@ function concluirFase() {
   progresso.estrelas[concluida] = Math.max(progresso.estrelas[concluida] ?? 0, estrelasGanhas);
   progresso.liberados = Math.max(progresso.liberados, Math.min(concluida + 2, NIVEIS_NA_TELA));
   salvarProgresso();
+  mostrarNiveis();
+}
+
+/** Luta contra o Kernel Panic (fim do último nível). A arena usa o mesmo terminal do projeto. */
+function iniciarChefe() {
+  estadoDaPartida = 'chefe';
+  controleDoJogo.stop();
+  limparAcoes();
+  botaoPausar.hidden = true;
+  menuPausa.hidden = true;
+  telaTitulo.hidden = true;
+  telaInicio.hidden = true;
+  telaNiveis.hidden = true;
+  seletorNiveis.esconder();
+  pararMusicaFundo();
+  telaChefe.hidden = false;
+  atualizarInterface();
+  lutaChefe.iniciar();
+}
+
+/** Chefe derrotado: salva a vitória e conclui o último nível. */
+function aoVencerChefe() {
+  lutaChefe.parar();
+  telaChefe.hidden = true;
+  progresso.chefe_derrotado = true;
+  salvarProgresso();
+  concluirFase();
+}
+
+/** Desistiu depois de perder todas as vidas da luta: volta à tela de níveis. */
+function sairDoChefe() {
+  telaChefe.hidden = true;
   mostrarNiveis();
 }
 
@@ -649,6 +712,7 @@ const dependenciasDoJogo = {
       inimigos.forEach((inimigo) => inimigo.atualizar(deltaTime));
       poderes.forEach((poder) => poder.atualizar(deltaTime));
       poderes = poderes.filter((poder) => !poder.terminou);
+      mecanicasDaFase.forEach((mecanica) => mecanica.atualizar(deltaTime, player));
     }
   },
 
@@ -694,7 +758,9 @@ const dependenciasDoJogo = {
       mensagemAte = performance.now() + 1000;
     }
 
-    const inimigoTocado = inimigos.find((inimigo) => inimigo.toca(player));
+    // Inimigos e perigos das mecânicas machucam ao toque.
+    const inimigoTocado = inimigos.find((inimigo) => inimigo.toca(player))
+      ?? mecanicasDaFase.find((mecanica) => mecanica.toca(player));
     if (inimigoTocado && player.receberDano()) {
       if (player.vidas <= 0) {
         aguardarEscolhaDoJogador();
@@ -717,6 +783,7 @@ const dependenciasDoJogo = {
     ctx.save();
     aplicarCameraMundo(ctx, cameraX, visao, cameraY);
     inimigos.forEach((inimigo) => inimigo.desenhar(ctx));
+    mecanicasDaFase.forEach((mecanica) => mecanica.desenhar(ctx));
     player.desenhar(ctx);
     poderes.forEach((poder) => poder.desenhar(ctx));
     ctx.restore();
@@ -789,9 +856,40 @@ document.addEventListener('visibilitychange', () => {
 // SAIR da tela do nível: volta à tela de níveis, sem iniciar a fase.
 botaoSair.addEventListener('click', () => mostrarNiveis());
 
+/** Toca a cutscene de introdução do Nível 1. aoTerminar roda ao acabar ou ao pular. */
+function tocarIntroNivel1(aoTerminar) {
+  estadoDaPartida = 'cutscene';
+  controleDoJogo.stop();
+  limparAcoes();
+  botaoPausar.hidden = true;
+  menuPausa.hidden = true;
+  telaTitulo.hidden = true;
+  telaInicio.hidden = true;
+  telaNiveis.hidden = true;
+  seletorNiveis.esconder();
+  telaCutscene.hidden = false;
+  atualizarInterface();
+  cutsceneIntro.tocar(ROTEIRO_INTRO_NIVEL1, {
+    aoTerminar: () => {
+      telaCutscene.hidden = true;
+      aoTerminar();
+    },
+  });
+}
+
 botaoJogar.addEventListener('click', () => {
   if (retratoMovel.matches) return;
   tocarSomApertarPlay();
+  // Primeira vez no Nível 1: a introdução toca antes da partida, e a música começa depois dela.
+  if (indiceFaseAtual() === 0 && !progresso.intro_nivel1_vista) {
+    tocarIntroNivel1(() => {
+      progresso.intro_nivel1_vista = true;
+      salvarProgresso();
+      iniciarMusicaFundo();
+      iniciarPartida();
+    });
+    return;
+  }
   iniciarMusicaFundo();
   iniciarPartida();
 });
@@ -860,6 +958,15 @@ window.addEventListener('keydown', (evento) => {
   // Os controles de instalação usam o comportamento nativo de Enter e espaço.
   if (evento.target.closest?.('.pwa-controls')) return;
   if (retratoMovel.matches) return;
+  // Cutscene em andamento: ela trata as próprias teclas.
+  if (estadoDaPartida === 'cutscene' || estadoDaPartida === 'chefe') return;
+  // F8 (teste): revê a introdução do Nível 1 a partir da tela de níveis ou da tela do nível.
+  if (evento.key === 'F8' && (estadoDaPartida === 'inicio' || estadoDaPartida === 'niveis')) {
+    evento.preventDefault();
+    const voltarPara = estadoDaPartida;
+    tocarIntroNivel1(() => (voltarPara === 'niveis' ? mostrarNiveis() : mostrarTelaInicio()));
+    return;
+  }
   // Com o painel de som aberto, Esc só fecha o painel: não pausa nem retoma o jogo.
   if (!menuSom.hidden) {
     if (evento.key === 'Escape') fecharMenuSom();

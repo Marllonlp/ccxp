@@ -5,6 +5,8 @@
 
 import { calcularVisao } from './viewport.js';
 import { AnimacaoGIF } from './player.js';
+import { criarMecanica, ligarMecanicas } from './mecanicas.js';
+import { FASES_EXTRA } from './fasesExtra.js';
 
 export const LARGURA_TELA = 960;
 export const ALTURA_FASE = 540;
@@ -180,28 +182,13 @@ export let vidasItens = [];
 export let patrulhasSentinelas = [];
 let metaAtual = null;
 let indiceFase = 0;
+// Mecânicas da fase carregada (perigos, plataformas móveis, máquinas). Trocadas por carregarFase().
+export let mecanicasDaFase = [];
 
-// Fase 2: exemplo para testar a progressão. Troque pelo desenho definitivo quando estiver pronto.
-const OBSTACULOS_FASE_2 = [
-  { tipo: 'chao', x: 0, y: SUPERFICIE_CHAO, width: 600, height: 60 },
-  { tipo: 'plataforma', x: 760, y: 390, width: 110, height: 20 },
-  { tipo: 'plataforma', x: 920, y: 310, width: 110, height: 20 },
-  { tipo: 'chao', x: 700, y: SUPERFICIE_CHAO, width: 700, height: 60 },
-  { tipo: 'teto', x: 1150, y: 330, width: 160, height: 100 },
-  { tipo: 'parede', x: 1400, y: 400, width: 40, height: 80 },
-  { tipo: 'chao', x: 1440, y: SUPERFICIE_CHAO, width: 200, height: 60 },
-  { tipo: 'chao', x: 1740, y: SUPERFICIE_CHAO, width: 260, height: 60 },
-];
-
-const VAOS_FASE_2 = [
-  { x: 600, y: SUPERFICIE_CHAO, width: 100, height: 60 },
-  { x: 1640, y: SUPERFICIE_CHAO, width: 100, height: 60 },
-];
-
-const CHECKPOINTS_FASE_2 = [
-  { id: 'f2cp1', x: 560, y: 416, width: 32, height: 64, posicaoSegura: { x: 555, y: 414 }, totem: 'obelisco', ativo: false },
-  { id: 'f2cp2', x: 1480, y: 416, width: 32, height: 64, posicaoSegura: { x: 1475, y: 414 }, totem: 'terminal', ativo: false },
-];
+/** Volta as mecânicas ao início, para uma nova partida da mesma fase. */
+export function reiniciarMecanicas() {
+  for (const mecanica of mecanicasDaFase) mecanica.reiniciar();
+}
 
 /**
  * Fases do jogo, na ordem. A meta é o ponto de chegada: tocar nela conclui a fase.
@@ -224,21 +211,7 @@ const FASES = [
     patrulhas: PATRULHAS_FASE_1,
     meta: { x: 3340, y: 416, width: 32, height: 64 },
   },
-  {
-    nome: 'Nível 02',
-    subtitulo: 'Byte',
-    texto: 'Texto de exemplo: este é um nível provisório para testar a progressão.',
-    larguraFase: 2100,
-    posicaoInicial: { x: 40, y: 414 },
-    obstaculos: OBSTACULOS_FASE_2,
-    vaos: VAOS_FASE_2,
-    checkpoints: CHECKPOINTS_FASE_2,
-    plantas: [],
-    moedas: [],
-    vidasItens: [],
-    patrulhas: [],
-    meta: { x: 1930, y: 416, width: 32, height: 64 },
-  },
+  ...FASES_EXTRA,
 ];
 
 /** Nome e texto de cada fase, para as telas de níveis e de início. */
@@ -250,7 +223,9 @@ export function carregarFase(indice) {
   const fase = FASES[indice];
   indiceFase = indice;
   // Cópias: as pontes construídas durante a partida não alteram o desenho original da fase.
-  obstaculos = [...fase.obstaculos];
+  mecanicasDaFase = (fase.mecanicas ?? []).map((spec) => criarMecanica(spec));
+  ligarMecanicas(mecanicasDaFase);
+  obstaculos = [...fase.obstaculos, ...mecanicasDaFase.flatMap((mecanica) => mecanica.rects)];
   vaos = fase.vaos.map((vao) => ({ ...vao, ponte: false, desafioFeito: false }));
   checkpoints = fase.checkpoints.map((checkpoint) => ({
     ...checkpoint,
@@ -595,6 +570,7 @@ function desenharMundo(ctx, limiteInferior) {
   for (const obstaculo of obstaculos) {
     // A ponte é desenhada junto com o vão, em desenharVao.
     if (obstaculo.tipo === 'ponte' && pecasCarregadas) continue;
+    if (obstaculo.mecanica) continue;
 
     if (obstaculo.tipo === 'plataforma' && pecaCarregada(plataformaTerra)) {
       desenharPlataforma(ctx, obstaculo);
