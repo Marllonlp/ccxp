@@ -15,7 +15,6 @@ import {
   aplicarCameraMundo,
   patrulhasSentinelas,
   plantas,
-  moedas,
   limparColetaveis,
   carregarFase,
   indiceFaseAtual,
@@ -98,7 +97,7 @@ fetch(PASTA_NIVEIS + 'niveis.json')
   .then((json) => { dadosJsonNiveis = json.niveis ?? []; })
   .catch((erro) => console.error('Falha ao carregar niveis.json:', erro));
 
-// Progresso: níveis liberados e estrelas de cada um. Fica salvo no navegador.
+// Progresso: níveis, estrelas e IDs das moedas coletadas por fase. Fica salvo no navegador.
 const CHAVE_PROGRESSO = 'byte-progresso';
 function carregarProgresso() {
   try {
@@ -107,6 +106,11 @@ function carregarProgresso() {
       return {
         liberados: Math.min(Math.max(salvo.liberados, 1), NIVEIS_NA_TELA),
         estrelas: Array.isArray(salvo.estrelas) ? salvo.estrelas : [],
+        moedasColetadas: Array.from({ length: quantidadeFases }, (_, indice) => (
+          Array.isArray(salvo.moedasColetadas?.[indice])
+            ? [...new Set(salvo.moedasColetadas[indice].filter((id) => typeof id === 'string'))]
+            : []
+        )),
         intro_nivel1_vista: salvo.intro_nivel1_vista === true,
         chefe_derrotado: salvo.chefe_derrotado === true,
       };
@@ -114,7 +118,7 @@ function carregarProgresso() {
   } catch {
     // Progresso ilegível ou sem armazenamento: começa do primeiro nível.
   }
-  return { liberados: 1, estrelas: [], intro_nivel1_vista: false, chefe_derrotado: false };
+  return { liberados: 1, estrelas: [], moedasColetadas: [], intro_nivel1_vista: false, chefe_derrotado: false };
 }
 function salvarProgresso() {
   try {
@@ -441,12 +445,12 @@ function atualizarHUD() {
     contextoMoedas.imageSmoothingEnabled = false;
     contextoMoedas.drawImage(moedaHUD, 0, 8, 16, 16);
   }
-  const moedasColetadas = moedas.filter((moeda) => moeda.coletado).length;
+  const moedasColetadas = progresso.moedasColetadas.reduce((total, daFase) => total + daFase.length, 0);
   contextoMoedas.fillStyle = '#f3f4f6';
   contextoMoedas.font = 'bold 16px system-ui, sans-serif';
   contextoMoedas.textBaseline = 'middle';
   contextoMoedas.fillText(String(moedasColetadas), 24, 16);
-  const rotuloMoedas = `${moedasColetadas} de ${moedas.length} moedas`;
+  const rotuloMoedas = `Moedas coletadas: ${moedasColetadas}`;
   if (canvasMoedas.getAttribute('aria-label') !== rotuloMoedas) {
     canvasMoedas.setAttribute('aria-label', rotuloMoedas);
   }
@@ -484,10 +488,10 @@ function reposicionar(ponto) {
   player.retornar(ponto.x, ponto.y);
 }
 
-/** Zera a partida: vidas, checkpoints e posição inicial. Não mexe nos menus. */
+/** Reinicia vidas, checkpoints e posição, preservando as moedas salvas. */
 function prepararNovaPartida() {
   limparCheckpoints();
-  limparColetaveis();
+  limparColetaveis(progresso.moedasColetadas[indiceFaseAtual()]);
   limparPontes();
   inimigos = criarInimigos();
   poderes = [];
@@ -501,7 +505,7 @@ function prepararNovaPartida() {
   mensagemAte = 0;
 }
 
-/** Esconde a tela inicial e os menus, e começa a partida do zero. */
+/** Esconde a tela inicial e os menus, e começa uma nova tentativa da fase. */
 function iniciarPartida() {
   if (retratoMovel.matches) return;
   prepararNovaPartida();
@@ -586,7 +590,7 @@ function mostrarNiveis() {
 /** Carrega a fase escolhida e abre a tela do nível. Níveis bloqueados ou sem fase não abrem. */
 function escolherNivel(indice) {
   if (indice >= progresso.liberados || indice >= quantidadeFases) return;
-  carregarFase(indice);
+  carregarFase(indice, progresso.moedasColetadas[indice]);
   mostrarTelaInicio();
 }
 
@@ -673,7 +677,7 @@ function selecionarBotaoTitulo(indice) {
 const PAINEIS_TITULO = {
   como: { titulo: 'Como jogar', linhas: ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'P ou ESC: pausar', 'R: reiniciar a fase'] },
   sobre: { titulo: 'Sobre', linhas: ['As aventuras de Byte', 'Versão 1.0', 'Jogo de plataforma em desenvolvimento.'] },
-  apagar: { titulo: 'Apagar dados', linhas: ['Isso apaga os níveis liberados, as estrelas e o chefe derrotado.', 'O jogo volta para o Nível 1. Não dá para desfazer.'] },
+  apagar: { titulo: 'Apagar dados', linhas: ['Isso apaga os níveis liberados, as estrelas, as moedas e o chefe derrotado.', 'O jogo volta para o Nível 1. Não dá para desfazer.'] },
 };
 
 function abrirPainelTitulo(conteudo) {
@@ -770,6 +774,11 @@ const dependenciasDoJogo = {
         player.vidas = Math.min(3, player.vidas + 1);
         mensagem = player.vidas === 3 ? 'Vida recuperada' : 'Coração coletado';
       } else {
+        const moedasDaFase = progresso.moedasColetadas[indiceFaseAtual()] ??= [];
+        if (!moedasDaFase.includes(coletavel.id)) {
+          moedasDaFase.push(coletavel.id);
+          salvarProgresso();
+        }
         mensagem = 'Moeda coletada';
       }
       mensagemAte = performance.now() + 1000;
