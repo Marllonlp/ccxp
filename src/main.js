@@ -350,6 +350,8 @@ function pausarMusicaFundo() {
 }
 
 function retomarMusicaFundo() {
+  // A decodificação pode terminar depois de o jogador pausar ou minimizar o app.
+  if (document.hidden || !['jogando', 'terminal', 'desafio'].includes(estadoDaPartida)) return;
   contextoAudio?.resume();
 }
 
@@ -785,6 +787,17 @@ function retomarPartida() {
   botaoPausar.focus({ preventScroll: true });
 }
 
+// Ao trocar de aplicativo ou bloquear a tela, mantém a partida pausada ao voltar.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    limparAcoes();
+    pausarPartida();
+    pausarMusicaFundo();
+  } else if (estadoDaPartida === 'terminal' || estadoDaPartida === 'desafio') {
+    retomarMusicaFundo();
+  }
+});
+
 // O evento click atende tanto ao mouse quanto ao toque nos botões.
 // SAIR da tela do nível: volta à tela de níveis, sem iniciar a fase.
 botaoSair.addEventListener('click', () => mostrarNiveis());
@@ -857,6 +870,8 @@ canvas.addEventListener('click', (evento) => {
 });
 
 window.addEventListener('keydown', (evento) => {
+  // Os controles de instalação usam o comportamento nativo de Enter e espaço.
+  if (evento.target.closest?.('.pwa-controls')) return;
   if (retratoMovel.matches) return;
   // Com o painel de som aberto, Esc só fecha o painel: não pausa nem retoma o jogo.
   if (!menuSom.hidden) {
