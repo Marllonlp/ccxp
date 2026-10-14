@@ -77,20 +77,6 @@ body {
   line-height: 1;
 }
 
-.orientation-card button {
-  min-height: 44px;
-  margin-top: 20px;
-  padding: 10px 16px;
-  border: 0;
-  border-radius: 6px;
-  background: #38bdf8;
-  color: #082f49;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
 /* Mantém o título e as instruções disponíveis para leitores de tela. */
 .page-header,
 .mobile-controls h2,

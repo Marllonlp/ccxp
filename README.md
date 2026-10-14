@@ -44,7 +44,7 @@ Redimensionar a janela preserva a posição, as vidas, os checkpoints e os itens
 
 No celular e no tablet, jogue na horizontal. Ao girar para a vertical durante uma partida, o jogo pausa e mostra o aviso de orientação. Depois de girar de volta, use **Retomar**. Os controles respeitam as bordas do aparelho, e a câmera reserva espaço para eles quando o personagem está no chão.
 
-Caso o navegador não permita bloquear a orientação na horizontal, gire o aparelho manualmente. O jogo se adapta automaticamente ao espaço disponível.
+O aviso desaparece ao girar o aparelho para a horizontal. O jogo se adapta automaticamente ao espaço disponível.
 
 ## Como executar
 
