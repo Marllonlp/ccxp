@@ -5,6 +5,7 @@
 import { inputState, limparAcoes } from './input.js';
 import { desenharVidas } from './player.js';
 import { carregarFonte, escrever, escreverCartela, quebrar } from './cutscene.js';
+import { pontoNoCanvas } from './viewport.js';
 
 const LARGURA = 480;
 const ALTURA = 270;
@@ -111,7 +112,7 @@ function quadroDe(tempo, msPorFrame, quadros, loop) {
  * - onSair(): o jogador desistiu depois de perder todas as vidas.
  * Devolve { iniciar(), parar() }.
  */
-export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, onSair }) {
+export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, onSair, onAtualizarInterface = () => {} }) {
   canvas.width = LARGURA;
   canvas.height = ALTURA;
   const ctx = canvas.getContext('2d');
@@ -124,6 +125,45 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   let s = null;
   let dialogo = null;
   let puloAnterior = false;
+  let pausado = false;
+  let controlesAnteriores = false;
+  let inicializacao = 0;
+  const menuFim = canvas.parentElement.querySelector('#chefe-fim');
+  const botaoTentar = menuFim.querySelector('#chefe-tentar');
+
+  function podeControlar() {
+    return rodando && !pausado && !dialogo && !s.terminalAberto && s.byte.vidas > 0 && s.estado !== 'fim';
+  }
+
+  function atualizarInterfaceChefe() {
+    const mostrarFim = rodando && s.estado === 'fim';
+    const mudouFim = menuFim.hidden === mostrarFim;
+    const controles = podeControlar();
+    menuFim.hidden = !mostrarFim;
+    if (mudouFim && mostrarFim) {
+      limparAcoes();
+      botaoTentar.focus({ preventScroll: true });
+    }
+    if (mudouFim || controles !== controlesAnteriores) {
+      controlesAnteriores = controles;
+      onAtualizarInterface();
+    }
+  }
+
+  function reiniciar() {
+    novaPartida();
+    pausado = false;
+    ultimoQuadro = performance.now();
+    atualizarInterfaceChefe();
+  }
+
+  function sair() {
+    parar();
+    onSair();
+  }
+
+  botaoTentar.addEventListener('click', reiniciar);
+  menuFim.querySelector('#chefe-sair').addEventListener('click', sair);
 
   // --- Acesso aos dados -----------------------------------------------------
 
@@ -646,7 +686,7 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     if (s.estado === 'mensagem' && s.mensagem) desenharMensagemPatch();
     if (dialogo) desenharDialogo();
     if (s.estado === 'vitoria') escreverCartela(ctx, 'VITÓRIA!', (LARGURA - 8 * 24) / 2, 110, 24, '#FFD646', '#C9A227');
-    if (s.estado === 'fim') desenharFimDeJogo();
+    atualizarInterfaceChefe();
   }
 
   function desenharCenario() {
@@ -799,14 +839,6 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     escrever(ctx, 'APLICADO!', caixa.x + 10, caixa.y + 44, 8, '#5AFF8C');
   }
 
-  function desenharFimDeJogo() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.fillRect(0, 0, LARGURA, ALTURA);
-    escreverCartela(ctx, 'FIM DE JOGO', (LARGURA - 11 * 24) / 2, 96, 24, '#FF6078', '#4A0B18');
-    escrever(ctx, 'ENTER: TENTAR DE NOVO', 120, 150, 8, '#FFFFFF');
-    escrever(ctx, 'ESC: SAIR', 176, 170, 8, '#8C92A6');
-  }
-
   // --- Diálogo --------------------------------------------------------------
 
   function abrirDialogo(quem, texto, aoFechar) {
@@ -842,6 +874,8 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
 
   function aoTecla(evento) {
     if (!rodando) return;
+    if (pausado) return;
+    if (evento.target.closest?.('#chefe-fim') && ['Enter', ' '].includes(evento.key)) return;
     if (s.terminalAberto) {
       terminal.tratarTecla(evento);
       return;
@@ -849,11 +883,10 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     if (s.estado === 'fim') {
       if (evento.key === 'Enter') {
         evento.preventDefault();
-        novaPartida();
+        reiniciar();
       } else if (evento.key === 'Escape') {
         evento.preventDefault();
-        parar();
-        onSair();
+        sair();
       }
       return;
     }
@@ -869,14 +902,12 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   }
 
   function aoClicar(evento) {
-    if (!rodando) return;
+    if (!rodando || pausado) return;
     if (dialogo) {
       avancarDialogo();
       return;
     }
-    const area = canvas.getBoundingClientRect();
-    const x = ((evento.clientX - area.left) * LARGURA) / area.width;
-    const y = ((evento.clientY - area.top) * ALTURA) / area.height;
+    const { x, y } = pontoNoCanvas(canvas, evento, LARGURA, ALTURA);
     const botao = botaoTerminal();
     if (podeAbrirTerminal() && x >= botao.x && x < botao.x + 150 && y >= botao.y && y < botao.y + 28) abrirTerminal();
   }
@@ -885,15 +916,19 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     if (!rodando) return;
     const dt = Math.min(0.05, (agora - ultimoQuadro) / 1000);
     ultimoQuadro = agora;
-    atualizar(dt);
-    if (dialogo && !s.terminalAberto) dialogo.letras = Math.min(dialogo.total, dialogo.letras + dt * 50);
-    desenhar();
+    if (!pausado) {
+      atualizar(dt);
+      if (dialogo && !s.terminalAberto) dialogo.letras = Math.min(dialogo.total, dialogo.letras + dt * 50);
+      desenhar();
+    }
     requestAnimationFrame(quadro);
   }
 
   function parar() {
+    inicializacao += 1;
     if (!rodando) return;
     rodando = false;
+    limparAcoes();
     window.removeEventListener('keydown', aoTecla);
     canvas.removeEventListener('click', aoClicar);
     if (retornosAnteriores) terminal.definirRetornos(retornosAnteriores);
@@ -903,21 +938,42 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       telaTerminal.hidden = true;
       terminal.fechar();
     }
+    atualizarInterfaceChefe();
   }
 
   return {
     /** Começa a luta: a faixa de apresentação e depois a primeira fase. */
     async iniciar() {
       if (rodando) return;
+      const tentativa = ++inicializacao;
+      pausado = false;
       if (!recursos) recursos = await carregarRecursos(pasta);
+      if (tentativa !== inicializacao) return;
       novaPartida();
       retornosAnteriores = terminal.definirRetornos({ onFechar: aoFecharTerminal, onResolvido: aoResolverPatch });
       rodando = true;
       ultimoQuadro = performance.now();
+      atualizarInterfaceChefe();
+      onAtualizarInterface();
       window.addEventListener('keydown', aoTecla);
       canvas.addEventListener('click', aoClicar);
       requestAnimationFrame(quadro);
     },
     parar,
+    reiniciar,
+    podeControlar,
+    pronto: () => rodando,
+    podePausar: () => rodando && s.estado !== 'fim' && !s.terminalAberto,
+    pausar() {
+      pausado = true;
+      limparAcoes();
+      atualizarInterfaceChefe();
+    },
+    retomar() {
+      pausado = false;
+      ultimoQuadro = performance.now();
+      limparAcoes();
+      atualizarInterfaceChefe();
+    },
   };
 }

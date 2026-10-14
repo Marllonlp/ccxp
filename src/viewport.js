@@ -1,4 +1,12 @@
 // O mapa usa coordenadas próprias; a janela só altera a escala e a área visível.
+export function pontoNoCanvas(canvas, evento, largura = canvas.width, altura = canvas.height) {
+  const area = canvas.getBoundingClientRect();
+  return {
+    x: (evento.clientX - area.left) * largura / area.width,
+    y: (evento.clientY - area.top) * altura / area.height,
+  };
+}
+
 export function calcularVisao(largura, altura, margemControles = 0) {
   largura = Math.max(1, largura);
   altura = Math.max(1, altura);

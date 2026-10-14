@@ -168,6 +168,39 @@
       <!-- Terminal do totem: mini editor de Python, desenhado em canvas 480 × 270. -->
       <section id="tela-terminal" class="tela-terminal" aria-label="Terminal do totem" hidden>
         <canvas id="canvas-terminal" class="canvas-terminal" role="img" aria-label="Terminal do totem"></canvas>
+        <div class="terminal-toque">
+          <header class="terminal-toque-cabecalho">
+            <h2>Terminal do totem</h2>
+            <button type="button" id="terminal-fechar" aria-label="Fechar terminal">Fechar</button>
+          </header>
+          <div class="terminal-toque-corpo">
+            <section class="terminal-toque-missao" aria-labelledby="terminal-missao-titulo">
+              <h3 id="terminal-missao-titulo"></h3>
+              <p id="terminal-enunciado"></p>
+              <details>
+                <summary>Entrada, saída e exemplos</summary>
+                <div id="terminal-detalhes"></div>
+              </details>
+            </section>
+            <section class="terminal-toque-editor" aria-labelledby="terminal-programa-titulo">
+              <h3 id="terminal-programa-titulo">Seu programa</h3>
+              <p class="terminal-toque-ajuda">Toque nos trechos para montar o código. Selecione uma linha para movê-la ou removê-la.</p>
+              <ol id="terminal-linhas"></ol>
+              <div class="terminal-toque-edicao" role="group" aria-label="Editar linha selecionada">
+                <button type="button" id="terminal-subir">Subir</button>
+                <button type="button" id="terminal-descer">Descer</button>
+                <button type="button" id="terminal-remover">Remover</button>
+              </div>
+              <h3>Trechos disponíveis</h3>
+              <div id="terminal-trechos"></div>
+              <div class="terminal-toque-acoes">
+                <button type="button" id="terminal-testar">Testar código</button>
+                <button type="button" id="terminal-dica">Dica</button>
+              </div>
+              <div id="terminal-resultado" role="status" aria-live="polite"></div>
+            </section>
+          </div>
+        </div>
       </section>
 
       <!-- Desafio do banco de perguntas: aparece nos corações, sentinelas e vãos com desafio. -->
@@ -186,11 +219,19 @@
       <!-- Cutscene de introdução do Nível 1: desenhada em canvas 480 × 270 pelo módulo cutscene.js. -->
       <section id="tela-cutscene" class="tela-cutscene" aria-label="Introdução do Nível 1" hidden>
         <canvas id="canvas-cutscene" class="canvas-cutscene" role="img" aria-label="Introdução do Nível 1"></canvas>
+        <button type="button" id="botao-pular-intro" class="botao-sobre-canvas">Pular introdução</button>
       </section>
 
       <!-- Luta contra o chefe (nível 5): desenhada em canvas 480 × 270 pelo módulo chefe.js. -->
       <section id="tela-chefe" class="tela-chefe" aria-label="Luta contra o chefe" hidden>
         <canvas id="canvas-chefe" class="canvas-chefe" role="img" aria-label="Luta contra o Kernel Panic"></canvas>
+        <div id="chefe-fim" class="chefe-fim" hidden>
+          <div class="menu-jogo-painel">
+            <h2>Fim de jogo</h2>
+            <button type="button" id="chefe-tentar" class="menu-jogo-botao menu-jogo-botao-principal">Tentar de novo</button>
+            <button type="button" id="chefe-sair" class="menu-jogo-botao">Voltar aos níveis</button>
+          </div>
+        </div>
       </section>
 
       <!-- Tela do nível: aparece antes de cada partida e quando as vidas acabam. -->
