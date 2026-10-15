@@ -29,10 +29,19 @@ await rm(destino, { recursive: true, force: true });
 for (const caminho of caminhos) {
   let conteudo = await readFile(join(raiz, caminho));
   if (caminho === 'index.html') {
-    const html = conteudo.toString();
+    let html = conteudo.toString();
     const marcador = '<meta name="pwa-build" content="development" />';
     if (!html.includes(marcador)) throw new Error('Marcador pwa-build ausente no HTML.');
-    conteudo = Buffer.from(html.replace(marcador, '<meta name="pwa-build" content="production" />'));
+    html = html.replace(marcador, '<meta name="pwa-build" content="production" />');
+    // Analytics apenas nos deploys da Vercel, sem dependências no jogo.
+    if (process.env.VERCEL === '1') {
+      html = html.replace('</head>', `  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>`);
+    }
+    conteudo = Buffer.from(html);
   }
   const digest = createHash('sha256').update(conteudo).digest('base64');
   hashVersao.update(caminho).update('\0').update(digest).update('\0');
