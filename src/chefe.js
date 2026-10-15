@@ -49,7 +49,7 @@ const ARQUIVOS = {
   notebook_2f: 'notebook_frente_2f_18x15.png',
   plataforma_2f: 'reutilizados/plataforma_metal_64x24_2f.png',
   totem_4f: 'reutilizados/totem_terminal_ativo_32x64_4f.png',
-  botao_terminal: 'botao_abrir_terminal_normal_150x28.png',
+  botao_terminal: 'botao_abrir_desafio_normal_154x28.png',
   byte_parado_2f: 'reutilizados/byte_parado_2f_48x48.png',
   byte_correndo_8f: 'reutilizados/byte_correndo_8f_48x48.png',
   byte_pulando_2f: 'reutilizados/byte_pulando_2f_48x48.png',
@@ -782,7 +782,7 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   function botaoTerminal() {
     const totem = posicaoTotem();
     // Centrado no totem, sem sair da arena nem cobrir a barra do chefe.
-    return { x: Math.max(2, Math.min(LARGURA - 152, totem.x + 16 - 75)), y: Math.max(28, totem.y - 37) };
+    return { x: Math.max(2, Math.min(LARGURA - 156, totem.x + 16 - 77)), y: Math.max(28, totem.y - 37) };
   }
 
   function desenharBotaoTerminal() {
@@ -909,7 +909,7 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     }
     const { x, y } = pontoNoCanvas(canvas, evento, LARGURA, ALTURA);
     const botao = botaoTerminal();
-    if (podeAbrirTerminal() && x >= botao.x && x < botao.x + 150 && y >= botao.y && y < botao.y + 28) abrirTerminal();
+    if (podeAbrirTerminal() && x >= botao.x && x < botao.x + 154 && y >= botao.y && y < botao.y + 28) abrirTerminal();
   }
 
   function quadro(agora) {
