@@ -14,22 +14,14 @@ function iniciarPWA() {
   const dispositivoIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   let conviteInstalacao = null;
-  let prontoOffline = false;
   let atualizacaoPronta = false;
-  let falhaPreparacao = false;
 
   painel.hidden = false;
 
   function atualizarStatus() {
-    if (atualizacaoPronta) {
-      status.textContent = 'Nova versão pronta. Para atualizar, feche todas as abas e janelas do jogo e abra novamente.';
-    } else if (prontoOffline) {
-      status.textContent = navigator.onLine ? 'Pronto para jogar offline' : 'Você está jogando offline';
-    } else if (falhaPreparacao) {
-      status.textContent = 'Modo offline indisponível. Tente abrir o jogo novamente com internet.';
-    } else {
-      status.textContent = 'Preparando jogo offline…';
-    }
+    status.textContent = atualizacaoPronta
+      ? 'Nova versão pronta. Para atualizar, feche todas as abas e janelas do jogo e abra novamente.'
+      : '';
   }
 
   function atualizarInstalacao() {
@@ -66,8 +58,6 @@ function iniciarPWA() {
     botaoInstalar.hidden = true;
   });
   modoAplicativo.addEventListener('change', atualizarInstalacao);
-  window.addEventListener('online', atualizarStatus);
-  window.addEventListener('offline', atualizarStatus);
   atualizarInstalacao();
   atualizarStatus();
 
@@ -81,8 +71,6 @@ function iniciarPWA() {
         function mudouEstado() {
           if (worker.state === 'installed' && registro.active) {
             atualizacaoPronta = true;
-          } else if (worker.state === 'redundant' && !registro.active) {
-            falhaPreparacao = true;
           }
           atualizarStatus();
         }
@@ -93,10 +81,6 @@ function iniciarPWA() {
       atualizacaoPronta = Boolean(registro.waiting);
       observarWorker(registro.installing);
       registro.addEventListener('updatefound', () => observarWorker(registro.installing));
-      navigator.serviceWorker.ready.then(() => {
-        prontoOffline = true;
-        atualizarStatus();
-      });
       atualizarStatus();
 
       if (navigator.onLine && !registro.installing) {
@@ -112,8 +96,6 @@ function iniciarPWA() {
       });
     })
     .catch((erro) => {
-      falhaPreparacao = true;
-      atualizarStatus();
       console.warn('Não foi possível preparar o jogo offline:', erro);
     });
 }
