@@ -3,10 +3,10 @@
 // Nível 5: revisão geral e operadores lógicos (and, or).
 // Cada desafio tem um id no formato F<fase>-<categoria><número>, ligado a um elemento da fase
 // (level.js para a Fase 1, fasesExtra.js para as outras):
-// - V (corações): ao tocar o coração. Acertou: recupera 1 vida. Errou: o coração some.
-// - M (monstros): ao chegar perto do sentinela ou da planta. Acertou: o Byte lança o poder </> e derrota o
-//   monstro. Errou: ele continua no lugar.
-// - P (pontes): na borda do vão. Errou: tenta de novo até acertar. Acertou: surge a ponte.
+// A pergunta só abre no computador de desafio com o mesmo id (botão ABRIR DESAFIO):
+// - V (corações): Acertou: recupera 1 vida. Errou: o coração some.
+// - M (monstros): Acertou: o Byte lança o poder </> e derrota o sentinela ou a planta. Errou: ele continua no lugar.
+// - P (pontes): Errou: tenta de novo até acertar. Acertou: surge a ponte.
 // No código, ___ marca a lacuna. `correta` é o índice da alternativa certa (0 = A).
 
 export const BANCO_DESAFIOS = {
@@ -14,7 +14,7 @@ export const BANCO_DESAFIOS = {
   'F1-P1': {
     categoria: 'ponte',
     titulo: 'Meu primeiro programa',
-    enunciado: 'Qual comando mostra a mensagem na tela?',
+    enunciado: 'Você terá que criar a ponte. Para isso, faça seu primeiro programa: qual comando mostra a mensagem na tela?',
     codigo: '___("Olá, mundo!")',
     alternativas: ['input', 'print', 'mostrar'],
     correta: 1,
@@ -29,32 +29,14 @@ export const BANCO_DESAFIOS = {
     correta: 1,
     explicacao: 'Sem aspas, nome é a variável e mostra o que ela guarda. Com aspas, apareceria a palavra nome.',
   },
-  'F1-P2': {
-    categoria: 'ponte',
-    titulo: 'Guardar um valor',
-    enunciado: 'A ponte precisa de 9 de energia. Qual sinal guarda o valor na variável?',
-    codigo: 'energia ___ 9',
-    alternativas: ['==', '=', ':'],
-    correta: 1,
-    explicacao: 'O sinal = guarda o valor da direita na variável da esquerda.',
-  },
   'F1-V1': {
     categoria: 'vida',
     titulo: 'Minha idade',
-    enunciado: 'Qual linha guarda a idade 12 como NÚMERO?',
+    enunciado: 'Qual opção guarda a idade 12 como NÚMERO?',
     codigo: 'idade = ___',
     alternativas: ['"12"', '12', 'doze'],
     correta: 1,
     explicacao: 'Número vai sem aspas. "12" entre aspas é um texto, e doze sem aspas seria uma variável que não existe.',
-  },
-  'F1-V2': {
-    categoria: 'vida',
-    titulo: 'O valor mais novo',
-    enunciado: 'O que aparece na tela?',
-    codigo: 'vidas = 3\nvidas = 2\nprint(vidas)',
-    alternativas: ['3', '2', '5'],
-    correta: 1,
-    explicacao: 'A variável guarda só o último valor colocado nela: 2.',
   },
   'F1-M2': {
     categoria: 'monstro',
@@ -64,15 +46,6 @@ export const BANCO_DESAFIOS = {
     alternativas: ['nome pontos', 'Byte 50', 'Byte, 50'],
     correta: 1,
     explicacao: 'O print mostra o valor de cada variável, separado por um espaço: Byte 50.',
-  },
-  'F1-M3': {
-    categoria: 'monstro',
-    titulo: 'Cartão de jogador',
-    enunciado: 'Qual nome de variável é válido para guardar a cidade do jogador?',
-    codigo: '___ = "Recife"',
-    alternativas: ['cidade jogador', '2cidade', 'cidade_jogador'],
-    correta: 2,
-    explicacao: 'Nomes não podem ter espaços nem começar com número. Use _ para separar as palavras.',
   },
 
   // --- Fase 2: input() e operações matemáticas ---
@@ -111,15 +84,6 @@ export const BANCO_DESAFIOS = {
     alternativas: ['125', '17', 'idade + 5'],
     correta: 1,
     explicacao: 'idade guarda um número, então o + soma: 12 + 5 = 17.',
-  },
-  'F2-M3': {
-    categoria: 'monstro',
-    titulo: 'Calculadora de pontos',
-    enunciado: 'Complete para guardar o total de pontos das duas partidas.',
-    codigo: 'p1 = 40\np2 = 25\ntotal = ___',
-    alternativas: ['p1 + p2', 'p1 - p2', '"p1 + p2"'],
-    correta: 0,
-    explicacao: 'O total é a soma das duas partidas: 40 + 25 = 65. Com aspas, seria só um texto.',
   },
 
   // --- Fase 3: condições (if e else) ---

@@ -5,14 +5,8 @@ const animacaoSentinela = sprites.sentinela;
 const animacaoSentinelaMorrendo = sprites.sentinelaMorrendo;
 const animacaoPlanta = sprites.planta;
 const animacaoPlantaMorrendo = sprites.plantaMorrendo;
-// Distância horizontal até a área do inimigo em que a pergunta aparece.
-const ALCANCE_DESAFIO = 120;
-// Altura acima do chão do inimigo em que a pergunta ainda aparece: pega quem tenta passar pulando
-// (por exemplo, de parede em parede até a saída).
-const ALTURA_DESAFIO = 120;
-
 /**
- * Regras comuns aos inimigos com desafio (campo `desafio` em level.js).
+ * Regras comuns aos inimigos com desafio (campo `desafio` em level.js), respondido no computador de desafio.
  * Estados: ativo → alvo (acertou a pergunta; o poder do Byte está a caminho)
  * → derrotado (animação de morte) → removido (some do mapa).
  * Só o inimigo ativo causa dano.
@@ -25,23 +19,7 @@ class Inimigo {
 
   reiniciarEstado() {
     this.estado = 'ativo';
-    this.desafioFeito = false;
     this.tempoMorte = 0;
-  }
-
-  /** Limites horizontais em que o inimigo age, para medir a aproximação do personagem. */
-  areaDesafio() {
-    return { inicioX: this.x, fimX: this.x + this.largura };
-  }
-
-  /** Verdadeiro quando o personagem chega perto, andando ou pulando, de uma pergunta ainda não feita. */
-  pedeDesafio(personagem) {
-    if (!this.desafio || this.desafioFeito || this.estado !== 'ativo') return false;
-    const { inicioX, fimX } = this.areaDesafio();
-    const pes = personagem.y + personagem.altura;
-    return pes <= this.superficieY + 2 && pes > this.superficieY - ALTURA_DESAFIO
-      && personagem.x + personagem.largura > inicioX - ALCANCE_DESAFIO
-      && personagem.x < fimX + ALCANCE_DESAFIO;
   }
 
   /** Pergunta respondida certo: o inimigo para e deixa de causar dano até o poder chegar. */
@@ -151,10 +129,6 @@ export class Sentinela extends Inimigo {
     this.progresso = 0;
     this.tempoAnimacao = 0;
     this.reiniciarEstado();
-  }
-
-  areaDesafio() {
-    return { inicioX: this.inicioX, fimX: this.fimX };
   }
 
   atualizar(deltaTime) {

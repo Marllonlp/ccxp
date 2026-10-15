@@ -11,6 +11,8 @@ export function interseca(ax, ay, aw, ah, bx, by, bw, bh) {
 /** Retorna o item coletado neste quadro, ou null. */
 export function verificarColetaveis(player) {
   for (const item of [...moedas, ...vidasItens]) {
+    // Coração com desafio não sai ao toque: só pelo computador de desafio ao lado.
+    if (item.desafio) continue;
     if (!item.coletado && interseca(
       player.x, player.y, player.largura, player.altura,
       item.x, item.y, 16, 16,
