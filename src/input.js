@@ -83,6 +83,31 @@ window.addEventListener('blur', limparAcoes);
 
 // Configuração dinâmica lendo o HTML
 export function configurarControlesToque() {
+    const areaDoJogo = document.querySelector('.game-shell');
+    let ultimoToque = null;
+
+    // No iOS, o segundo toque ainda pode acionar zoom apesar do touch-action.
+    // Cancela apenas esse gesto na partida; o movimento continua pelos Pointer Events.
+    areaDoJogo.addEventListener('touchend', (evento) => {
+        if (evento.changedTouches.length !== 1
+            || !['jogando', 'chefe'].includes(areaDoJogo.dataset.estado)) {
+            ultimoToque = null;
+            return;
+        }
+
+        const toque = evento.changedTouches[0];
+        const agora = performance.now();
+        if (ultimoToque && agora - ultimoToque.tempo < 350
+            && Math.hypot(toque.clientX - ultimoToque.x, toque.clientY - ultimoToque.y) < 32) {
+            evento.preventDefault();
+        }
+        ultimoToque = { tempo: agora, x: toque.clientX, y: toque.clientY };
+    }, { passive: false });
+
+    areaDoJogo.addEventListener('touchcancel', () => {
+        ultimoToque = null;
+    }, { passive: true });
+
     const botoes = document.querySelectorAll('.mobile-controls button[data-action]');
 
     botoes.forEach(botao => {
