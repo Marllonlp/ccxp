@@ -22,7 +22,11 @@ import {
   infoFases,
   quantidadeFases,
   checkpoints,
-  verificarDesafioPonte,
+  computadores,
+  verificarComputadores,
+  saidaBloqueada,
+  vaos,
+  vidasItens,
   construirPonte,
   limparPontes,
   mecanicasDaFase,
@@ -150,18 +154,25 @@ const seletorNiveis = criarTelaNiveis(document.getElementById('canvas-niveis'), 
 });
 
 // Terminal do totem: abre a missão do totem ativo em que o Byte está.
+// O mesmo botão ABRIR DESAFIO aparece nos computadores de desafio e abre a pergunta deles.
 const telaTerminal = document.getElementById('tela-terminal');
 const imagemBotaoTerminal = new Image();
-imagemBotaoTerminal.src = './assets/characters/Imagens_Personagens/02_cenario/terminal_python_pacote/botao_abrir_terminal_normal_150x28.png';
+imagemBotaoTerminal.src = './assets/characters/Imagens_Personagens/02_cenario/terminal_python_pacote/botao_abrir_desafio_normal_154x28.png';
 let missoesTerminal = [];
 carregarMissoes()
   .then((lista) => { missoesTerminal = lista; })
   .catch((erro) => console.error('Falha ao carregar missoes.json:', erro));
 let totemProximo = null;
 let areaBotaoTerminal = null;
+// Missões resolvidas no terminal nesta página: o computador que abriu a missão é resolvido ao fechar o terminal.
+const missoesResolvidas = new Set();
+let computadorDoTerminal = null;
 const terminal = criarTerminal(document.getElementById('canvas-terminal'), {
   onFechar: () => fecharTerminal(),
-  onResolvido: (idMissao) => abrirPortasDaMissao(mecanicasDaFase, idMissao),
+  onResolvido: (idMissao) => {
+    missoesResolvidas.add(idMissao);
+    abrirPortasDaMissao(mecanicasDaFase, idMissao);
+  },
 });
 
 // Luta contra o Kernel Panic (fim do último nível). Usa o mesmo terminal, com as missões do chefe.
@@ -175,9 +186,16 @@ const lutaChefe = criarChefe(document.getElementById('canvas-chefe'), {
   onAtualizarInterface: atualizarInterface,
 });
 
+/** Abre o que o totem encostado oferece: a pergunta do computador de desafio ou o terminal da missão. */
+function abrirDoTotem() {
+  if (totemProximo?.desafio) abrirDesafioDoComputador(totemProximo);
+  else abrirTerminal();
+}
+
 function abrirTerminal() {
   const missao = missoesTerminal.find((item) => item.id === totemProximo?.missao);
   if (!missao) return;
+  computadorDoTerminal = computadores.includes(totemProximo) ? totemProximo : null;
   estadoDaPartida = 'terminal';
   controleDoJogo.stop();
   limparAcoes();
@@ -194,9 +212,22 @@ function fecharTerminal() {
   limparAcoes();
   controleDoJogo.start();
   atualizarInterface();
+  resolverComputadorDoTerminal();
 }
 
-// Desafios do banco de perguntas: abrem nos corações, monstros e vãos que têm um id de desafio.
+/** Missão do computador de desafio resolvida: o Byte lança o poder no monstro ligado à mesma missão. */
+function resolverComputadorDoTerminal() {
+  const computador = computadorDoTerminal;
+  computadorDoTerminal = null;
+  if (!computador || !missoesResolvidas.has(computador.missao)) return;
+  computador.feito = true;
+  const monstro = inimigos.find((inimigo) => inimigo.missao === computador.missao && inimigo.estado === 'ativo');
+  if (monstro) lancarPoder(monstro);
+  mensagem = monstro ? 'Poder lançado!' : 'Missão concluída';
+  mensagemAte = performance.now() + 1500;
+}
+
+// Desafios do banco de perguntas: abrem nos computadores de desafio, ligados a corações, monstros e vãos.
 const telaDesafio = document.getElementById('tela-desafio');
 const janelaDesafio = criarJanelaDesafio(telaDesafio);
 // Poderes </> em voo, lançados pelo Byte nos monstros cujas perguntas ele acertou.
@@ -244,54 +275,62 @@ function abrirDesafio(id, { textoAcerto, textoErro, insistir, onFim }) {
   return true;
 }
 
-/** Coração com desafio: acertar recupera a vida; errar deixa o coração perdido (já foi coletado). */
-function desafioDeVida(item) {
-  return abrirDesafio(item.desafio, {
-    textoAcerto: player.vidas < 3 ? 'Você recuperou uma vida.' : 'Suas vidas já estão completas.',
-    textoErro: 'O coração se perdeu.',
-    onFim: (acertou) => {
-      if (acertou) player.vidas = Math.min(3, player.vidas + 1);
-      mensagem = acertou ? 'Coração coletado' : 'Coração perdido';
-      mensagemAte = performance.now() + 1500;
-    },
-  });
-}
-
-/** Verifica monstros e vãos com desafio perto do Byte. Devolve true se abriu uma pergunta. */
-function verificarDesafiosDoCaminho() {
-  const monstro = inimigos.find((inimigo) => inimigo.pedeDesafio(player));
-  if (monstro) {
-    monstro.desafioFeito = true;
-    const robo = monstro instanceof Sentinela;
-    return abrirDesafio(monstro.desafio, {
-      textoAcerto: `O Byte lança o poder e derrota ${robo ? 'o robô' : 'a planta'}.`,
-      textoErro: robo ? 'O robô continua patrulhando.' : 'A planta continua no caminho.',
-      onFim: (acertou) => {
-        if (acertou) lancarPoder(monstro);
-        mensagem = acertou ? 'Poder lançado!' : `Cuidado com ${robo ? 'o sentinela' : 'a planta'}`;
-        mensagemAte = performance.now() + 1500;
-      },
-    });
-  }
-
-  const vao = verificarDesafioPonte(player);
+/**
+ * Pergunta do computador de desafio. A consequência vai para o vão, monstro ou coração com o mesmo id.
+ * Cada computador pergunta uma vez por partida; no vão, o jogador tenta até acertar.
+ */
+function abrirDesafioDoComputador(computador) {
+  const id = computador.desafio;
+  const vao = vaos.find((item) => item.desafio === id);
+  const monstro = inimigos.find((inimigo) => inimigo.desafio === id);
+  const vida = vidasItens.find((item) => item.desafio === id);
+  let opcoes;
   if (vao) {
-    vao.desafioFeito = true;
     // Sem a ponte a fase não continua: o jogador tenta até acertar.
-    return abrirDesafio(vao.desafio, {
+    opcoes = {
       textoAcerto: 'A ponte foi construída.',
       insistir: true,
       onFim: () => {
         construirPonte(vao);
         mensagem = 'Ponte construída';
-        mensagemAte = performance.now() + 1500;
       },
-    });
+    };
+  } else if (monstro) {
+    const robo = monstro instanceof Sentinela;
+    opcoes = {
+      textoAcerto: `O Byte lança o poder e derrota ${robo ? 'o robô' : 'a planta'}.`,
+      textoErro: robo ? 'O robô continua patrulhando.' : 'A planta continua no caminho.',
+      onFim: (acertou) => {
+        if (acertou && monstro.estado === 'ativo') lancarPoder(monstro);
+        mensagem = acertou ? 'Poder lançado!' : `Cuidado com ${robo ? 'o sentinela' : 'a planta'}`;
+      },
+    };
+  } else if (vida) {
+    // Acertar recupera a vida; errar faz o coração sumir.
+    opcoes = {
+      textoAcerto: player.vidas < 3 ? 'Você recuperou uma vida.' : 'Suas vidas já estão completas.',
+      textoErro: 'O coração se perdeu.',
+      onFim: (acertou) => {
+        vida.coletado = true;
+        if (acertou) player.vidas = Math.min(3, player.vidas + 1);
+        mensagem = acertou ? 'Coração coletado' : 'Coração perdido';
+      },
+    };
+  } else {
+    opcoes = { textoAcerto: 'Desafio concluído.', onFim: () => { mensagem = 'Desafio concluído'; } };
   }
-  return false;
+  const onFim = opcoes.onFim;
+  abrirDesafio(id, {
+    ...opcoes,
+    onFim: (acertou) => {
+      computador.feito = true;
+      onFim(acertou);
+      mensagemAte = performance.now() + 1500;
+    },
+  });
 }
 
-/** Botão ABRIR TERMINAL sobre o totem, em coordenadas de tela (escala da visão). */
+/** Botão ABRIR DESAFIO sobre o totem, em coordenadas de tela (escala da visão). */
 function desenharBotaoTerminal(ctx, cameraX, cameraY) {
   areaBotaoTerminal = null;
   if (estadoDaPartida !== 'jogando' || !totemProximo || !imagemBotaoTerminal.complete) return;
@@ -299,7 +338,7 @@ function desenharBotaoTerminal(ctx, cameraX, cameraY) {
   const s = escala / 1.5;
   const centroX = (totemProximo.x + totemProximo.width / 2 - cameraX) * escala;
   const topo = (totemProximo.y - cameraY) * escala;
-  const largura = 150 * s;
+  const largura = 154 * s;
   const altura = 28 * s;
   const balanco = Math.floor(performance.now() / 400) % 2 === 0 ? 0 : s;
   const x = centroX - largura / 2;
@@ -410,9 +449,10 @@ const player = new Player(inicio.x, inicio.y);
 // Inimigos da fase carregada: recriados ao começar cada partida, porque cada fase tem os seus.
 let inimigos = [];
 function criarInimigos() {
+  // `missao`: o monstro é derrotado pela missão do terminal resolvida no computador de desafio.
   return [
-    ...patrulhasSentinelas.map((campo) => new Sentinela(campo)),
-    ...plantas.map((posicao) => new Planta(posicao)),
+    ...patrulhasSentinelas.map((campo) => Object.assign(new Sentinela(campo), { missao: campo.missao ?? null })),
+    ...plantas.map((posicao) => Object.assign(new Planta(posicao), { missao: posicao.missao ?? null })),
   ];
 }
 inimigos = criarInimigos();
@@ -691,11 +731,12 @@ function selecionarBotaoTitulo(indice) {
 const PAINEIS_TITULO = {
   como: {
     titulo: 'Como jogar',
-    linhas: ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'P ou ESC: pausar', 'R: reiniciar a fase'],
+    linhas: ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'E ou ENTER: abrir o desafio do computador', 'P ou ESC: pausar', 'R: reiniciar a fase'],
     linhasToque: [
       'Segure as setas da esquerda para andar.',
       'Toque na seta para cima, à direita, para pular. Você pode andar e pular ao mesmo tempo.',
       'Segure a seta para baixo para agachar.',
+      'Encoste no computador e toque em ABRIR DESAFIO para responder.',
       'Toque em Pausar para retomar, ajustar o som ou reiniciar.',
       'No terminal, toque nos trechos de código. Selecione uma linha para movê-la ou removê-la.',
     ],
@@ -780,17 +821,20 @@ const dependenciasDoJogo = {
     if (estadoDaPartida !== 'jogando') return;
     resolverColisoes(player, deltaTime);
 
-    // Totem ativo com missão, encostado pelo Byte: mostra o botão ABRIR TERMINAL.
-    totemProximo = checkpoints.find((c) => c.ativo && c.missao
-      && player.x < c.x + c.width && player.x + player.largura > c.x
-      && player.y < c.y + c.height && player.y + player.altura > c.y) ?? null;
+    // Computador de desafio ou totem ativo com missão, encostado pelo Byte: mostra o botão ABRIR DESAFIO.
+    totemProximo = verificarComputadores(player)
+      ?? checkpoints.find((c) => c.ativo && c.missao
+        && player.x < c.x + c.width && player.x + player.largura > c.x
+        && player.y < c.y + c.height && player.y + player.altura > c.y) ?? null;
 
-    // As perguntas vêm antes da meta: a planta que guarda a saída sempre pergunta antes de a fase acabar.
-    if (verificarDesafiosDoCaminho()) return;
-
+    // A saída só abre depois do computador obrigatório que fica antes dela.
     if (verificarMeta(player)) {
-      concluirFase();
-      return;
+      if (!saidaBloqueada()) {
+        concluirFase();
+        return;
+      }
+      mensagem = 'Abra o desafio do computador antes da saída';
+      mensagemAte = performance.now() + 1500;
     }
 
     const checkpoint = verificarCheckpoints(player);
@@ -807,7 +851,6 @@ const dependenciasDoJogo = {
     }
 
     const coletavel = verificarColetaveis(player);
-    if (coletavel?.desafio && desafioDeVida(coletavel)) return;
     if (coletavel) {
       if (coletavel.id.startsWith('vida-')) {
         player.vidas = Math.min(3, player.vidas + 1);
@@ -1072,7 +1115,7 @@ canvas.addEventListener('click', (evento) => {
   if (!areaBotaoTerminal || estadoDaPartida !== 'jogando') return;
   const { x, y } = pontoNoCanvas(canvas, evento, visao.largura, visao.altura);
   const b = areaBotaoTerminal;
-  if (x >= b.x && x < b.x + b.largura && y >= b.y && y < b.y + b.altura) abrirTerminal();
+  if (x >= b.x && x < b.x + b.largura && y >= b.y && y < b.y + b.altura) abrirDoTotem();
 });
 
 window.addEventListener('keydown', (evento) => {
@@ -1116,10 +1159,10 @@ window.addEventListener('keydown', (evento) => {
     return;
   }
 
-  // E ou Enter abrem o terminal quando o Byte está num totem ativo com missão.
+  // E ou Enter abrem o desafio do computador ou o terminal do totem ativo com missão.
   if (estadoDaPartida === 'jogando' && totemProximo && ['e', 'E', 'Enter'].includes(evento.key)) {
     evento.preventDefault();
-    abrirTerminal();
+    abrirDoTotem();
     return;
   }
 

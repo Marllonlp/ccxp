@@ -60,11 +60,12 @@ const OBSTACULOS_FASE_1 = [
 ];
 
 // Vãos com água. O personagem cai neles e volta ao ponto seguro.
-// `desafio` (opcional): pergunta de ponte feita na borda esquerda; acertar constrói a ponte.
+// `desafio` (opcional): pergunta de ponte, aberta no computador de desafio antes do vão; acertar constrói a ponte.
 const VAOS_FASE_1 = [
   // Rio largo (320 px): maior que o alcance do pulo (~250 px), só se atravessa pela ponte.
   { x: 340, y: SUPERFICIE_CHAO, width: 320, height: 60, desafio: 'F1-P1' },
-  { x: 1920, y: SUPERFICIE_CHAO, width: 100, height: 60, desafio: 'F1-P2' },
+  // Já começa com a ponte construída.
+  { x: 1920, y: SUPERFICIE_CHAO, width: 100, height: 60, ponteInicial: true },
   { x: 2520, y: SUPERFICIE_CHAO, width: 100, height: 60 },
 ];
 
@@ -74,8 +75,8 @@ const PLANTAS_FASE_1 = [
   { id: 'planta-2', x: 900, superficieY: 330 },
   { id: 'planta-4', x: 2040, superficieY: SUPERFICIE_CHAO },
   { id: 'planta-5', x: 2904, superficieY: 310 },
-  // Guarda a saída da fase: a pergunta aparece ao chegar perto.
-  { id: 'planta-6', x: 3340, superficieY: SUPERFICIE_CHAO, desafio: 'F1-M3' },
+  // Guarda a saída da fase: a missão 1 do terminal, no computador logo antes dela, dá o poder que a derrota.
+  { id: 'planta-6', x: 3340, superficieY: SUPERFICIE_CHAO, missao: 1 },
 ];
 
 // Coletáveis: moedas ficam em caminhos de progressão e corações recompensam
@@ -91,10 +92,10 @@ const MOEDAS_FASE_1 = [
   { id: 'moeda-10', x: 3170, y: 430, coletado: false },
 ];
 
-// `desafio`: pergunta feita ao tocar o coração. Acertar recupera a vida; errar faz o coração sumir.
+// `desafio`: o coração só sai pelo computador de desafio ao lado. Acertar recupera a vida; errar faz o coração sumir.
 const VIDAS_FASE_1 = [
   { id: 'vida-1', x: 2400, y: 448, coletado: false, desafio: 'F1-V1' },
-  { id: 'vida-2', x: 3100, y: 448, coletado: false, desafio: 'F1-V2' },
+  { id: 'vida-2', x: 3100, y: 448, coletado: false },
 ];
 
 const moedaSprite = sprites.moeda;
@@ -109,7 +110,7 @@ export function limparColetaveis(moedasColetadas = []) {
 
 // Campo de patrulha: início e fim delimitam toda a área ocupada pelo robô.
 // Cada campo fica sobre uma superfície contínua, sem invadir paredes ou vãos.
-// `desafio` (opcional): pergunta feita ao chegar perto; acertar desativa o robô.
+// `desafio` (opcional): pergunta aberta no computador de desafio antes do robô; acertar desativa o robô.
 const PATRULHAS_FASE_1 = [
   {
     id: 'sentinela-1',
@@ -142,25 +143,10 @@ const PATRULHAS_FASE_1 = [
 // totem indica o modelo do pacote plataformas_totens_pacote.
 const CHECKPOINTS_FASE_1 = [
   {
-    id: 'cp1',
-    x: 280, y: 416, width: 32, height: 64,
-    posicaoSegura: { x: 275, y: 414 },
-    totem: 'tela',
-    missao: 1,
-    ativo: false,
-  },
-  {
     id: 'cp2',
     x: 720, y: 416, width: 32, height: 64,
     posicaoSegura: { x: 715, y: 414 },
     totem: 'obelisco',
-    ativo: false,
-  },
-  {
-    id: 'cp3',
-    x: 1700, y: 416, width: 32, height: 64,
-    posicaoSegura: { x: 1695, y: 414 },
-    totem: 'terminal',
     ativo: false,
   },
   {
@@ -172,12 +158,26 @@ const CHECKPOINTS_FASE_1 = [
   },
 ];
 
+// Computadores de desafio: totem de tela em pé sobre o chão, com o botão ABRIR DESAFIO.
+// `desafio`: abre a pergunta do vão, monstro ou coração com o mesmo id.
+// `missao`: abre o terminal; resolver a missão derrota o monstro com a mesma missão.
+// As perguntas só aparecem por eles: nada abre sozinho ao passar perto ou pular.
+// `obrigatorio`: a saída da fase só abre depois de o computador ser resolvido.
+const COMPUTADORES_FASE_1 = [
+  { x: 180, desafio: 'F1-P1' },
+  { x: 1650, desafio: 'F1-M1' },
+  { x: 2440, desafio: 'F1-V1' },
+  { x: 2930, desafio: 'F1-M2' },
+  { x: 3250, missao: 1, obrigatorio: true },
+];
+
 let ultimoCheckpoint = null;
 
 // Dados que a fase carregada usa. Trocados por carregarFase().
 export let obstaculos = [];
 export let vaos = [];
 export let checkpoints = [];
+export let computadores = [];
 // Inimigos e coletáveis da fase carregada. Trocados por carregarFase().
 export let plantas = [];
 export let moedas = [];
@@ -208,6 +208,7 @@ const FASES = [
     obstaculos: OBSTACULOS_FASE_1,
     vaos: VAOS_FASE_1,
     checkpoints: CHECKPOINTS_FASE_1,
+    computadores: COMPUTADORES_FASE_1,
     plantas: PLANTAS_FASE_1,
     moedas: MOEDAS_FASE_1,
     vidasItens: VIDAS_FASE_1,
@@ -229,7 +230,11 @@ export function carregarFase(indice, moedasColetadas = []) {
   mecanicasDaFase = (fase.mecanicas ?? []).map((spec) => criarMecanica(spec));
   ligarMecanicas(mecanicasDaFase);
   obstaculos = [...fase.obstaculos, ...mecanicasDaFase.flatMap((mecanica) => mecanica.rects)];
-  vaos = fase.vaos.map((vao) => ({ ...vao, ponte: false, desafioFeito: false }));
+  vaos = fase.vaos.map((vao) => ({ ...vao, ponte: false }));
+  for (const vao of vaos) if (vao.ponteInicial) construirPonte(vao);
+  computadores = (fase.computadores ?? []).map(({ x, ...resto }) => ({
+    ...resto, x, y: SUPERFICIE_CHAO - 64, width: 32, height: 64, totem: 'tela', ativo: false, feito: false,
+  }));
   checkpoints = fase.checkpoints.map((checkpoint) => ({
     ...checkpoint,
     posicaoSegura: { ...checkpoint.posicaoSegura },
@@ -259,37 +264,44 @@ export function verificarMeta(player) {
   return player.x + player.largura > metaAtual.x;
 }
 
-// Distância antes da borda do vão em que a pergunta de ponte aparece.
-const ALCANCE_DESAFIO_PONTE = 50;
-
-// Altura acima do chão em que a pergunta ainda aparece: pega também quem tenta pular o vão.
-const ALTURA_DESAFIO_PONTE = 120;
-
-/**
- * Vão com desafio ainda não feito, cuja borda esquerda o personagem alcançou, andando ou pulando.
- * Devolve o vão, ou null.
- */
-export function verificarDesafioPonte(player) {
-  const pes = player.y + player.altura;
-  const direita = player.x + player.largura;
-  return vaos.find((vao) => vao.desafio && !vao.desafioFeito
-    && pes <= vao.y + 2 && pes > vao.y - ALTURA_DESAFIO_PONTE
-    && direita > vao.x - ALCANCE_DESAFIO_PONTE && direita <= vao.x + 2) ?? null;
-}
-
 /** Cobre o vão com uma ponte sólida. */
 export function construirPonte(vao) {
   vao.ponte = true;
   obstaculos.push({ tipo: 'ponte', x: vao.x, y: vao.y, width: vao.width, height: 20 });
 }
 
-/** Reinício da fase: desfaz as pontes e volta a perguntar nos vãos. */
+/** Reinício da fase: desfaz as pontes dos desafios e religa os computadores de desafio. */
 export function limparPontes() {
   obstaculos = obstaculos.filter((obstaculo) => obstaculo.tipo !== 'ponte');
   for (const vao of vaos) {
     vao.ponte = false;
-    vao.desafioFeito = false;
+    if (vao.ponteInicial) construirPonte(vao);
   }
+  for (const computador of computadores) {
+    computador.ativo = false;
+    computador.feito = false;
+  }
+}
+
+/**
+ * Computador de desafio tocado pelo personagem, com a pergunta ainda não respondida, ou null.
+ * O toque liga o computador (fica animado, como o totem do checkpoint).
+ */
+export function verificarComputadores(player) {
+  for (const computador of computadores) {
+    if (computador.feito) continue;
+    if (player.x < computador.x + computador.width && player.x + player.largura > computador.x
+      && player.y < computador.y + computador.height && player.y + player.altura > computador.y) {
+      computador.ativo = true;
+      return computador;
+    }
+  }
+  return null;
+}
+
+/** Verdadeiro enquanto houver um computador obrigatório sem resposta: a saída da fase fica fechada. */
+export function saidaBloqueada() {
+  return computadores.some((computador) => computador.obrigatorio && !computador.feito);
 }
 
 /** Posição inicial da fase. Devolve uma copia para ninguém alterar o original. */
@@ -625,8 +637,8 @@ function desenharMundo(ctx, limiteInferior) {
   }
 
   const tempo = performance.now() / 1000;
-  for (const checkpoint of checkpoints) {
-    desenharTotem(ctx, checkpoint, tempo);
+  for (const totem of [...checkpoints, ...computadores]) {
+    desenharTotem(ctx, totem, tempo);
   }
 
   for (const moeda of moedas) {

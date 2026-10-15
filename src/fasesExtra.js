@@ -13,9 +13,15 @@
 //                                       extras.missao: porta que abre quando a missão é resolvida
 //   ['planta', extras?]                 planta (inimigo) no chão, com 60 px de chão
 //   ['patrulha', largura, extras?]      sentinela patrulhando o chão deste trecho
-//   ['checkpoint', extras?]             totem no cursor; extras.missao abre um terminal
+//   ['checkpoint', extras?]             totem no cursor; extras.missao abre um terminal (totem de tela; os
+//                                       outros usam obelisco e antena, para não parecerem computadores)
 //   ['moeda', dx, y] / ['vida', dx, y, extras?]  coletáveis (dx em relação ao cursor; y em px do mundo)
 //   extras.desafio (vão, planta, patrulha e vida): id de uma pergunta de bancoDesafios.js
+//   ['computador', desafio, dx?]        computador de desafio no chão em cursor + dx (padrão -72: fim do chão
+//                                       anterior); não avança. Abre a pergunta `desafio` pelo botão ABRIR DESAFIO
+//   ['computadorTerminal', missao, dx?] igual, mas abre o terminal da missão; resolvê-la derrota o monstro
+//                                       com a mesma missão (extras.missao na planta ou na patrulha).
+//                                       É obrigatório: a saída da fase só abre com a missão resolvida
 //   ['meta']                            ponto de chegada: tocar conclui a fase
 //
 // Regras de desenho (base do Mario Bros, adaptadas ao Byte):
@@ -34,7 +40,8 @@
 import { LARGURAS } from './mecanicas.js';
 
 const CHAO = 480;
-const TOTENS = ['tela', 'obelisco', 'terminal', 'antena'];
+// Totens dos checkpoints sem missão. A tela fica para os computadores com o botão ABRIR DESAFIO.
+const TOTENS = ['obelisco', 'antena'];
 
 /** Monta uma fase a partir da lista de trechos. */
 export function construirFase({ nome, subtitulo, titulo, texto, itens, estiloPlataforma }) {
@@ -42,6 +49,7 @@ export function construirFase({ nome, subtitulo, titulo, texto, itens, estiloPla
   const obstaculos = [];
   const vaos = [];
   const checkpoints = [];
+  const computadores = [];
   const mecanicas = [];
   const plantas = [];
   const patrulhas = [];
@@ -52,7 +60,10 @@ export function construirFase({ nome, subtitulo, titulo, texto, itens, estiloPla
   let inimigos = 0;
 
   // Pergunta do banco de desafios ligada ao elemento, quando houver.
-  const comDesafio = (extras) => (extras?.desafio ? { desafio: extras.desafio } : {});
+  const comDesafio = (extras) => ({
+    ...(extras?.desafio ? { desafio: extras.desafio } : {}),
+    ...(extras?.missao !== undefined ? { missao: extras.missao } : {}),
+  });
 
   const chao = (largura, tipo = 'chao') => {
     obstaculos.push({ tipo, x: cursor, y: CHAO, width: largura, height: 60 });
@@ -131,7 +142,7 @@ export function construirFase({ nome, subtitulo, titulo, texto, itens, estiloPla
           id: `${nome.replace(/\s+/g, '').toLowerCase()}-cp${checkpoints.length + 1}`,
           x: cursor, y: 416, width: 32, height: 64,
           posicaoSegura: { x: cursor - 5, y: 414 },
-          totem: TOTENS[totens++ % TOTENS.length],
+          totem: extras.missao !== undefined ? 'tela' : TOTENS[totens++ % TOTENS.length],
           ativo: false,
           ...(extras.missao !== undefined ? { missao: extras.missao } : {}),
         });
@@ -143,6 +154,12 @@ export function construirFase({ nome, subtitulo, titulo, texto, itens, estiloPla
         break;
       case 'vida':
         vidasItens.push({ id: `vida-${vidasItens.length + 1}`, x: cursor + a, y: b ?? 448, coletado: false, ...comDesafio(c) });
+        break;
+      case 'computador':
+        computadores.push({ x: cursor + (b ?? -72), desafio: a });
+        break;
+      case 'computadorTerminal':
+        computadores.push({ x: cursor + (b ?? -72), missao: a, obrigatorio: true });
         break;
       case 'meta':
         meta = { x: cursor, y: 416, width: 32, height: 64 };
@@ -168,6 +185,7 @@ export function construirFase({ nome, subtitulo, titulo, texto, itens, estiloPla
     obstaculos,
     vaos,
     checkpoints,
+    computadores,
     plantas,
     moedas,
     vidasItens,
@@ -185,7 +203,7 @@ export const FASES_EXTRA = [
     nome: 'Nível 02',
     subtitulo: 'Byte',
     titulo: 'Campo dos Cálculos',
-    texto: 'Ler o que o jogador digita com input(), virar número com int() e fazer contas com + - * /. A porta só abre com a missão 2.',
+    texto: 'Ler o que o jogador digita com input(), virar número com int() e fazer contas com + - * /. A missão 2 do terminal derrota o último bicho e libera a saída.',
     itens: [
       // Início: esteira empurrando para a direita, moedas, e uma escada de caixas até uma plataforma alta.
       ['chao', 200],
@@ -194,21 +212,21 @@ export const FASES_EXTRA = [
       ['mec', 'caixa', { blocos: 1 }], ['mec', 'caixa', { blocos: 2 }], ['chao', 40],
       ['plataforma', 120, 120], ['moeda', 30, 330], ['moeda', 70, 300],
       ['chao', 40],
-      ['checkpoint', { missao: 2 }],
+      ['checkpoint'],
       // Vão sem bloco no meio.
-      ['vao', 100, { desafio: 'F2-P1' }],
+      ['computador', 'F2-P1', -80], ['vao', 100, { desafio: 'F2-P1' }],
       // Teto para agachar e drone de cabeça com espaço antes.
       ['chao', 200], ['teto', 160], ['chao', 200],
       ['mec', 'drone'], ['chao', 200],
       // Planta encostada numa caixa (como um cano) e uma plataforma flutuante com moeda.
-      ['mec', 'caixa', { blocos: 1 }], ['planta', { desafio: 'F2-M1' }], ['chao', 200],
+      ['computador', 'F2-M1'], ['mec', 'caixa', { blocos: 1 }], ['planta', { desafio: 'F2-M1' }], ['chao', 200],
       ['plataforma', 120, 110], ['moeda', 40, 360], ['chao', 120],
-      // Escada de caixas e a porta que abre com a missão 2.
+      // Escada de caixas.
       ['mec', 'caixa', { blocos: 1 }], ['mec', 'caixa', { blocos: 1 }], ['mec', 'caixa', { blocos: 2 }], ['chao', 100],
-      ['mec', 'porta', { id: 'porta-2', missao: 2 }], ['chao', 180],
+      ['chao', 204],
       // Cristal com sentinela, e vão com elevador no meio.
       ['cristal', 200],
-      ['patrulha', 160, { desafio: 'F2-M2' }], ['chao', 80],
+      ['computador', 'F2-M2'], ['patrulha', 160, { desafio: 'F2-M2' }], ['chao', 80],
       ['vao', 40], ['mec', 'elevador', { sobreVao: true }], ['vao', 60],
       ['chao', 180],
       ['mec', 'fios'], ['chao', 160],
@@ -218,9 +236,12 @@ export const FASES_EXTRA = [
       ['chao', 160],
       ['checkpoint'],
       // Final: trampolim para uma plataforma alta com uma vida, uma caixa dupla com planta, e a meta.
+      // O computador da vida fica embaixo do coração. Bem depois dele, o terminal da missão 2
+      // derrota a planta e libera a saída.
       ['mec', 'trampolim'], ['chao', 80],
-      ['plataforma', 120, 150], ['vida', 40, 330, { desafio: 'F2-V1' }], ['chao', 120],
-      ['mec', 'caixa', { blocos: 2 }], ['planta', { desafio: 'F2-M3' }], ['chao', 200],
+      ['plataforma', 120, 150], ['vida', 40, 330, { desafio: 'F2-V1' }],
+      ['computador', 'F2-V1', 32], ['chao', 360],
+      ['computadorTerminal', 2, -96], ['mec', 'caixa', { blocos: 2 }], ['planta', { missao: 2 }], ['chao', 200],
       ['meta'],
     ],
   }),
@@ -248,14 +269,14 @@ export const FASES_EXTRA = [
       ['mec', 'esteira', { dir: 1 }], ['chao', 200],
       // Um caminho por cima da sentinela, para quem desce da ponte.
       ['suspensa', -6, 90, 128], ['moeda', 34, 360], ['moeda', 74, 360],
-      ['patrulha', 180, { desafio: 'F3-M1' }], ['chao', 80],
+      ['computador', 'F3-M1'], ['patrulha', 180, { desafio: 'F3-M1' }], ['chao', 80],
       // Plataforma quebradiça sobre um vão: o jogador precisa pular para fora dela.
       ['checkpoint'],
       ['mec', 'quebradica', { base: 40, sobreVao: true }],
       ['vao', 110], ['chao', 200],
       // Trampolim: lança para cima, em direção a uma plataforma alta com uma vida.
       ['mec', 'trampolim'], ['chao', 90],
-      ['plataforma', 120, 150], ['vida', 20, 330, { desafio: 'F3-V1' }],
+      ['plataforma', 120, 150], ['vida', 20, 330, { desafio: 'F3-V1' }], ['computador', 'F3-V1', 24],
       // Mais um andar acima da plataforma alta, com moedas de prêmio.
       ['suspensa', 48, 230, 80], ['moeda', 64, 220], ['moeda', 96, 220],
       ['chao', 160],
@@ -281,7 +302,7 @@ export const FASES_EXTRA = [
       ['suspensa', 184, 170, 64], ['moeda', 208, 280],
       ['chao', 200],
       ['moeda', 40, 400], ['moeda', 80, 360], ['moeda', 120, 400],
-      ['vao', 110, { desafio: 'F3-P1' }], ['chao', 220],
+      ['computador', 'F3-P1'], ['vao', 110, { desafio: 'F3-P1' }], ['chao', 220],
       // Ventilador empurra o jogador para uma plataforma alta.
       ['mec', 'ventilador'], ['chao', 40],
       ['plataforma', 110, 130],
@@ -290,7 +311,7 @@ export const FASES_EXTRA = [
       ['chao', 200],
       // Sentinela sobre o chão reto (com um caminho de cristal por cima), e uma planta encostada num bloco.
       ['suspensa', 24, 90, 128], ['moeda', 74, 360], ['moeda', 104, 360],
-      ['patrulha', 180, { desafio: 'F3-M2' }], ['chao', 80],
+      ['computador', 'F3-M2'], ['patrulha', 180, { desafio: 'F3-M2' }], ['chao', 80],
       ['bloco', 60, 40], ['planta'], ['chao', 200],
       // Cadeia de plataformas: trampolim de novo, depois uma plataforma com moedas.
       ['mec', 'trampolim'], ['chao', 80],
@@ -303,7 +324,7 @@ export const FASES_EXTRA = [
       // Porta: a missão 3 é resolvida no totem logo antes dela.
       ['checkpoint', { missao: 3 }],
       ['mec', 'porta', { id: 'porta-3', missao: 3 }], ['chao', 200],
-      ['vida', 60, 380, { desafio: 'F3-V2' }],
+      ['computador', 'F3-V2'], ['vida', 60, 380, { desafio: 'F3-V2' }],
       // Escadaria final de blocos, como no início de cada fase do Mario.
       ['bloco', 100, 40], ['bloco', 100, 80],
       ['meta'],
@@ -329,7 +350,7 @@ export const FASES_EXTRA = [
       // Planta encostada num bloco (com uma passarela alta por cima) e outro esmagador.
       ['suspensa', 50, 170, 80], ['moeda', 62, 280], ['moeda', 94, 280],
       ['suspensa', 178, 90, 64], ['moeda', 202, 360],
-      ['bloco', 60, 40], ['planta', { desafio: 'F4-M1' }], ['chao', 200],
+      ['computador', 'F4-M1'], ['bloco', 60, 40], ['planta', { desafio: 'F4-M1' }], ['chao', 200],
       ['esmagadorNaPlataforma', 140],
       ['suspensa', 40, 90, 96], ['moeda', 80, 360],
       ['chao', 200],
@@ -352,14 +373,14 @@ export const FASES_EXTRA = [
       ['checkpoint'],
       // Sentinela num trecho reto (com passarela por cima), depois a esteira de volta a direita.
       ['suspensa', 36, 90, 128], ['moeda', 76, 360], ['moeda', 116, 360],
-      ['patrulha', 200, { desafio: 'F4-M2' }], ['chao', 80],
+      ['computador', 'F4-M2'], ['patrulha', 200, { desafio: 'F4-M2' }], ['chao', 80],
       ['mec', 'esteira', { dir: 1 }],
       ['suspensa', 42, 90, 80],
       ['suspensa', 170, 170, 64], ['moeda', 194, 280],
       ['chao', 180],
       // Moedas em arco sobre um vão e um elevador que sobe.
       ['moeda', 30, 400], ['moeda', 60, 360], ['moeda', 90, 400],
-      ['vao', 100, { desafio: 'F4-P1' }], ['chao', 180],
+      ['computador', 'F4-P1'], ['vao', 100, { desafio: 'F4-P1' }], ['chao', 180],
       ['mec', 'elevador', { sobreVao: true }],
       ['vao', 100],
       // Escada de metal sobre o bloco da planta.
@@ -381,7 +402,7 @@ export const FASES_EXTRA = [
       ['mec', 'ventilador'], ['chao', 40],
       ['plataforma', 110, 90], ['chao', 120],
       ['mec', 'trampolim'], ['chao', 100],
-      ['plataforma', 120, 150], ['vida', 40, 330, { desafio: 'F4-V1' }],
+      ['plataforma', 120, 150], ['vida', 40, 330, { desafio: 'F4-V1' }], ['computador', 'F4-V1', 24],
       // O último andar, acima da plataforma alta.
       ['suspensa', 48, 230, 80], ['moeda', 64, 220], ['moeda', 96, 220],
       ['chao', 140],
@@ -390,7 +411,7 @@ export const FASES_EXTRA = [
       // Sentinela no chão reto antes da escadaria final, com uma passarela por cima.
       ['suspensa', 16, 90, 128], ['moeda', 56, 360], ['moeda', 96, 360],
       ['patrulha', 160], ['chao', 80],
-      ['vida', 60, 380, { desafio: 'F4-V2' }],
+      ['computador', 'F4-V2', -48], ['vida', 60, 380, { desafio: 'F4-V2' }],
       ['bloco', 100, 40], ['bloco', 100, 80],
       ['meta'],
     ],
@@ -409,26 +430,26 @@ export const FASES_EXTRA = [
       ['mec', 'caixa', { blocos: 2 }], ['chao', 200],
       // Fios sozinhos e depois uma planta encostada num bloco.
       ['mec', 'fios'], ['chao', 200],
-      ['bloco', 60, 40], ['planta', { desafio: 'F5-M1' }], ['chao', 200],
+      ['computador', 'F5-M1'], ['bloco', 60, 40], ['planta', { desafio: 'F5-M1' }], ['chao', 200],
       ['checkpoint'],
       // Drone e botão com porta: o jogador desvia do drone, pisa no botão e passa.
       ['mec', 'drone'], ['chao', 200],
       ['mec', 'botao', { alvo: 'f-porta' }], ['chao', 90],
       ['mec', 'porta', { id: 'f-porta' }], ['chao', 200],
       // Bloco holográfico entre dois vãos, sobre a água.
-      ['vao', 90, { desafio: 'F5-P1' }],
+      ['computador', 'F5-P1'], ['vao', 90, { desafio: 'F5-P1' }],
       ['mec', 'holografico', { sobreVao: true }],
       ['vao', 90], ['chao', 200],
       // Quebradiça e trampolim: o trampolim lança para uma plataforma alta com uma vida.
       ['mec', 'quebradica', { base: 40, sobreVao: true }],
       ['vao', 100], ['chao', 180],
       ['mec', 'trampolim'], ['chao', 80],
-      ['plataforma', 120, 150], ['vida', 20, 330, { desafio: 'F5-V1' }], ['chao', 140],
+      ['plataforma', 120, 150], ['vida', 20, 330, { desafio: 'F5-V1' }], ['computador', 'F5-V1', 24], ['chao', 140],
       ['checkpoint'],
       // Ventilador que sobe para uma plataforma e sentinela no chão reto.
       ['mec', 'ventilador'], ['chao', 40],
       ['plataforma', 110, 90], ['chao', 80],
-      ['patrulha', 180, { desafio: 'F5-M2' }], ['chao', 60],
+      ['computador', 'F5-M2'], ['patrulha', 180, { desafio: 'F5-M2' }], ['chao', 60],
       // Esteira empurrando para o esmagador, com chão entre os dois.
       ['mec', 'esteira', { dir: 1 }], ['chao', 40],
       ['esmagadorNaPlataforma', 140], ['chao', 200],
@@ -446,7 +467,7 @@ export const FASES_EXTRA = [
       ['patrulha', 160], ['chao', 80],
       ['mec', 'bomba'], ['chao', 200],
       ['moeda', 40, 360], ['moeda', 100, 340], ['moeda', 160, 360],
-      ['vida', 80, 320, { desafio: 'F5-V2' }],
+      ['computador', 'F5-V2'], ['vida', 80, 320, { desafio: 'F5-V2' }],
       // Escadaria final de blocos, cristal e a última porta com missão 5.
       ['bloco', 100, 40], ['bloco', 100, 80], ['bloco', 100, 120],
       ['cristal', 160],
