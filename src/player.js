@@ -4,100 +4,22 @@
 
 import { inputState } from './input.js';
 import { registrarEfeito } from './audio.js';
-
-
-export class AnimacaoGIF {
-  constructor(caminho) {
-    this.caminho = caminho;
-    this.img = new Image();
-    this.img.src = caminho;
-    this.frames = [];
-    this.tempoTotal = 0;
-    this.carregado = false;
-
-    if (typeof ImageDecoder !== 'undefined' && caminho.endsWith('.gif')) {
-      this._decodificar();
-    }
-  }
-
-  async _decodificar() {
-    try {
-      const resp = await fetch(this.caminho);
-      const buffer = await resp.arrayBuffer();
-      const dec = new ImageDecoder({ data: buffer, type: 'image/gif' });
-      await dec.tracks.ready;
-      const total = dec.tracks.selectedTrack.frameCount;
-      const frames = [];
-      let tempoTotal = 0;
-
-      for (let i = 0; i < total; i++) {
-        const f = await dec.decode({ frameIndex: i });
-        const duration = (f.image.duration || 80000) / 1000000;
-        const bmp = await createImageBitmap(f.image);
-        f.image.close();
-        frames.push({ bmp, duration });
-        tempoTotal += duration;
-      }
-
-      this.frames = frames;
-      this.tempoTotal = tempoTotal;
-      this.carregado = true;
-    } catch {
-      this.carregado = false;
-    }
-  }
-
-  desenhar(ctx, tempo, dx, dy, dw, dh, flip = false) {
-    let fonte = this.img;
-
-    if (this.carregado && this.frames.length > 0) {
-      if (this.tempoTotal > 0) {
-        const tempoCiclo = tempo % this.tempoTotal;
-        let acum = 0;
-        for (const f of this.frames) {
-          acum += f.duration;
-          if (tempoCiclo <= acum) {
-            fonte = f.bmp;
-            break;
-          }
-        }
-      } else {
-        fonte = this.frames[0].bmp;
-      }
-    }
-
-    if (!fonte) return;
-    if (fonte instanceof HTMLImageElement && (!fonte.complete || fonte.naturalWidth === 0)) {
-      return;
-    }
-
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    if (flip) {
-      ctx.translate(dx + dw, dy);
-      ctx.scale(-1, 1);
-      ctx.drawImage(fonte, 0, 0, dw, dh);
-    } else {
-      ctx.drawImage(fonte, dx, dy, dw, dh);
-    }
-    ctx.restore();
-  }
-}
+import { sprites } from './sprites.js';
 
 export const byteSprites = {
-  parado: new AnimacaoGIF('assets/characters/Imagens_Personagens/01_byte/02_byte_parado.gif'),
-  correndo: new AnimacaoGIF('assets/characters/Imagens_Personagens/01_byte/01_byte_correndo.gif'),
-  pulando: new AnimacaoGIF('assets/characters/Imagens_Personagens/01_byte/03_byte_pulando.gif'),
-  caindo: new AnimacaoGIF('assets/characters/Imagens_Personagens/01_byte/05_byte_caindo.gif'),
-  agachado: new AnimacaoGIF('assets/characters/Imagens_Personagens/01_byte/04_byte_agachado.gif'),
-  dano: new AnimacaoGIF('assets/characters/Imagens_Personagens/01_byte/06_byte_dano.gif'),
-  morte: new AnimacaoGIF('assets/characters/Imagens_Personagens/01_byte/07_byte_morte.gif'),
+  parado: sprites.byteParado,
+  correndo: sprites.byteCorrendo,
+  pulando: sprites.bytePulando,
+  caindo: sprites.byteCaindo,
+  agachado: sprites.byteAgachado,
+  dano: sprites.byteDano,
+  morte: sprites.byteMorte,
 };
 
 export const heartSprites = {
-  cheia: new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/02_vida.png'),
-  vazia: new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/03_coracao_sem_vida.gif'),
-  ultima: new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/04_ultima_vida.gif'),
+  cheia: sprites.vidaCheia,
+  vazia: sprites.vidaVazia,
+  ultima: sprites.vidaUltima,
 };
 
 export function desenharVidas(ctx, vidas, tempo = performance.now() / 1000, { x = 24, y = 20 } = {}) {

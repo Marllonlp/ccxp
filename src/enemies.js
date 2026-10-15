@@ -1,14 +1,10 @@
-import { AnimacaoGIF } from './player.js';
+import { sprites } from './sprites.js';
 import { interseca } from './collisions.js';
 
-const PASTA_INIMIGOS = 'assets/characters/Imagens_Personagens/05_inimigos/';
-const animacaoSentinela = new AnimacaoGIF(`${PASTA_INIMIGOS}03_robo_sentinela_andando.gif`);
-const animacaoSentinelaMorrendo = new AnimacaoGIF(`${PASTA_INIMIGOS}04_robo_sentinela_morrendo.gif`);
-const animacaoPlanta = new AnimacaoGIF(`${PASTA_INIMIGOS}01_planta_parada.gif`);
-const animacaoPlantaMorrendo = new AnimacaoGIF(`${PASTA_INIMIGOS}02_planta_morrendo.gif`);
-
-// Duração da morte enquanto o GIF ainda não foi decodificado, em segundos.
-const DURACAO_MORTE_PADRAO = 1;
+const animacaoSentinela = sprites.sentinela;
+const animacaoSentinelaMorrendo = sprites.sentinelaMorrendo;
+const animacaoPlanta = sprites.planta;
+const animacaoPlantaMorrendo = sprites.plantaMorrendo;
 // Distância horizontal até a área do inimigo em que a pergunta aparece.
 const ALCANCE_DESAFIO = 120;
 // Altura acima do chão do inimigo em que a pergunta ainda aparece: pega quem tenta passar pulando
@@ -18,7 +14,7 @@ const ALTURA_DESAFIO = 120;
 /**
  * Regras comuns aos inimigos com desafio (campo `desafio` em level.js).
  * Estados: ativo → alvo (acertou a pergunta; o poder do Byte está a caminho)
- * → derrotado (GIF de morte) → removido (some do mapa).
+ * → derrotado (animação de morte) → removido (some do mapa).
  * Só o inimigo ativo causa dano.
  */
 class Inimigo {
@@ -73,7 +69,7 @@ class Inimigo {
   }
 
   duracaoMorte() {
-    return this.animacaoMorte.tempoTotal || DURACAO_MORTE_PADRAO;
+    return this.animacaoMorte.tempoTotal;
   }
 
   toca(personagem) {

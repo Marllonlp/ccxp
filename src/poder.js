@@ -1,9 +1,9 @@
 // Poder do Byte: o ícone </> que sai do personagem quando ele acerta a pergunta de um monstro.
 // Voa até o centro do inimigo e, ao chegar, o derrota.
 
-import { AnimacaoGIF } from './player.js';
+import { sprites } from './sprites.js';
 
-const animacaoPoder = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/05_powerup.gif');
+const animacaoPoder = sprites.poder;
 // Sprite original de 16 × 15, desenhado com o dobro do tamanho.
 const LARGURA = 32;
 const ALTURA = 30;

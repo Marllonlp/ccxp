@@ -2,10 +2,9 @@
 // do pacote obstaculos_mecanicas_pacote aparecem em sequência, e o Byte age sobre eles:
 // pula por cima, abaixa para passar e pousa em cima das superfícies. Desenhada em 480 × 270
 // pixels, ampliada pelo CSS com pixel nítido, como as outras telas.
-import { AnimacaoGIF } from './player.js';
+import { byteSprites as byte } from './player.js';
 
 const PASTA_MECANICAS = './assets/characters/Imagens_Personagens/02_cenario/obstaculos_mecanicas_pacote/';
-const PASTA_BYTE = './assets/characters/Imagens_Personagens/01_byte/';
 
 // Tudo em pixels da tela 480 × 270, na mesma escala da fase (o Byte usa 0,72 do sprite de 96 px).
 const LARGURA = 480;
@@ -60,13 +59,6 @@ function pronta(imagem) {
 
 // Imagens dos tipos, carregadas uma vez.
 const modelos = TIPOS.map((tipo) => ({ ...tipo, imagem: carregarImagem(PASTA_MECANICAS + tipo.arquivo) }));
-
-const byte = {
-  correndo: new AnimacaoGIF(PASTA_BYTE + '01_byte_correndo.gif'),
-  pulando: new AnimacaoGIF(PASTA_BYTE + '03_byte_pulando.gif'),
-  caindo: new AnimacaoGIF(PASTA_BYTE + '05_byte_caindo.gif'),
-  agachado: new AnimacaoGIF(PASTA_BYTE + '04_byte_agachado.gif'),
-};
 
 /** Altura da base do obstáculo acima do chão, no instante `agora` (ms). */
 function baseEm(obstaculo, agora) {

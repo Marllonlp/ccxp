@@ -4,7 +4,7 @@
 // A fase tem LARGURA_FASE de comprimento; a janela visível se adapta à tela.
 
 import { calcularVisao } from './viewport.js';
-import { AnimacaoGIF } from './player.js';
+import { sprites } from './sprites.js';
 import { criarMecanica, ligarMecanicas } from './mecanicas.js';
 import { FASES_EXTRA } from './fasesExtra.js';
 
@@ -97,8 +97,8 @@ const VIDAS_FASE_1 = [
   { id: 'vida-2', x: 3100, y: 448, coletado: false, desafio: 'F1-V2' },
 ];
 
-const moedaSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif');
-const vidaItemSprite = new AnimacaoGIF('assets/characters/Imagens_Personagens/04_vidas_e_itens/06_vida_item.gif');
+const moedaSprite = sprites.moeda;
+const vidaItemSprite = sprites.vidaItem;
 
 /** Restaura as moedas salvas e repõe os corações para uma nova tentativa. */
 export function limparColetaveis(moedasColetadas = []) {
