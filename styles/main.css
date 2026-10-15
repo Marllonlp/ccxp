@@ -33,6 +33,7 @@ body {
   height: 100dvh;
   overflow: hidden;
   isolation: isolate;
+  touch-action: manipulation;
 }
 
 [hidden] {
