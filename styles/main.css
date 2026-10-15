@@ -148,6 +148,11 @@ body {
 }
 
 /* A resolução interna acompanha a janela; a câmera preserva a proporção do mundo. */
+#game-canvas,
+.canvas-chefe {
+  touch-action: none;
+}
+
 #game-canvas {
   display: block;
   width: 100%;
