@@ -915,6 +915,7 @@ body {
 .tela-titulo-palco {
   position: relative;
   width: min(100%, calc(100vh * 16 / 9));
+  width: min(100%, calc(100dvh * 16 / 9));
   aspect-ratio: 16 / 9;
   overflow: hidden;
   container-type: inline-size;
@@ -1232,6 +1233,7 @@ body {
 .canvas-niveis {
   display: block;
   width: min(100%, calc(100vh * 16 / 9));
+  width: min(100%, calc(100dvh * 16 / 9));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
 }
@@ -1275,6 +1277,7 @@ body {
 .canvas-terminal {
   display: block;
   width: min(100%, calc(100vh * 16 / 9));
+  width: min(100%, calc(100dvh * 16 / 9));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
 }
@@ -1648,6 +1651,7 @@ body {
 .canvas-cutscene {
   display: block;
   width: min(100%, calc(100vh * 16 / 9));
+  width: min(100%, calc(100dvh * 16 / 9));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
 }
@@ -1669,6 +1673,7 @@ body {
 .canvas-chefe {
   display: block;
   width: min(100%, calc(100vh * 16 / 9));
+  width: min(100%, calc(100dvh * 16 / 9));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
 }
