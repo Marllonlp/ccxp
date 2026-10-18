@@ -37,6 +37,15 @@ export function criarJanelaDesafio(secao) {
     });
   }
 
+  /** Frase curta dizendo por que a alternativa escolhida está errada (vazia se o desafio não tiver). */
+  function motivoDoErro(indice) {
+    const motivo = atual.desafio.porqueErrado?.[indice];
+    if (!motivo) return [];
+    return [Object.assign(document.createElement('span'), {
+      className: 'motivo-erro', textContent: motivo,
+    })];
+  }
+
   /** Errou numa pergunta com insistir: risca a alternativa e deixa escolher outra, sem mostrar a certa. */
   function tentarDeNovo(indice) {
     const botao = botoes[indice];
@@ -45,6 +54,7 @@ export function criarJanelaDesafio(secao) {
     resultado.className = 'resultado-desafio erro';
     resultado.replaceChildren(
       Object.assign(document.createElement('strong'), { textContent: 'Ainda não. Tente de novo!' }),
+      ...motivoDoErro(indice),
     );
     resultado.hidden = false;
     botoes.find((outro) => !outro.disabled)?.focus({ preventScroll: true });
@@ -72,6 +82,7 @@ export function criarJanelaDesafio(secao) {
       Object.assign(document.createElement('strong'), {
         textContent: acertou ? `Correto! ${textoAcerto}` : `Resposta certa: ${certa}. ${textoErro}`,
       }),
+      ...(acertou ? [] : motivoDoErro(indice)),
       Object.assign(document.createElement('span'), { textContent: desafio.explicacao }),
     );
     resultado.hidden = false;

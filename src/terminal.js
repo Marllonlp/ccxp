@@ -47,6 +47,14 @@ export function criarTerminal(secao, { onFechar, onResolvido }) {
     'subir', 'descer', 'remover', 'testar', 'dica', 'resultado',
   ].map(nome => [nome, secao.querySelector(`#terminal-${nome}`)]));
   const trechoPorId = id => missao.trechos.find(trecho => trecho.id === id);
+  /** Recuo da linha ao entrar no código: o da solução; um distrator segue a linha de cima, como num editor. */
+  function recuo(id, indice) {
+    const passo = missao.solucao.find(item => item.id === id);
+    if (passo) return passo.indent ?? 0;
+    const anterior = estado.linhas[indice - 1];
+    if (!anterior) return 0;
+    return anterior.indent + (trechoPorId(anterior.id).codigo.trimEnd().endsWith(':') ? 1 : 0);
+  }
   const disponiveis = () => estado.ordem.map(trechoPorId)
     .filter(trecho => !estado.linhas.some(linha => linha.id === trecho.id));
 
@@ -58,7 +66,7 @@ export function criarTerminal(secao, { onFechar, onResolvido }) {
       botao.classList.toggle('selecionada', indice === selecionado);
       botao.setAttribute('aria-pressed', String(indice === selecionado));
       const codigo = codigoColorido(trechoPorId(linha.id).codigo);
-      codigo.style.paddingInlineStart = `${linha.indent * 20}px`;
+      codigo.style.paddingInlineStart = `${linha.indent * 4}ch`;
       botao.append(codigo);
       botao.addEventListener('click', () => executar(() => { selecionado = indice; }));
       item.append(botao);
@@ -73,7 +81,7 @@ export function criarTerminal(secao, { onFechar, onResolvido }) {
       botao.addEventListener('click', () => executar(() => {
         if (estado.linhas.length >= MAX_LINHAS) return;
         const indice = selecionado >= 0 ? selecionado + 1 : estado.linhas.length;
-        estado.linhas.splice(indice, 0, { id: trecho.id, indent: 0 });
+        estado.linhas.splice(indice, 0, { id: trecho.id, indent: recuo(trecho.id, indice) });
         selecionado = indice;
       }));
       return botao;
@@ -128,8 +136,6 @@ export function criarTerminal(secao, { onFechar, onResolvido }) {
         : 'Escolha os trechos e monte o programa primeiro.', tipo: 'erro' }];
       return;
     }
-    const recuos = new Map(missao.solucao.map(passo => [passo.id, passo.indent ?? 0]));
-    for (const linha of linhas) linha.indent = recuos.get(linha.id) ?? 0;
     estado.console = missao.testes.map(teste => ({
       texto: `Entrada: ${teste.entrada} → ${teste.esperado} · OK`, tipo: 'ok',
     }));
