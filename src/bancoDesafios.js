@@ -3,7 +3,7 @@
 // Nível 5: revisão geral e operadores lógicos (and, or).
 // Cada desafio tem um id no formato F<fase>-<categoria><número>, ligado a um elemento da fase
 // (level.js para a Fase 1, fasesExtra.js para as outras):
-// A pergunta só abre no computador de desafio com o mesmo id (botão ABRIR DESAFIO):
+// Pontes e monstros usam o computador de mesmo id; corações oferecem a pergunta ao toque:
 // - V (corações): Acertou: recupera 1 vida. Errou: o coração some.
 // - M (monstros): Acertou: o Byte lança o poder </> e derrota o sentinela ou a planta. Errou: ele continua no lugar.
 // - P (pontes): Errou: tenta de novo até acertar. Acertou: surge a ponte.
@@ -37,6 +37,15 @@ export const BANCO_DESAFIOS = {
     alternativas: ['"12"', '12', 'doze'],
     correta: 1,
     explicacao: 'Número vai sem aspas. "12" entre aspas é um texto, e doze sem aspas seria uma variável que não existe.',
+  },
+  'F1-V2': {
+    categoria: 'vida',
+    titulo: 'Mais uma chance',
+    enunciado: 'Qual comando mostra o valor guardado na variável vidas?',
+    codigo: 'vidas = 2\n___',
+    alternativas: ['print("vidas")', 'print(vidas)', 'vidas(print)'],
+    correta: 1,
+    explicacao: 'print(vidas) mostra o número 2. Com aspas, seria exibida a palavra vidas.',
   },
   'F1-M2': {
     categoria: 'monstro',

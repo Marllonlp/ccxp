@@ -13,7 +13,9 @@ async function listar(pasta) {
   for (const entrada of await readdir(join(raiz, pasta), { withFileTypes: true })) {
     const caminho = `${pasta}/${entrada.name}`;
     if (entrada.isDirectory()) arquivos.push(...await listar(caminho));
-    else if (entrada.isFile() && extensoes.has(extname(entrada.name))) arquivos.push(caminho);
+    // Prévias e guias de arte não são recursos do jogo nem entram no cache offline.
+    else if (entrada.isFile() && extensoes.has(extname(entrada.name))
+      && !/_(preview|guia)(_|\.|$)/i.test(entrada.name)) arquivos.push(caminho);
   }
   return arquivos;
 }

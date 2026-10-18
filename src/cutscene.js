@@ -1,4 +1,4 @@
-// Reprodutor de cutscenes. Lê um roteiro JSON (INSTRUCOES_CUTSCENE_INTRO.md) e desenha tudo em 480 × 270 pixels.
+// Reprodutor de cutscenes. Lê o roteiro JSON e desenha tudo em 480 × 270 pixels.
 // Cada passo vira uma tarefa e a sequência espera a tarefa terminar. "paralelo" roda junto com o passo principal
 // e para quando ele termina.
 import { tecladoPrincipal } from './input.js';
@@ -23,29 +23,29 @@ const TREMOR_PADRAO_MS = 90;
 
 // Arquivos da pasta da cutscene, pelo nome usado no roteiro. Sprites seguem o padrão _Nf_LxA (N quadros de L × A).
 const ARQUIVOS = {
-  cenario_dia: 'cenario_intro_dia_480x270.png',
-  cenario_alerta: 'cenario_intro_alerta_480x270.png',
+  cenario_dia: '../../compartilhados/cenario_intro_dia_480x270.png',
+  cenario_alerta: '../../compartilhados/arena_chefe_fundo_480x270.png',
   byte_sentado_notebook_4f_48x48: 'byte_sentado_notebook_4f_48x48.png',
   byte_sentado_olhando_1f_48x48: 'byte_sentado_olhando_1f_48x48.png',
-  notebook_frente_2f_18x15: 'notebook_frente_2f_18x15.png',
+  notebook_frente_2f_18x15: '../../compartilhados/notebook_frente_2f_18x15.png',
   tontura_3f_24x10: 'tontura_3f_24x10.png',
-  byte_parado_2f_48x48: 'reutilizados/byte_parado_2f_48x48.png',
-  byte_correndo_8f_48x48: 'reutilizados/byte_correndo_8f_48x48.png',
-  byte_pulando_2f_48x48: 'reutilizados/byte_pulando_2f_48x48.png',
-  byte_caindo_2f_48x48: 'reutilizados/byte_caindo_2f_48x48.png',
-  byte_agachado_2f_48x48: 'reutilizados/byte_agachado_2f_48x48.png',
-  byte_dano_2f_48x48: 'reutilizados/byte_dano_2f_48x48.png',
-  byte_morte_3f_48x48: 'reutilizados/byte_morte_3f_48x48.png',
+  byte_parado_2f_48x48: '../../compartilhados/byte_parado_2f_48x48.png',
+  byte_correndo_8f_48x48: '../../compartilhados/byte_correndo_8f_48x48.png',
+  byte_pulando_2f_48x48: '../../compartilhados/byte_pulando_2f_48x48.png',
+  byte_caindo_2f_48x48: '../../compartilhados/byte_caindo_2f_48x48.png',
+  byte_agachado_2f_48x48: '../../compartilhados/byte_agachado_2f_48x48.png',
+  byte_dano_2f_48x48: '../../compartilhados/byte_dano_2f_48x48.png',
+  byte_morte_3f_48x48: '../../compartilhados/byte_morte_3f_48x48.png',
   chefe_kernel_panic_parado_6f_128x128: 'reutilizados/chefe_kernel_panic_parado_6f_128x128.png',
   chefe_kernel_panic_ataque_6f_128x128: 'reutilizados/chefe_kernel_panic_ataque_6f_128x128.png',
-  projetil_pacote_erro_2f_12x12: 'reutilizados/projetil_pacote_erro_2f_12x12.png',
-  balao_exclamacao: 'balao_exclamacao_16x16.png',
+  projetil_pacote_erro_2f_12x12: '../../compartilhados/projetil_pacote_erro_2f_12x12.png',
+  balao_exclamacao: '../../compartilhados/balao_exclamacao_16x16.png',
   balao_interrogacao: 'balao_interrogacao_16x16.png',
-  balao_surpresa: 'balao_surpresa_16x16.png',
+  balao_surpresa: '../../compartilhados/balao_surpresa_16x16.png',
   balao_reticencias: 'balao_reticencias_16x16.png',
-  caixa_byte: 'caixa_dialogo_byte_468x82.png',
+  caixa_byte: '../../compartilhados/caixa_dialogo_byte_468x82.png',
   caixa_kernel: 'caixa_dialogo_kernel_468x82.png',
-  retrato_byte: 'retrato_byte_44x44.png',
+  retrato_byte: '../../compartilhados/retrato_byte_44x44.png',
   retrato_kernel: 'retrato_kernel_panic_44x44.png',
 };
 
@@ -63,12 +63,14 @@ const PIXELS_ACENTO = {
   cedilha: [[3, 7], [4, 8], [3, 9]],
 };
 
-/** Carrega a fonte Press Start 2P com o nome usado pelas telas de história e de luta. */
-export function carregarFonte(pasta) {
-  const fonte = new FontFace('PressStart2PCutscene', `url(${pasta}PressStart2P-Regular.ttf)`);
-  return fonte.load()
-    .then(() => document.fonts.add(fonte))
+let fonteCarregada;
+
+/** Compartilha a mesma fonte entre as telas de história, tutorial e luta. */
+export function carregarFonte() {
+  fonteCarregada ??= new FontFace('PressStart2PCutscene', 'url(./assets/fontes/PressStart2P-Regular.ttf)').load()
+    .then((fonte) => document.fonts.add(fonte))
     .catch((erro) => console.error('Falha ao carregar a fonte da cutscene:', erro));
+  return fonteCarregada;
 }
 
 function carregarImagem(url) {
@@ -82,7 +84,7 @@ function carregarImagem(url) {
 
 /** Carrega as imagens e a fonte da cutscene. Devolve { nome: { img, quadros, largura, altura } }. */
 async function carregarRecursos(pasta) {
-  const fonteCarregada = carregarFonte(pasta);
+  const fonteCarregada = carregarFonte();
   const imagens = Object.entries(ARQUIVOS).map(async ([nome, arquivo]) => {
     const img = await carregarImagem(pasta + arquivo);
     const padrao = /_(\d+)f_(\d+)x(\d+)$/.exec(nome);
@@ -685,7 +687,7 @@ function desenharCena(ctx, recursos, cena) {
 }
 
 /**
- * Cria o reprodutor dentro de `canvas` (480 × 270). `pasta` é onde ficam as imagens e a fonte da cutscene.
+ * Cria o reprodutor dentro de `canvas` (480 × 270). `pasta` contém as imagens da cutscene.
  * tocar(urlRoteiro, { aoTerminar }) toca o roteiro; aoTerminar roda ao chegar no fim do roteiro ou ao pular.
  */
 export function criarCutscene(canvas, { pasta }) {

@@ -1,7 +1,7 @@
 // Responsável: Dudu. Detecção e resolução das colisões.
 // O ciclo chama esta etapa após o movimento do personagem e antes do desenho.
 
-import { obstaculos, moedas, vidasItens } from './level.js';
+import { obstaculos, moedas, limitarPosicao } from './level.js';
 
 /** Sobreposição entre dois retângulos, sem contar o encosto exato. */
 export function interseca(ax, ay, aw, ah, bx, by, bw, bh) {
@@ -10,9 +10,7 @@ export function interseca(ax, ay, aw, ah, bx, by, bw, bh) {
 
 /** Retorna o item coletado neste quadro, ou null. */
 export function verificarColetaveis(player) {
-  for (const item of [...moedas, ...vidasItens]) {
-    // Coração com desafio não sai ao toque: só pelo computador de desafio ao lado.
-    if (item.desafio) continue;
+  for (const item of moedas) {
     if (!item.coletado && interseca(
       player.x, player.y, player.largura, player.altura,
       item.x, item.y, 16, 16,
@@ -82,6 +80,7 @@ export function resolverColisoes(player, deltaTime) {
 
   // Fora de qualquer superfície o apoio não é reposto, então sair de uma borda
   // deixa a gravidade agir.
+  limitarPosicao(player, deltaTime);
 }
 
 /**

@@ -3,7 +3,7 @@
     {
       "id": "patch_1",
       "titulo": "PATCH 1/3",
-      "enunciado": "O escudo (e) do Kernel Panic tem 100 de energia. Tire 25 de cada vez enquanto ele for maior que zero e, no fim, mostre DESLIGOU.",
+      "enunciado": "O escudo (e) do Kernel Panic tem 100 de energia. Tire 25 de cada vez enquanto ele for maior que zero: cada redução lança um tiro (4 no total). No fim, mostre DESLIGOU.",
       "entrada": "Nenhuma.",
       "saida": [
         "Mostre DESLIGOU."
@@ -60,12 +60,13 @@
           "esperado": "DESLIGOU"
         }
       ],
-      "dica": "O while repete enquanto a condição for verdadeira. Diminua o escudo dentro do laço (recuado) e mostre a mensagem depois, fora dele."
+      "dica": "O while repete enquanto a condição for verdadeira. Diminua o escudo dentro do laço (recuado) e mostre a mensagem depois, fora dele.",
+      "disparos": 4
     },
     {
       "id": "patch_2",
       "titulo": "PATCH 2/3",
-      "enunciado": "Para bloquear o laser, o sistema pede uma senha (s). Se a senha for byte, mostre LIBERADO. Senão, mostre NEGADO.",
+      "enunciado": "Para bloquear o laser, o sistema pede uma senha (s). Se a senha for byte, mostre LIBERADO para autorizar um tiro. Senão, mostre NEGADO.",
       "entrada": "Uma palavra (a senha).",
       "saida": [
         "Se for byte: LIBERADO.",
@@ -140,12 +141,13 @@
           "esperado": "NEGADO"
         }
       ],
-      "dica": "Para comparar use == (dois iguais). Um = só serve para guardar um valor numa variável."
+      "dica": "Para comparar use == (dois iguais). Um = só serve para guardar um valor numa variável.",
+      "disparos": 1
     },
     {
       "id": "patch_3",
       "titulo": "PATCH 3/3",
-      "enunciado": "Último passo! O Kernel Panic tem 3 núcleos. Use for para mostrar ZAP 3 vezes e, no fim, OFF.",
+      "enunciado": "Último passo! O Kernel Panic tem 3 núcleos. Use for para mostrar ZAP 3 vezes e, no fim, OFF. Cada ZAP lança um tiro (3 no total).",
       "entrada": "Nenhuma.",
       "saida": [
         "Mostre ZAP três vezes.",
@@ -200,7 +202,8 @@
           "esperado": "ZAP ZAP ZAP OFF"
         }
       ],
-      "dica": "O for com range(3) repete 3 vezes o que está recuado embaixo dele. O print do OFF fica fora do laço."
+      "dica": "O for com range(3) repete 3 vezes o que está recuado embaixo dele. O print do OFF fica fora do laço.",
+      "disparos": 3
     }
   ]
 }

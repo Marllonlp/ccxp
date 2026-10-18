@@ -1,4 +1,4 @@
-// Responsável: Dudu. Dados do cenário, obstáculos e checkpoints da fase de teste.
+// Cenários, obstáculos, coletáveis e checkpoints das cinco fases.
 // Convenções acordadas: x cresce para a direita, y cresce para baixo.
 // Todo obstáculo é um retângulo com x, y, width e height, em coordenadas do mundo.
 // A fase tem LARGURA_FASE de comprimento; a janela visível se adapta à tela.
@@ -7,6 +7,7 @@ import { calcularVisao } from './viewport.js';
 import { sprites } from './sprites.js';
 import { criarMecanica, ligarMecanicas } from './mecanicas.js';
 import { FASES_EXTRA } from './fasesExtra.js';
+import { desenharPortalChefe } from './portalChefe.js';
 
 export const LARGURA_TELA = 960;
 export const ALTURA_FASE = 540;
@@ -23,79 +24,85 @@ let posicaoInicial = { x: 40, y: 414 };
 
 // Superfície do chão. Com a colisão em y=480, o personagem fica em pé com os pés em 480.
 const SUPERFICIE_CHAO = 480;
+const DURACAO_CONSTRUCAO_PONTE = 1.2;
+const TAMANHO_PECA_PONTE = 16;
 
-// Alcance do pulo: 500 px/s de impulso e 1200 px/s² de gravidade dão cerca de 104 px de altura.
-// Por isso plataformas e paredes ficam até 90 px acima do chão, e vãos têm no máximo 100 px.
+// O pulo comum sobe ~104 px e percorre ~250 px, mais os 40 px do corpo.
+// O rio do primeiro exercício tem 400 px, sem apoio ou impulso para dispensar a ponte.
 
 // Obstáculos sólidos. O campo "tipo" define o visual provisório ou a peça de cenário.
 const OBSTACULOS_FASE_1 = [
   // --- Trecho inicial ---
   { tipo: 'chao', x: 0, y: SUPERFICIE_CHAO, width: 340, height: 60 },
-  { tipo: 'chao', x: 660, y: SUPERFICIE_CHAO, width: 520, height: 60 },
+  { tipo: 'chao', x: 740, y: SUPERFICIE_CHAO, width: 520, height: 60 },
   // Sem plataformas sobre o primeiro vão: o jogador precisa passar pela pergunta da ponte.
 
   // Bloco suspenso: deixa 50 px livres até o chão, o que só permite passar agachado.
-  { tipo: 'teto', x: 840, y: 330, width: 160, height: 100 },
+  { tipo: 'teto', x: 920, y: 330, width: 160, height: 100 },
 
   // Degrau baixo: alto o bastante para exigir o pulo, baixo o bastante para ser vencido.
-  { tipo: 'parede', x: 1080, y: 400, width: 40, height: 80 },
+  { tipo: 'parede', x: 1160, y: 400, width: 40, height: 80 },
 
   // --- Escadaria de plataformas ---
-  { tipo: 'chao', x: 1180, y: SUPERFICIE_CHAO, width: 340, height: 60 },
-  { tipo: 'plataforma', x: 1220, y: 390, width: 110, height: 20 },
-  { tipo: 'plataforma', x: 1380, y: 310, width: 110, height: 20 },
-  { tipo: 'plataforma', x: 1540, y: 390, width: 110, height: 20 },
+  { tipo: 'chao', x: 1260, y: SUPERFICIE_CHAO, width: 340, height: 60 },
+  { tipo: 'plataforma', x: 1300, y: 390, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 1460, y: 310, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 1620, y: 390, width: 110, height: 20 },
 
   // --- Chão de cristais e teto baixo ---
-  { tipo: 'chao_cristal', x: 1520, y: SUPERFICIE_CHAO, width: 400, height: 60 },
-  { tipo: 'chao', x: 2020, y: SUPERFICIE_CHAO, width: 500, height: 60 },
-  { tipo: 'teto', x: 2170, y: 330, width: 200, height: 100 },
+  { tipo: 'chao_cristal', x: 1600, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'chao', x: 2100, y: SUPERFICIE_CHAO, width: 500, height: 60 },
+  { tipo: 'teto', x: 2250, y: 330, width: 200, height: 100 },
 
   // --- Trecho final com degraus e paredes baixas ---
-  { tipo: 'chao_cristal', x: 2620, y: SUPERFICIE_CHAO, width: 400, height: 60 },
-  { tipo: 'plataforma', x: 2720, y: 390, width: 110, height: 20 },
-  { tipo: 'plataforma', x: 2870, y: 310, width: 110, height: 20 },
-  { tipo: 'chao', x: 3020, y: SUPERFICIE_CHAO, width: 400, height: 60 },
-  { tipo: 'parede', x: 3120, y: 400, width: 40, height: 80 },
+  { tipo: 'chao_cristal', x: 2700, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'plataforma', x: 2800, y: 390, width: 110, height: 20 },
+  { tipo: 'plataforma', x: 2950, y: 310, width: 110, height: 20 },
+  { tipo: 'chao', x: 3100, y: SUPERFICIE_CHAO, width: 400, height: 60 },
+  { tipo: 'parede', x: 3200, y: 400, width: 40, height: 80 },
 ];
 
 // Vãos com água. O personagem cai neles e volta ao ponto seguro.
 // `desafio` (opcional): pergunta de ponte, aberta no computador de desafio antes do vão; acertar constrói a ponte.
 const VAOS_FASE_1 = [
-  // Rio largo (320 px): maior que o alcance do pulo (~250 px), só se atravessa pela ponte.
-  { x: 340, y: SUPERFICIE_CHAO, width: 320, height: 60, desafio: 'F1-P1' },
+  // Rio largo (400 px): maior que o alcance do pulo (~250 px), só se atravessa pela ponte.
+  { x: 340, y: SUPERFICIE_CHAO, width: 400, height: 60, desafio: 'F1-P1' },
   // Já começa com a ponte construída.
-  { x: 1920, y: SUPERFICIE_CHAO, width: 100, height: 60, ponteInicial: true },
-  { x: 2520, y: SUPERFICIE_CHAO, width: 100, height: 60 },
+  { x: 2000, y: SUPERFICIE_CHAO, width: 100, height: 60, ponteInicial: true },
+  { x: 2600, y: SUPERFICIE_CHAO, width: 100, height: 60 },
 ];
 
-// Plantas distribuídas pelo chão, pelas plataformas e pelo bloco suspenso inicial.
+// O monstro final fica depois do seu computador, em chão livre para ler a missão.
 // superficieY é o topo da superfície em que cada planta fica apoiada.
 const PLANTAS_FASE_1 = [
-  { id: 'planta-2', x: 900, superficieY: 330 },
-  { id: 'planta-4', x: 2040, superficieY: SUPERFICIE_CHAO },
-  { id: 'planta-5', x: 2904, superficieY: 310 },
   // Guarda a saída da fase: a missão 1 do terminal, no computador logo antes dela, dá o poder que a derrota.
-  { id: 'planta-6', x: 3340, superficieY: SUPERFICIE_CHAO, missao: 1 },
+  { id: 'planta-6', x: 3360, superficieY: SUPERFICIE_CHAO, missao: 1 },
 ];
 
 // Coletáveis: moedas ficam em caminhos de progressão e corações recompensam
 // a exploração sem permitir ultrapassar o limite inicial de três vidas.
 const MOEDAS_FASE_1 = [
-  { id: 'moeda-3', x: 740, y: 430, coletado: false },
-  { id: 'moeda-4', x: 1265, y: 350, coletado: false },
-  { id: 'moeda-5', x: 1425, y: 270, coletado: false },
-  { id: 'moeda-6', x: 1760, y: 430, coletado: false },
-  { id: 'moeda-7', x: 2100, y: 430, coletado: false },
-  { id: 'moeda-8', x: 2780, y: 350, coletado: false },
-  { id: 'moeda-9', x: 2915, y: 270, coletado: false },
-  { id: 'moeda-10', x: 3170, y: 430, coletado: false },
+  { id: 'moeda-3', x: 860, y: 440, coletado: false },
+  { id: 'moeda-4', x: 1345, y: 350, coletado: false },
+  { id: 'moeda-5', x: 1505, y: 270, coletado: false },
+  { id: 'moeda-6', x: 1770, y: 440, coletado: false },
+  { id: 'moeda-7', x: 2210, y: 440, coletado: false },
+  { id: 'moeda-8', x: 2860, y: 350, coletado: false },
+  { id: 'moeda-9', x: 2995, y: 270, coletado: false },
+  { id: 'moeda-10', x: 3250, y: 430, coletado: false },
+  { id: 'moeda-11', x: 100, y: 440, coletado: false },
+  { id: 'moeda-12', x: 140, y: 440, coletado: false },
+  { id: 'moeda-13', x: 440, y: 440, coletado: false },
+  { id: 'moeda-14', x: 540, y: 440, coletado: false },
+  { id: 'moeda-15', x: 640, y: 440, coletado: false },
+  { id: 'moeda-16', x: 2620, y: 392, coletado: false },
+  { id: 'moeda-17', x: 2660, y: 392, coletado: false },
 ];
 
-// `desafio`: o coração só sai pelo computador de desafio ao lado. Acertar recupera a vida; errar faz o coração sumir.
+// O próprio coração oferece o desafio ao toque: acertar recupera uma vida; errar consome o coração.
 const VIDAS_FASE_1 = [
-  { id: 'vida-1', x: 2400, y: 448, coletado: false, desafio: 'F1-V1' },
-  { id: 'vida-2', x: 3100, y: 448, coletado: false },
+  { id: 'vida-1', x: 2480, y: 448, coletado: false, desafio: 'F1-V1' },
+  { id: 'vida-2', x: 1530, y: 278, coletado: false, desafio: 'F1-V2' },
 ];
 
 const moedaSprite = sprites.moeda;
@@ -115,23 +122,16 @@ const PATRULHAS_FASE_1 = [
   {
     id: 'sentinela-1',
     desafio: 'F1-M1',
-    inicioX: 1755,
-    fimX: 1865,
+    inicioX: 1835,
+    fimX: 1945,
     superficieY: SUPERFICIE_CHAO,
     velocidade: 80,
   },
   {
-    id: 'sentinela-2',
-    inicioX: 1228,
-    fimX: 1322,
-    superficieY: 390,
-    velocidade: 65,
-  },
-  {
     id: 'sentinela-4',
     desafio: 'F1-M2',
-    inicioX: 3005,
-    fimX: 3090,
+    inicioX: 3085,
+    fimX: 3170,
     superficieY: SUPERFICIE_CHAO,
     velocidade: 90,
   },
@@ -144,31 +144,37 @@ const PATRULHAS_FASE_1 = [
 const CHECKPOINTS_FASE_1 = [
   {
     id: 'cp2',
-    x: 720, y: 416, width: 32, height: 64,
-    posicaoSegura: { x: 715, y: 414 },
+    x: 800, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 795, y: 414 },
     totem: 'obelisco',
     ativo: false,
   },
   {
+    id: 'cp3',
+    x: 2160, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 2155, y: 414 },
+    totem: 'antena',
+    ativo: false,
+  },
+  {
     id: 'cp4',
-    x: 2640, y: 416, width: 32, height: 64,
-    posicaoSegura: { x: 2635, y: 414 },
+    x: 2720, y: 416, width: 32, height: 64,
+    posicaoSegura: { x: 2715, y: 414 },
     totem: 'antena',
     ativo: false,
   },
 ];
 
 // Computadores de desafio: totem de tela em pé sobre o chão, com o botão ABRIR DESAFIO.
-// `desafio`: abre a pergunta do vão, monstro ou coração com o mesmo id.
+// `desafio`: abre a pergunta do vão ou monstro com o mesmo id.
 // `missao`: abre o terminal; resolver a missão derrota o monstro com a mesma missão.
 // As perguntas só aparecem por eles: nada abre sozinho ao passar perto ou pular.
 // `obrigatorio`: a saída da fase só abre depois de o computador ser resolvido.
 const COMPUTADORES_FASE_1 = [
   { x: 180, desafio: 'F1-P1' },
-  { x: 1650, desafio: 'F1-M1' },
-  { x: 2440, desafio: 'F1-V1' },
-  { x: 2930, desafio: 'F1-M2' },
-  { x: 3250, missao: 1, obrigatorio: true },
+  { x: 1730, desafio: 'F1-M1' },
+  { x: 3010, desafio: 'F1-M2' },
+  { x: 3270, missao: 1, obrigatorio: true },
 ];
 
 let ultimoCheckpoint = null;
@@ -202,8 +208,8 @@ const FASES = [
     nome: 'Nível 01',
     subtitulo: 'Byte',
     titulo: 'Laboratório das Variáveis',
-    texto: 'Mostrar mensagens com print() e guardar valores em variáveis com =. Texto vai entre aspas; número, sem aspas.',
-    larguraFase: 3420,
+    texto: 'Aprenda print() e variáveis. Resolva os quatro exercícios obrigatórios para ligar a saída. Os desafios de coração são opcionais.',
+    larguraFase: 3500,
     posicaoInicial: { x: 40, y: 414 },
     obstaculos: OBSTACULOS_FASE_1,
     vaos: VAOS_FASE_1,
@@ -213,7 +219,7 @@ const FASES = [
     moedas: MOEDAS_FASE_1,
     vidasItens: VIDAS_FASE_1,
     patrulhas: PATRULHAS_FASE_1,
-    meta: { x: 3340, y: 416, width: 32, height: 64 },
+    meta: { x: 3420, y: 416, width: 32, height: 64 },
   },
   ...FASES_EXTRA,
 ];
@@ -230,15 +236,15 @@ export function carregarFase(indice, moedasColetadas = []) {
   mecanicasDaFase = (fase.mecanicas ?? []).map((spec) => criarMecanica(spec));
   ligarMecanicas(mecanicasDaFase);
   obstaculos = [...fase.obstaculos, ...mecanicasDaFase.flatMap((mecanica) => mecanica.rects)];
-  vaos = fase.vaos.map((vao) => ({ ...vao, ponte: false }));
+  vaos = fase.vaos.map((vao) => ({ ...vao, ponte: false, construcao: null }));
   for (const vao of vaos) if (vao.ponteInicial) construirPonte(vao);
   computadores = (fase.computadores ?? []).map(({ x, ...resto }) => ({
-    ...resto, x, y: SUPERFICIE_CHAO - 64, width: 32, height: 64, totem: 'tela', ativo: false, feito: false,
+    ...resto, x, y: resto.y ?? SUPERFICIE_CHAO - 64, width: 32, height: 64, totem: 'tela', ativo: false, feito: false,
   }));
   checkpoints = fase.checkpoints.map((checkpoint) => ({
     ...checkpoint,
     posicaoSegura: { ...checkpoint.posicaoSegura },
-    ativo: false,
+    ativo: false, feito: false,
   }));
   plantas = fase.plantas.map((planta) => ({ ...planta }));
   moedas = fase.moedas.map((moeda) => ({ ...moeda }));
@@ -247,7 +253,7 @@ export function carregarFase(indice, moedasColetadas = []) {
   patrulhasSentinelas = fase.patrulhas.map((patrulha) => ({ ...patrulha }));
   LARGURA_FASE = fase.larguraFase;
   posicaoInicial = { ...fase.posicaoInicial };
-  metaAtual = { ...fase.meta };
+  metaAtual = { ...fase.meta, quadroPorta: 0 };
   ultimoCheckpoint = null;
 }
 
@@ -257,17 +263,57 @@ export function indiceFaseAtual() {
 }
 
 /**
- * Verdadeiro quando o personagem alcança a meta da fase. Vale em qualquer altura: quem pula por cima
- * da antena também conclui, em vez de passar dela e cair no fim do mapa.
+ * A saída fechada avisa sobre pendências. A passagem aguarda a animação de abertura.
  */
 export function verificarMeta(player) {
-  return player.x + player.largura > metaAtual.x;
+  if (player.x + player.largura < metaAtual.x - 1) return false;
+  if (saidaBloqueada()) return true;
+  const piso = metaAtual.y + metaAtual.height;
+  return metaAtual.quadroPorta === 3 && player.noChao
+    && Math.abs(player.y + player.altura - piso) < 3;
 }
 
-/** Cobre o vão com uma ponte sólida. */
-export function construirPonte(vao) {
+export function obterEntradaSaida() {
+  return { x: metaAtual.x + 24, piso: metaAtual.y + metaAtual.height,
+    nucleo: indiceFase === FASES.length - 1 };
+}
+
+export function fecharPortaSaida(deltaTime) {
+  metaAtual.quadroPorta = Math.max(0, metaAtual.quadroPorta - deltaTime * 10);
+}
+
+/** Limites do mapa independem da câmera e da altura do salto. */
+export function limitarPosicao(player, deltaTime = 0) {
+  const bloqueada = saidaBloqueada();
+  metaAtual.quadroPorta = Math.max(0, Math.min(3,
+    metaAtual.quadroPorta + (bloqueada ? -1 : 1) * deltaTime * 10));
+  const direita = bloqueada || metaAtual.quadroPorta < 3 ? metaAtual.x
+    : Math.min(LARGURA_FASE - 12, metaAtual.x + 48);
+  const x = Math.max(12, Math.min(player.x, direita - player.largura));
+  if (player.x !== x) player.vx = 0;
+  player.x = x;
+}
+
+/** A ponte avança em peças; apenas o trecho já construído sustenta o personagem. */
+export function construirPonte(vao, { animar = !vao.ponteInicial } = {}) {
+  if (vao.ponte) return;
   vao.ponte = true;
-  obstaculos.push({ tipo: 'ponte', x: vao.x, y: vao.y, width: vao.width, height: 20 });
+  const retangulo = { tipo: 'ponte', x: vao.x, y: vao.y, width: animar ? 0 : vao.width, height: 20, ativo: !animar };
+  vao.construcao = animar ? { tempo: 0, retangulo } : null;
+  obstaculos.push(retangulo);
+}
+
+export function atualizarPontes(deltaTime) {
+  for (const vao of vaos) {
+    const construcao = vao.construcao;
+    if (!construcao) continue;
+    construcao.tempo += deltaTime;
+    const progresso = Math.min(1, construcao.tempo / DURACAO_CONSTRUCAO_PONTE);
+    construcao.retangulo.width = progresso === 1 ? vao.width
+      : Math.floor(vao.width * progresso / TAMANHO_PECA_PONTE) * TAMANHO_PECA_PONTE;
+    construcao.retangulo.ativo = construcao.retangulo.width > 0;
+    if (construcao.tempo >= DURACAO_CONSTRUCAO_PONTE + 0.3) vao.construcao = null;
+  }
 }
 
 /** Reinício da fase: desfaz as pontes dos desafios e religa os computadores de desafio. */
@@ -275,6 +321,7 @@ export function limparPontes() {
   obstaculos = obstaculos.filter((obstaculo) => obstaculo.tipo !== 'ponte');
   for (const vao of vaos) {
     vao.ponte = false;
+    vao.construcao = null;
     if (vao.ponteInicial) construirPonte(vao);
   }
   for (const computador of computadores) {
@@ -300,8 +347,23 @@ export function verificarComputadores(player) {
 }
 
 /** Verdadeiro enquanto houver um computador obrigatório sem resposta: a saída da fase fica fechada. */
+export function progressoExercicios() {
+  const unicos = new Map();
+  for (const item of [...computadores, ...checkpoints]) {
+    if (!item.desafio && item.missao === undefined) continue;
+    const id = item.desafio ?? `missao-${item.missao}`;
+    if (!unicos.has(id)) unicos.set(id, {
+      id, feito: item.feito === true, x: item.x,
+      nome: item.desafio ? `Exercício ${item.desafio}` : `Terminal — missão ${item.missao}`,
+    });
+  }
+  const todos = [...unicos.values()];
+  return { total: todos.length, concluidos: todos.filter(item => item.feito).length,
+    pendentes: todos.filter(item => !item.feito) };
+}
+
 export function saidaBloqueada() {
-  return computadores.some((computador) => computador.obrigatorio && !computador.feito);
+  return progressoExercicios().pendentes.length > 0;
 }
 
 /** Posição inicial da fase. Devolve uma copia para ninguém alterar o original. */
@@ -317,11 +379,6 @@ export function obterPontoSeguro() {
   if (!ultimoCheckpoint) return obterPosicaoInicial();
   const { x, y } = ultimoCheckpoint.posicaoSegura;
   return { x, y };
-}
-
-/** Último checkpoint ativado, ou null. Útil para a interface do Kelvis. */
-export function obterUltimoCheckpoint() {
-  return ultimoCheckpoint;
 }
 
 /**
@@ -352,6 +409,7 @@ export function verificarCheckpoints(player) {
 export function limparCheckpoints() {
   for (const checkpoint of checkpoints) {
     checkpoint.ativo = false;
+    checkpoint.feito = false;
   }
   ultimoCheckpoint = null;
 }
@@ -424,8 +482,6 @@ function carregarImagem(arquivo) {
   return imagem;
 }
 
-const plataformaTerra = carregarImagem('plataforma_terra_96x24_1f.png');
-
 // Outros estilos de plataforma (cristal, metal, holo). Cada largura tem a sua peça desenhada,
 // então a imagem só é esticada quando a largura da colisão não existe no pacote.
 // As peças são carregadas já ao abrir o jogo, para a plataforma não trocar de visual no meio da fase,
@@ -438,6 +494,7 @@ for (const [estilo, quadros] of Object.entries(QUADROS_PLATAFORMA)) {
     pecasPlataforma.set(`${estilo}_${tamanho}`, { imagem: carregarImagem(`plataforma_${estilo}_${tamanho}x24_${quadros}f.png`), tamanho });
   }
 }
+const plataformaTerra = pecasPlataforma.get('terra_96').imagem;
 
 function pecaPlataforma(estilo, largura) {
   const tamanho = LARGURAS_PLATAFORMA.includes(largura) ? largura : 96;
@@ -557,9 +614,8 @@ const COLUNAS_PONTE = { esquerda: [86, 100], meio: [100, 148], direita: [156, 17
 // Altura da peça (80) e faixa de terra/água repetida abaixo dela (linhas 48 a 80).
 const ALTURA_PECA = 80;
 
-/** Água (ou ponte) do vão: margens nas bordas e o meio repetido até cobrir toda a largura. */
-function desenharVao(ctx, vao, limiteInferior) {
-  const ponte = vao.ponte && pecaCarregada(pecaPonte);
+/** Margens e módulos repetidos, recortados no trecho já visível. */
+function desenharFaixaVao(ctx, vao, limiteInferior, ponte = false) {
   const peca = ponte ? pecaPonte : pecaAgua;
   const colunas = ponte ? COLUNAS_PONTE : COLUNAS_AGUA;
   const topo = vao.y - SUPERFICIE_PECA;
@@ -575,7 +631,8 @@ function desenharVao(ctx, vao, limiteInferior) {
 
   ctx.save();
   ctx.beginPath();
-  ctx.rect(vao.x, topo, vao.width, Math.max(ALTURA_PECA, limiteInferior - topo));
+  const largura = ponte ? (vao.construcao?.retangulo.width ?? vao.width) : vao.width;
+  ctx.rect(vao.x, topo, largura, Math.max(ALTURA_PECA, limiteInferior - topo));
   ctx.clip();
   const larguraEsquerda = colunas.esquerda[1] - colunas.esquerda[0];
   const larguraDireita = colunas.direita[1] - colunas.direita[0];
@@ -585,6 +642,35 @@ function desenharVao(ctx, vao, limiteInferior) {
   }
   coluna(colunas.esquerda, vao.x);
   coluna(colunas.direita, fim - larguraDireita);
+  ctx.restore();
+}
+
+function desenharVao(ctx, vao, limiteInferior) {
+  desenharFaixaVao(ctx, vao, limiteInferior);
+  if (!vao.ponte || !pecaCarregada(pecaPonte)) return;
+  desenharFaixaVao(ctx, vao, limiteInferior, true);
+  const construcao = vao.construcao;
+  if (!construcao || !construcao.retangulo.ativo) return;
+
+  const frente = vao.x + construcao.retangulo.width;
+  const brilho = Math.min(1, (DURACAO_CONSTRUCAO_PONTE + 0.3 - construcao.tempo) / 0.3);
+  ctx.save();
+  ctx.globalAlpha = brilho * 0.2;
+  ctx.fillStyle = '#50ddff';
+  ctx.fillRect(frente - 12, vao.y - 15, 20, 32);
+  ctx.globalAlpha = brilho;
+  ctx.fillStyle = '#3ce6ff';
+  ctx.fillRect(frente - 3, vao.y - 12, 4, 26);
+  ctx.fillStyle = '#f2ffcf';
+  ctx.fillRect(frente - 1, vao.y - 10, 2, 22);
+  // Pequenos fragmentos de energia acompanham a montagem dos módulos.
+  for (let i = 0; i < 8; i++) {
+    const t = (construcao.tempo * 2 + i * 0.13) % 1;
+    ctx.globalAlpha = brilho * (1 - t);
+    ctx.fillStyle = i % 2 ? '#ffd66b' : '#8defff';
+    ctx.fillRect(Math.round(frente - 4 - t * 22 + (i % 3) * 4),
+      Math.round(vao.y - 3 - t * 25 + (i % 2) * 12), 2, 2);
+  }
   ctx.restore();
 }
 
@@ -603,7 +689,7 @@ function desenharMundo(ctx, limiteInferior) {
 
   for (const obstaculo of obstaculos) {
     // A ponte é desenhada junto com o vão, em desenharVao.
-    if (obstaculo.tipo === 'ponte' && pecasCarregadas) continue;
+    if (obstaculo.tipo === 'ponte' && pecasCarregadas && pecaCarregada(pecaPonte)) continue;
     if (obstaculo.mecanica) continue;
 
     if (obstaculo.tipo === 'plataforma' && pecaCarregada(plataformaTerra)) {
@@ -651,9 +737,96 @@ function desenharMundo(ctx, limiteInferior) {
       vidaItemSprite.desenhar(ctx, tempo, vida.x, vida.y, 16, 16);
     }
   }
-  if (metaAtual) {
-    desenharTotem(ctx, { ...metaAtual, totem: 'antena', ativo: true }, tempo);
+  desenharSaida(ctx);
+}
+
+function desenharSaida(ctx) {
+  if (!metaAtual) return;
+  const bloqueada = saidaBloqueada();
+  const { x, y } = metaAtual;
+  const piso = y + metaAtual.height;
+  if (indiceFase === FASES.length - 1) {
+    desenharPortalChefe(ctx, x + 24, piso, metaAtual.quadroPorta / 3, progressoExercicios());
+    return;
   }
+  const topo = piso - 100;
+  const esquerda = x - 12;
+  const abertura = metaAtual.quadroPorta / 3;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+
+  // Arco de pedra, com a soleira apoiada no mesmo chão do restante da fase.
+  ctx.fillStyle = '#243330';
+  ctx.fillRect(esquerda + 12, topo, 48, 8);
+  ctx.fillRect(esquerda + 4, topo + 8, 64, 8);
+  ctx.fillRect(esquerda, topo + 16, 72, 84);
+  ctx.fillRect(esquerda - 4, piso - 6, 80, 6);
+  ctx.fillStyle = '#63736a';
+  ctx.fillRect(esquerda + 14, topo + 4, 44, 8);
+  ctx.fillRect(esquerda + 6, topo + 12, 60, 8);
+  ctx.fillRect(esquerda + 4, topo + 20, 8, 74);
+  ctx.fillRect(esquerda + 60, topo + 20, 8, 74);
+  ctx.fillStyle = '#91a08a';
+  ctx.fillRect(esquerda + 14, topo + 4, 44, 2);
+  ctx.fillRect(esquerda + 4, topo + 20, 2, 72);
+  ctx.fillRect(esquerda + 60, topo + 20, 2, 72);
+  for (let linha = 0; linha < 4; linha++) {
+    ctx.fillStyle = '#354a42';
+    ctx.fillRect(esquerda + 4, topo + 30 + linha * 18, 8, 2);
+    ctx.fillRect(esquerda + 60, topo + 24 + linha * 18, 8, 2);
+  }
+
+  // O vão escuro continua visível por trás das duas folhas de madeira.
+  ctx.fillStyle = '#0b151b';
+  ctx.fillRect(x, topo + 20, 48, 76);
+  ctx.fillStyle = '#172923';
+  ctx.fillRect(x + 4, piso - 14, 40, 4);
+  ctx.fillRect(x, piso - 8, 48, 4);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, topo + 20, 48, 76);
+  ctx.clip();
+  for (let folha = 0; folha < 2; folha++) {
+    const px = x + folha * 24 + (folha ? 1 : -1) * Math.round(abertura * 24);
+    ctx.fillStyle = '#6d593f';
+    ctx.fillRect(px, topo + 20, 24, 76);
+    for (let tabua = 0; tabua < 3; tabua++) {
+      ctx.fillStyle = '#403b30';
+      ctx.fillRect(px + tabua * 8, topo + 20, 2, 76);
+      ctx.fillStyle = '#9b7c50';
+      ctx.fillRect(px + tabua * 8 + 2, topo + 22, 2, 70);
+      ctx.fillStyle = '#514630';
+      ctx.fillRect(px + tabua * 8 + 5, topo + 34 + tabua * 10, 2, 16);
+    }
+    ctx.fillStyle = '#34493e';
+    ctx.fillRect(px, topo + 38, 24, 4);
+    ctx.fillRect(px, topo + 76, 24, 4);
+    ctx.fillStyle = '#c3b36c';
+    ctx.fillRect(px + (folha ? 3 : 19), topo + 56, 2, 8);
+  }
+  ctx.restore();
+
+  // Musgo e folhas usam o verde do cenário, sem um painel retangular ao redor.
+  for (const [dx, dy] of [[8, 8], [18, 2], [30, 0], [50, 2], [60, 10], [0, 22], [66, 28]]) {
+    ctx.fillStyle = '#3e774c';
+    ctx.fillRect(esquerda + dx, topo + dy, 8, 4);
+    ctx.fillRect(esquerda + dx + 2, topo + dy - 4, 4, 4);
+    ctx.fillStyle = '#7eae62';
+    ctx.fillRect(esquerda + dx + 2, topo + dy, 4, 2);
+  }
+  const exercicios = progressoExercicios();
+  for (let i = 0; i < exercicios.total; i++) {
+    ctx.fillStyle = i < exercicios.concluidos ? '#7bd98a' : '#31483c';
+    ctx.fillRect(x + 10 + i * 8, topo + 12, 4, 4);
+  }
+  ctx.font = 'bold 10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = bloqueada ? '#ffd646' : '#7bd98a';
+  ctx.shadowColor = '#04060c';
+  ctx.shadowOffsetX = 1;
+  ctx.shadowOffsetY = 1;
+  ctx.fillText('SAÍDA', x + 24, topo - 12);
+  ctx.restore();
 }
 
 /**
@@ -664,16 +837,13 @@ function desenharPlataforma(ctx, obstaculo) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   const peca = obstaculo.estilo ? pecaPlataforma(obstaculo.estilo, obstaculo.width) : null;
-  if (peca) {
-    // Enquanto a peça não carrega, não desenha nada: assim a plataforma nunca troca de visual.
-    if (pecaCarregada(peca.imagem)) {
+  if (peca && pecaCarregada(peca.imagem)) {
       ctx.drawImage(
         peca.imagem,
         0, 0, peca.tamanho, ALTURA_PLATAFORMA,
         obstaculo.x, obstaculo.y - SOBRA_PLATAFORMA, obstaculo.width, ALTURA_PLATAFORMA,
       );
-    }
-  } else {
+  } else if (pecaCarregada(plataformaTerra)) {
     ctx.drawImage(
       plataformaTerra,
       obstaculo.x,
@@ -681,6 +851,9 @@ function desenharPlataforma(ctx, obstaculo) {
       obstaculo.width,
       ALTURA_PLATAFORMA,
     );
+  } else {
+    ctx.fillStyle = '#59728c';
+    ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.width, obstaculo.height);
   }
   ctx.restore();
 }
@@ -721,6 +894,19 @@ function desenharTetoPilha(ctx, obstaculo) {
  * A troca acontece quando verificarCheckpoints marca o checkpoint como ativo.
  */
 function desenharTotem(ctx, checkpoint, tempo) {
+  if (checkpoint.desafio || checkpoint.missao !== undefined) {
+    ctx.save();
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    const texto = checkpoint.feito ? 'CONCLUÍDO'
+      : checkpoint.missao !== undefined ? 'TERMINAL' : 'EXERCÍCIO';
+    ctx.shadowColor = '#04060c';
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+    ctx.fillStyle = checkpoint.feito ? '#5aff8c' : '#ffd646';
+    ctx.fillText(texto, checkpoint.x + 16, checkpoint.y - 12);
+    ctx.restore();
+  }
   const modelo = totens[checkpoint.totem];
   const imagem = checkpoint.ativo ? modelo.ativo : modelo.inativo;
 
