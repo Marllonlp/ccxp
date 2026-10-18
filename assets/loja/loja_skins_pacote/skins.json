@@ -1,0 +1,78 @@
+{
+  "skins": [
+    {
+      "id": "classico",
+      "nome": "Byte Clássico",
+      "tipo": "padrao",
+      "preco": 0,
+      "pasta": null,
+      "descricao": "O visual original do Byte."
+    },
+    {
+      "id": "pythonista",
+      "nome": "Byte Pythonista",
+      "tipo": "compra",
+      "preco": 40,
+      "pasta": "pythonista",
+      "descricao": "Moletom azul e amarelo, as cores do Python."
+    },
+    {
+      "id": "hacker",
+      "nome": "Byte Hacker",
+      "tipo": "compra",
+      "preco": 30,
+      "pasta": "hacker",
+      "descricao": "Moletom preto e óculos de lente verde. O pulo deixa um rastro de caracteres de terminal.",
+      "efeito": "rastro_terminal"
+    },
+    {
+      "id": "astronauta",
+      "nome": "Byte Astronauta",
+      "tipo": "compra",
+      "preco": 60,
+      "pasta": "astronauta",
+      "descricao": "Traje espacial branco e laranja, com capacete de vidro."
+    },
+    {
+      "id": "glitch",
+      "nome": "Byte Glitch",
+      "tipo": "compra",
+      "preco": 45,
+      "pasta": "glitch",
+      "descricao": "Infectado pelo Kernel Panic: o Byte treme e falha de vez em quando.",
+      "efeito": "tremor_glitch"
+    },
+    {
+      "id": "dourado",
+      "nome": "Byte Dourado",
+      "tipo": "conquista",
+      "condicao": "tres_estrelas_em_todos",
+      "requisito": "Ganhe 3 estrelas em todos os níveis.",
+      "pasta": "dourado"
+    },
+    {
+      "id": "matador",
+      "nome": "Matador de Vírus",
+      "tipo": "conquista",
+      "condicao": "chefe_derrotado",
+      "requisito": "Derrote o Kernel Panic.",
+      "pasta": "matador"
+    },
+    {
+      "id": "pda",
+      "nome": "Byte Programadores do Amanhã",
+      "tipo": "social",
+      "url": "https://www.instagram.com/[CONFIRMAR_PERFIL_PDA]/",
+      "requisito": "Siga a Programadores do Amanhã no Instagram.",
+      "pasta": "pda"
+    },
+    {
+      "id": "framework",
+      "nome": "Byte Framework Digital",
+      "tipo": "social",
+      "url": "https://www.instagram.com/[CONFIRMAR_PERFIL_FRAMEWORK]/",
+      "requisito": "Siga a Framework Digital no Instagram.",
+      "pasta": "framework"
+    }
+  ]
+}

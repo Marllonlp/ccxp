@@ -438,7 +438,7 @@ function desenharAvisoFlutuante(ctx, cameraX, cameraY, linhas, centroMundo, topo
   linhas.forEach((linha, i) => ctx.fillText(linha, x, y - (linhas.length - 1 - i) * 20));
   ctx.restore();
 }
-const somApertarPlay = new Audio('./assets/sound/apertar_play.mp3');
+const somApertarPlay = new Audio('./assets/sound/apertar_play.wav');
 registrarEfeito(somApertarPlay);
 const somPerder = new Audio('./assets/sound/perder.mp3');
 registrarEfeito(somPerder);
@@ -473,9 +473,9 @@ configurarControlesToque();
 function tocarSomApertarPlay() {
   try {
     somApertarPlay.currentTime = 0;
-    somApertarPlay.play().catch((erro) => console.error('Falha ao tocar apertar_play.mp3:', erro));
+    somApertarPlay.play().catch((erro) => console.error('Falha ao tocar apertar_play.wav:', erro));
   } catch (erro) {
-    console.error('Falha ao tocar apertar_play.mp3:', erro);
+    console.error('Falha ao tocar apertar_play.wav:', erro);
   }
 }
 
