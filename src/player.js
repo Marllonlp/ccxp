@@ -5,16 +5,58 @@
 import { inputState } from './input.js';
 import { registrarEfeito } from './audio.js';
 import { sprites } from './sprites.js';
+import { AnimacaoSprite } from './animacao.js';
+import { buscarSkin } from './skins.js';
 
-export const byteSprites = {
-  parado: sprites.byteParado,
-  correndo: sprites.byteCorrendo,
-  pulando: sprites.bytePulando,
-  caindo: sprites.byteCaindo,
-  agachado: sprites.byteAgachado,
-  dano: sprites.byteDano,
-  morte: sprites.byteMorte,
+// Estado da animação -> tira PNG em assets/animacoes/ (o Clássico) ou na pasta da skin.
+const TIRAS_BYTE = {
+  parado: 'byteParado',
+  correndo: 'byteCorrendo',
+  pulando: 'bytePulando',
+  caindo: 'byteCaindo',
+  agachado: 'byteAgachado',
+  dano: 'byteDano',
+  morte: 'byteMorte',
 };
+
+// Animações da skin equipada. O objeto é o mesmo para sempre: a fase e a demonstração do título
+// leem dele a cada quadro, então trocar a skin troca o desenho nos dois lugares.
+export const byteSprites = {};
+const animacoesPorSkin = new Map();
+let efeitoSkin = null;
+
+export function pastaDaSkin(id) {
+  return id === 'classico' ? 'assets/animacoes/' : `assets/animacoes/skins/${id}/`;
+}
+
+/** Equipa a skin `id`: troca as 7 animações do Byte. Tamanho e hitbox não mudam. */
+export function carregarAnimacoesByte(id) {
+  const skin = buscarSkin(id);
+  if (!animacoesPorSkin.has(skin.id)) {
+    const pasta = pastaDaSkin(skin.id);
+    animacoesPorSkin.set(skin.id, Object.fromEntries(Object.entries(TIRAS_BYTE).map(([estado, tira]) => {
+      // As skins têm os mesmos quadros e tempos do Clássico, que já estão em sprites.js.
+      const { largura, altura, quadros, duracao } = sprites[tira];
+      const animacao = skin.id === 'classico'
+        ? sprites[tira]
+        : new AnimacaoSprite({ arquivo: `${pasta}${tira}.png`, largura, altura, quadros, duracao });
+      return [estado, animacao];
+    })));
+  }
+  Object.assign(byteSprites, animacoesPorSkin.get(skin.id));
+  efeitoSkin = skin.efeito ?? null;
+}
+carregarAnimacoesByte('classico');
+
+// Efeito rastro_terminal: caracteres verdes soltos atrás do Byte enquanto ele corre ou está no ar.
+const CARACTERES_RASTRO = ['0', '1', '{', '}', '<', '>', ';'];
+const INTERVALO_RASTRO = 0.08;
+const VIDA_RASTRO = 0.5;
+const MAXIMO_RASTRO = 12;
+// Efeito tremor_glitch: a cada 2 a 4 s, o desenho se desloca 2 px para o lado por 120 ms.
+const DESLOCAMENTO_GLITCH = 2;
+const DURACAO_GLITCH = 0.12;
+const proximoGlitch = () => 2 + Math.random() * 2;
 
 export const heartSprites = {
   cheia: sprites.vidaCheia,
@@ -87,6 +129,60 @@ export class Player {
     this.olhandoDireita = true;
     this.estadoAnimacao = 'parado';
     this.tempoAnimacao = 0;
+
+    this.rastro = [];
+    this.esperaRastro = 0;
+    this.esperaGlitch = proximoGlitch();
+    this.glitchRestante = 0;
+    this.glitchLado = 1;
+  }
+
+  /** Atualiza o rastro (Hacker) e o tremor (Glitch). Sem efeito na skin, apenas limpa o que sobrou. */
+  atualizarEfeitoSkin(deltaTime) {
+    for (const caractere of this.rastro) {
+      caractere.vida -= deltaTime;
+      caractere.y += 20 * deltaTime;
+    }
+    this.rastro = this.rastro.filter((caractere) => caractere.vida > 0);
+
+    if (efeitoSkin === 'rastro_terminal') {
+      const emMovimento = !this.emQuedaLivre && (!this.noChao || this.vx !== 0);
+      this.esperaRastro -= deltaTime;
+      if (emMovimento && this.esperaRastro <= 0) {
+        this.esperaRastro = INTERVALO_RASTRO;
+        if (this.rastro.length >= MAXIMO_RASTRO) this.rastro.shift();
+        this.rastro.push({
+          texto: CARACTERES_RASTRO[Math.floor(Math.random() * CARACTERES_RASTRO.length)],
+          x: this.olhandoDireita ? this.x - 4 : this.x + this.largura + 4,
+          y: this.y + this.altura * (0.3 + Math.random() * 0.5),
+          vida: VIDA_RASTRO,
+        });
+      }
+    }
+
+    this.glitchRestante = Math.max(0, this.glitchRestante - deltaTime);
+    if (efeitoSkin === 'tremor_glitch') {
+      this.esperaGlitch -= deltaTime;
+      if (this.esperaGlitch <= 0) {
+        this.esperaGlitch = proximoGlitch();
+        this.glitchRestante = DURACAO_GLITCH;
+        this.glitchLado = Math.random() < 0.5 ? -1 : 1;
+      }
+    }
+  }
+
+  desenharRastro(ctx) {
+    if (this.rastro.length === 0) return;
+    ctx.save();
+    ctx.font = 'bold 10px ui-monospace, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#39ff7a';
+    for (const caractere of this.rastro) {
+      ctx.globalAlpha = Math.max(0, caractere.vida / VIDA_RASTRO);
+      ctx.fillText(caractere.texto, caractere.x, caractere.y);
+    }
+    ctx.restore();
   }
 
   obterEstado() {
@@ -163,6 +259,7 @@ export class Player {
     } else {
       this.tempoAnimacao += deltaTime;
     }
+    this.atualizarEfeitoSkin(deltaTime);
 
     // 5. Verificação de queda do mapa
     if (limiteFaseY !== undefined && this.y > limiteFaseY) {
@@ -201,6 +298,7 @@ export class Player {
     this.altura = this.alturaNormal;
     this.estadoAnimacao = this.tempoInvulneravel > 0 ? 'dano' : 'parado';
     this.tempoAnimacao = 0;
+    this.rastro = [];
   }
 
   desenhar(ctx) {
@@ -212,11 +310,13 @@ export class Player {
     const tamanhoSprite = 96 * escala;
     const CENTRO_VISIVEL = 54;
     const BASE_VISIVEL = 94;
-    const dx = Math.round(this.x + (this.largura / 2) - CENTRO_VISIVEL * escala);
+    const tremor = this.glitchRestante > 0 ? DESLOCAMENTO_GLITCH * this.glitchLado : 0;
+    const dx = Math.round(this.x + (this.largura / 2) - CENTRO_VISIVEL * escala) + tremor;
     // Os pés ficam na base da caixa de colisão.
     const dy = Math.round(this.y + this.altura - BASE_VISIVEL * escala);
     const flip = !this.olhandoDireita;
 
+    this.desenharRastro(ctx);
     ctx.save();
     if (this.tempoInvulneravel > 0 && Math.floor(this.tempoInvulneravel * 10) % 2 === 0) {
       ctx.globalAlpha *= 0.35;

@@ -108,10 +108,16 @@ const VIDAS_FASE_1 = [
 const moedaSprite = sprites.moeda;
 const vidaItemSprite = sprites.vidaItem;
 
-/** Restaura as moedas salvas e repõe os corações para uma nova tentativa. */
+/**
+ * Repõe moedas e corações para uma nova tentativa. Todas as moedas voltam, porque cada partida
+ * rende moedas para a Loja; as já coletadas em partidas anteriores aparecem semitransparentes.
+ */
 export function limparColetaveis(moedasColetadas = []) {
   const coletadas = new Set(moedasColetadas);
-  for (const moeda of moedas) moeda.coletado = coletadas.has(moeda.id);
+  for (const moeda of moedas) {
+    moeda.coletado = false;
+    moeda.jaColetada = coletadas.has(moeda.id);
+  }
   for (const vida of vidasItens) vida.coletado = false;
 }
 
@@ -729,7 +735,10 @@ function desenharMundo(ctx, limiteInferior) {
 
   for (const moeda of moedas) {
     if (!moeda.coletado) {
+      ctx.save();
+      if (moeda.jaColetada) ctx.globalAlpha *= 0.45;
       moedaSprite.desenhar(ctx, tempo, moeda.x, moeda.y, 16, 16);
+      ctx.restore();
     }
   }
   for (const vida of vidasItens) {
