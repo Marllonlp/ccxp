@@ -52,6 +52,9 @@ import { criarChefe } from './chefe.js';
 import { criarTutorialAda } from './ada.js';
 import { criarLoja } from './loja.js';
 import { IDS_SKINS, buscarSkin, skinLiberada } from './skins.js';
+import {
+  escalaTexto, altoContraste, lerPreferencia, definirPreferencia, aoMudarAcessibilidade,
+} from './acessibilidade.js';
 
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
@@ -456,21 +459,34 @@ function desenharAvisos(ctx, cameraX, cameraY) {
     player.x + player.largura / 2, player.y);
 }
 
+/** Aviso sobre o mundo, no tamanho de texto escolhido. Com alto contraste, ganha uma faixa preta atrás. */
 function desenharAvisoFlutuante(ctx, cameraX, cameraY, linhas, centroMundo, topoMundo, cor = '#ffd646') {
   const centro = (centroMundo - cameraX) * visao.escala;
   if (centro < 0 || centro > visao.largura) return;
+  const escala = escalaTexto();
+  const altura = 20 * escala;
   ctx.save();
-  ctx.font = 'bold 16px system-ui, sans-serif';
+  ctx.font = `bold ${16 * escala}px system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillStyle = cor;
-  ctx.shadowColor = '#04060c';
-  ctx.shadowBlur = 3;
-  ctx.shadowOffsetY = 1;
   const meiaLargura = Math.max(...linhas.map((linha) => ctx.measureText(linha).width)) / 2 + 8;
   const x = Math.max(meiaLargura, Math.min(centro, visao.largura - meiaLargura));
-  const y = Math.max(24 + (linhas.length - 1) * 20, (topoMundo - cameraY) * visao.escala - 12);
-  linhas.forEach((linha, i) => ctx.fillText(linha, x, y - (linhas.length - 1 - i) * 20));
+  // Fica abaixo do HUD (margemSuperior), mesmo com o texto grande.
+  const y = Math.max(margemSuperior + linhas.length * altura, (topoMundo - cameraY) * visao.escala - 12);
+  if (altoContraste()) {
+    const topo = y - linhas.length * altura - 4;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x - meiaLargura, topo, meiaLargura * 2, y - topo + 6);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - meiaLargura, topo, meiaLargura * 2, y - topo + 6);
+  } else {
+    ctx.shadowColor = '#04060c';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+  }
+  ctx.fillStyle = cor;
+  linhas.forEach((linha, i) => ctx.fillText(linha, x, y - (linhas.length - 1 - i) * altura));
   ctx.restore();
 }
 const somApertarPlay = new Audio('./assets/sound/apertar_play.wav');
@@ -487,6 +503,9 @@ const valorMusica = document.getElementById('valor-musica');
 const valorEfeitos = document.getElementById('valor-efeitos');
 const botaoVoltarSom = document.getElementById('botao-voltar-som');
 let botaoOrigemSom = null;
+const botaoAcessibilidade = document.getElementById('botao-acessibilidade');
+const menuAcessibilidade = document.getElementById('menu-acessibilidade');
+const botaoVoltarAcessibilidade = document.getElementById('botao-voltar-acessibilidade');
 
 // Música de fundo: começa no segundo 10, fica baixa e repete a partir do mesmo ponto.
 // Usa Web Audio com o arquivo inteiro em memória, para o loop não depender de pular dentro do MP3 no servidor.
@@ -664,6 +683,7 @@ function redimensionarJogo() {
     avisoOrientacao.focus({ preventScroll: true });
   } else if (!retratoMovel.matches && document.activeElement === avisoOrientacao) {
     const proximoFoco = !menuSom.hidden ? controleMusica
+      : !menuAcessibilidade.hidden ? menuAcessibilidade.querySelector('input:checked')
       : estadoDaPartida === 'titulo' ? botoesTitulo[indiceTitulo]
       : estadoDaPartida === 'loja' ? document.getElementById('botao-loja-voltar')
       : estadoDaPartida === 'inicio' ? botaoJogar : botaoRetomar;
@@ -1322,6 +1342,7 @@ botaoRetomar.addEventListener('click', retomarPartida);
 // Menu: larga a fase pausada e volta para a tela de título.
 botaoMenuPausa.addEventListener('click', () => {
   menuSom.hidden = true;
+  menuAcessibilidade.hidden = true;
   mostrarTitulo();
   atualizarInterface();
   botoesTitulo[0].focus({ preventScroll: true });
@@ -1342,6 +1363,26 @@ function fecharMenuSom() {
 botaoSomInicio.addEventListener('click', () => abrirMenuSom(botaoSomInicio));
 botaoSomPausa.addEventListener('click', () => abrirMenuSom(botaoSomPausa));
 botaoVoltarSom.addEventListener('click', fecharMenuSom);
+
+/** Abre o painel Acessibilidade do menu de pausa, com a opção atual de cada grupo marcada. */
+function abrirMenuAcessibilidade() {
+  for (const entrada of menuAcessibilidade.querySelectorAll('input[type="radio"]')) {
+    entrada.checked = lerPreferencia(entrada.name) === entrada.value;
+  }
+  menuAcessibilidade.hidden = false;
+  menuAcessibilidade.querySelector('input:checked').focus({ preventScroll: true });
+}
+
+function fecharMenuAcessibilidade() {
+  menuAcessibilidade.hidden = true;
+  botaoAcessibilidade.focus({ preventScroll: true });
+}
+
+botaoAcessibilidade.addEventListener('click', abrirMenuAcessibilidade);
+botaoVoltarAcessibilidade.addEventListener('click', fecharMenuAcessibilidade);
+menuAcessibilidade.addEventListener('change', (evento) => definirPreferencia(evento.target.name, evento.target.value));
+// Texto maior muda a altura do HUD, que define a margem da câmera: recalcula o enquadramento.
+aoMudarAcessibilidade(() => redimensionarJogo());
 
 for (const [tipo, controle, rotulo] of [
   ['musica', controleMusica, valorMusica], ['efeitos', controleEfeitos, valorEfeitos],
@@ -1414,6 +1455,11 @@ window.addEventListener('keydown', (evento) => {
   // Com o painel de som aberto, Esc só fecha o painel: não pausa nem retoma o jogo.
   if (!menuSom.hidden) {
     if (evento.key === 'Escape') fecharMenuSom();
+    return;
+  }
+  // O mesmo vale para o painel Acessibilidade; as setas ficam com os botões de opção.
+  if (!menuAcessibilidade.hidden) {
+    if (evento.key === 'Escape') fecharMenuAcessibilidade();
     return;
   }
 

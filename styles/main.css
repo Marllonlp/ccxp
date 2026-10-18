@@ -70,7 +70,7 @@ body {
 }
 
 .orientation-card h1 {
-  font-size: 24px;
+  font-size: calc(24px * var(--escala-texto, 1));
 }
 
 .orientation-card p:not(.orientation-icon) {
@@ -316,7 +316,7 @@ body {
 .menu-jogo-legenda {
   margin: 0 0 12px;
   color: #83d7eb;
-  font-size: 8px;
+  font-size: calc(8px * var(--escala-texto, 1));
   line-height: 1.6;
   text-transform: uppercase;
 }
@@ -324,7 +324,7 @@ body {
 .pause-menu h2 {
   margin: 0;
   color: #ffd646;
-  font-size: 16px;
+  font-size: calc(16px * var(--escala-texto, 1));
   font-weight: 400;
   line-height: 1.7;
   text-shadow: 2px 2px 0 #0c0e1c;
@@ -349,7 +349,7 @@ body {
   background: #2a4464;
   box-shadow: 0 0 0 1px #589ab5, inset 0 3px 0 #496384, inset 0 -5px 0 #16283f;
   color: #f5f8ff;
-  font: 10px/1.7 'Press Start 2P', monospace;
+  font: calc(10px * var(--escala-texto, 1))/1.7 'Press Start 2P', monospace;
   text-align: left;
   text-shadow: 2px 2px 0 #0c0e1c;
   text-transform: uppercase;
@@ -401,7 +401,7 @@ body {
 .menu-jogo-dica {
   margin: 0;
   color: #a0b6d0;
-  font-size: 7px;
+  font-size: calc(7px * var(--escala-texto, 1));
   line-height: 2;
 }
 
@@ -432,7 +432,7 @@ body {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 4px 12px;
-  font-size: 10px;
+  font-size: calc(10px * var(--escala-texto, 1));
   line-height: 1.8;
   text-align: left;
 }
@@ -544,7 +544,7 @@ body {
   text-align: center;
   color: #7dd3fc;
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(10px, 1.5cqw, 22px);
+  font-size: calc(clamp(10px, 1.5cqw, 22px) * var(--escala-texto, 1));
   line-height: 1.7;
   overflow-y: auto;
 }
@@ -563,7 +563,7 @@ body {
   border-radius: 0;
   color: #ffffff;
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(11px, 1.8cqw, 26px);
+  font-size: calc(clamp(11px, 1.8cqw, 26px) * var(--escala-texto, 1));
   min-height: 44px;
   text-shadow: 3px 3px 0 #0b0f1a;
   cursor: pointer;
@@ -752,7 +752,7 @@ body {
   background: rgb(11 31 51 / 90%);
   color: #f3f4f6;
   margin: 0;
-  font-size: clamp(12px, 2vw, 16px);
+  font-size: calc(clamp(12px, 2vw, 16px) * var(--escala-texto, 1));
 }
 
 #hud-vidas,
@@ -787,7 +787,7 @@ body {
   }
 
   .pause-menu h2 {
-    font-size: 14px;
+    font-size: calc(14px * var(--escala-texto, 1));
   }
 
   .menu-jogo-legenda {
@@ -822,7 +822,7 @@ body {
 
   .botao-ajuda { top: max(12px, env(safe-area-inset-top)); }
   .botao-titulo { min-height: 44px; }
-  .botao-apagar-dados { min-height: 44px; font-size: 12px; }
+  .botao-apagar-dados { min-height: 44px; font-size: calc(12px * var(--escala-texto, 1)); }
 
   .menu-jogo-dica {
     display: none;
@@ -851,11 +851,11 @@ body {
 
   .menu-jogo-legenda {
     margin-bottom: 4px;
-    font-size: 7px;
+    font-size: calc(7px * var(--escala-texto, 1));
   }
 
   .pause-menu h2 {
-    font-size: 12px;
+    font-size: calc(12px * var(--escala-texto, 1));
   }
 }
 
@@ -880,7 +880,7 @@ body {
   justify-items: end;
   gap: 6px;
   width: min(260px, 35vw);
-  font: 12px/1.4 system-ui, sans-serif;
+  font: calc(12px * var(--escala-texto, 1))/1.4 system-ui, sans-serif;
   text-align: right;
   color: #f3f4f6;
 }
@@ -893,7 +893,7 @@ body {
   border-radius: 8px;
   background: #0b1f33;
   color: #f3f4f6;
-  font: 600 14px/1.4 system-ui, sans-serif;
+  font: 600 calc(14px * var(--escala-texto, 1))/1.4 system-ui, sans-serif;
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -1120,7 +1120,7 @@ body {
   right: 0;
   bottom: 4.5%;
   text-align: center;
-  font-size: clamp(9px, 1.4cqw, 16px);
+  font-size: calc(clamp(9px, 1.4cqw, 16px) * var(--escala-texto, 1));
   line-height: 1.6;
 }
 
@@ -1144,7 +1144,7 @@ body {
   background-color: rgb(32 36 43 / 85%);
   color: #fca5a5;
   font-family: 'Press Start 2P', monospace;
-  font-size: 1cqw;
+  font-size: calc(1cqw * var(--escala-texto, 1));
   cursor: pointer;
 }
 
@@ -1184,7 +1184,7 @@ body {
 .titulo-painel h2 {
   flex-shrink: 0;
   margin: 0;
-  font-size: clamp(14px, 2.2cqw, 20px);
+  font-size: calc(clamp(14px, 2.2cqw, 20px) * var(--escala-texto, 1));
   line-height: 1.5;
   text-align: center;
   color: #7dd3fc;
@@ -1197,7 +1197,7 @@ body {
 
 .titulo-painel-texto p {
   margin: 0 0 12px;
-  font: 16px/1.6 system-ui, sans-serif;
+  font: calc(16px * var(--escala-texto, 1))/1.6 system-ui, sans-serif;
 }
 
 .botao-painel {
@@ -1211,7 +1211,7 @@ body {
   background-color: #29313d;
   color: #f9fafb;
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto, 1));
   cursor: pointer;
 }
 
@@ -1270,7 +1270,7 @@ body {
 
 .loja-topo h2 {
   margin: 0;
-  font-size: clamp(14px, 2.4vw, 28px);
+  font-size: calc(clamp(14px, 2.4vw, 28px) * var(--escala-texto, 1));
   line-height: 1.4;
   text-align: center;
   color: #38d6f5;
@@ -1286,7 +1286,7 @@ body {
   background-color: #1b2342;
   color: #f9fafb;
   font: inherit;
-  font-size: clamp(10px, 1.1vw, 13px);
+  font-size: calc(clamp(10px, 1.1vw, 13px) * var(--escala-texto, 1));
   cursor: pointer;
 }
 
@@ -1300,7 +1300,7 @@ body {
   border: 2px solid #facc15;
   border-radius: 6px;
   background-color: #1b2342;
-  font-size: clamp(12px, 1.4vw, 18px);
+  font-size: calc(clamp(12px, 1.4vw, 18px) * var(--escala-texto, 1));
   color: #fde68a;
 }
 
@@ -1387,7 +1387,7 @@ body {
   min-height: 2.8em;
   display: grid;
   place-items: center;
-  font-size: clamp(8px, 0.85vw, 11px);
+  font-size: calc(clamp(8px, 0.85vw, 11px) * var(--escala-texto, 1));
   font-weight: 400;
   line-height: 1.4;
   text-align: center;
@@ -1399,7 +1399,7 @@ body {
   align-items: center;
   gap: 6px;
   min-height: 24px;
-  font: 13px/1.3 system-ui, sans-serif;
+  font: calc(13px * var(--escala-texto, 1))/1.3 system-ui, sans-serif;
   text-align: center;
   color: #cbd5e1;
 }
@@ -1408,7 +1408,7 @@ body {
   padding: 2px 10px;
   border: 1px solid #facc15;
   font-family: 'Press Start 2P', monospace;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto, 1));
   color: #fde68a;
 }
 
@@ -1439,7 +1439,7 @@ body {
   background-color: #16a34a;
   color: #f9fafb;
   font: inherit;
-  font-size: clamp(8px, 0.8vw, 10px);
+  font-size: calc(clamp(8px, 0.8vw, 10px) * var(--escala-texto, 1));
   line-height: 1.4;
   cursor: pointer;
 }
@@ -1460,7 +1460,7 @@ body {
 .loja-aviso {
   min-height: 1.6em;
   margin: 10px 0 0;
-  font: 600 15px/1.6 system-ui, sans-serif;
+  font: 600 calc(15px * var(--escala-texto, 1))/1.6 system-ui, sans-serif;
   text-align: center;
   color: #fde68a;
 }
@@ -1509,7 +1509,7 @@ body {
   border: 2px solid #44ddf2;
   background: #1b254b;
   color: #e1e8f5;
-  font: 16px/1.5 system-ui, sans-serif;
+  font: calc(16px * var(--escala-texto, 1))/1.5 system-ui, sans-serif;
   box-shadow: 6px 6px 0 #080e20;
 }
 
@@ -1531,7 +1531,7 @@ body {
 .terminal-toque h3 {
   margin: 0;
   color: #ffd646;
-  font: 12px/1.8 'Press Start 2P', monospace;
+  font: calc(12px * var(--escala-texto, 1))/1.8 'Press Start 2P', monospace;
 }
 
 .terminal-toque h2 {
@@ -1565,7 +1565,7 @@ body {
 .terminal-toque-banco { grid-template-rows: auto minmax(0, 1fr); }
 .terminal-toque-missao { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 .terminal-toque-missao summary { position: sticky; top: 0; background: #111a36; font-weight: 700; }
-.terminal-toque-ver { margin-left: 8px; font-size: 13px; font-weight: 400; }
+.terminal-toque-ver { margin-left: 8px; font-size: calc(13px * var(--escala-texto, 1)); font-weight: 400; }
 
 .terminal-toque p {
   margin: 8px 0;
@@ -1574,7 +1574,7 @@ body {
 .terminal-toque .terminal-toque-ajuda {
   margin: 0;
   color: #b8cee1;
-  font-size: 14px;
+  font-size: calc(14px * var(--escala-texto, 1));
 }
 
 .terminal-toque summary {
@@ -1611,7 +1611,7 @@ body {
 }
 
 .terminal-toque code {
-  font: 16px/1.5 ui-monospace, monospace;
+  font: calc(16px * var(--escala-texto, 1))/1.5 ui-monospace, monospace;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1669,7 +1669,7 @@ body {
 #terminal-linhas:empty::before {
   content: 'Seu código aparece aqui.';
   color: #b8cee1;
-  font-size: 14px;
+  font-size: calc(14px * var(--escala-texto, 1));
 }
 
 #terminal-trechos,
@@ -1682,7 +1682,7 @@ body {
 
 .terminal-toque-edicao {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  font-size: 14px;
+  font-size: calc(14px * var(--escala-texto, 1));
 }
 
 #terminal-trechos button {
@@ -1692,6 +1692,8 @@ body {
 
 #terminal-trechos {
   min-height: 0;
+  /* Quando os trechos não cabem, linhas automáticas encolheriam até o min-height dos botões e cortariam o código. */
+  grid-auto-rows: max-content;
   overflow-y: auto;
   overscroll-behavior: contain;
   align-content: start;
@@ -1731,7 +1733,7 @@ body {
   max-height: 72px;
   overflow-y: auto;
   overflow-wrap: anywhere;
-  font-size: 14px;
+  font-size: calc(14px * var(--escala-texto, 1));
 }
 
 #terminal-resultado:empty {
@@ -1745,8 +1747,8 @@ body {
   .tela-terminal { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   .terminal-toque { width: 100%; height: 100%; max-height: 100%; box-shadow: none; }
   .terminal-toque-cabecalho { padding: 4px 10px 4px 60px; }
-  .terminal-toque h2 { font-size: 10px; }
-  .terminal-toque h3 { font: 700 14px/1.4 system-ui, sans-serif; }
+  .terminal-toque h2 { font-size: calc(10px * var(--escala-texto, 1)); }
+  .terminal-toque h3 { font: 700 calc(14px * var(--escala-texto, 1))/1.4 system-ui, sans-serif; }
   .terminal-toque-corpo { gap: 12px; padding: 8px 10px; }
   .terminal-toque-editor { grid-template-rows: auto minmax(0, 1fr) auto; }
   .terminal-toque-editor, .terminal-toque-banco { gap: 6px; }
@@ -1754,7 +1756,7 @@ body {
   .terminal-toque-missao summary { padding-block: 8px; }
   .terminal-toque button { padding: 8px; }
   .terminal-toque-rodape { gap: 8px; padding: 6px 10px; }
-  .terminal-toque-acoes { font-size: 14px; }
+  .terminal-toque-acoes { font-size: calc(14px * var(--escala-texto, 1)); }
   #terminal-resultado { max-height: 52px; }
 }
 
@@ -1770,19 +1772,19 @@ body {
   color: #ffd646;
   background: #111e37;
   border: 1px solid #486780;
-  font: 14px/1.4 system-ui, sans-serif;
+  font: calc(14px * var(--escala-texto, 1))/1.4 system-ui, sans-serif;
   white-space: nowrap;
 }
 .painel-confirmar-vida { max-width: 520px; }
 .painel-confirmar-vida h2 { color: #ffd646; }
-.painel-confirmar-vida p { font: 16px/1.5 system-ui, sans-serif; }
+.painel-confirmar-vida p { font: calc(16px * var(--escala-texto, 1))/1.5 system-ui, sans-serif; }
 .painel-confirmar-vida .aviso-tentativa { color: #b8cee1; }
 .confirmar-vida-acoes { display: flex; flex-wrap: wrap; gap: 12px; }
 
 @media (hover: none), (pointer: coarse) {
   .tela-inicio-texto {
     padding: 10px;
-    font: 16px/1.5 system-ui, sans-serif;
+    font: calc(16px * var(--escala-texto, 1))/1.5 system-ui, sans-serif;
   }
 }
 
@@ -1827,21 +1829,21 @@ body {
 
 .categoria-desafio {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(8px, 1.6vh, 11px);
+  font-size: calc(clamp(8px, 1.6vh, 11px) * var(--escala-texto, 1));
   color: #3ce6ff;
   text-transform: uppercase;
 }
 
 .titulo-desafio {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(11px, 2.4vh, 16px);
+  font-size: calc(clamp(11px, 2.4vh, 16px) * var(--escala-texto, 1));
   line-height: 1.5;
   color: #ffd646;
   text-shadow: 2px 2px 0 #04060c;
 }
 
 .enunciado-desafio {
-  font-size: clamp(14px, 2.6vh, 18px);
+  font-size: calc(clamp(14px, 2.6vh, 18px) * var(--escala-texto, 1));
   line-height: 1.45;
 }
 
@@ -1850,7 +1852,7 @@ body {
   border: 1px solid #28384f;
   background-color: #04060c;
   font-family: ui-monospace, monospace;
-  font-size: clamp(16px, 3.2vh, 24px);
+  font-size: calc(clamp(16px, 3.2vh, 24px) * var(--escala-texto, 1));
   line-height: 1.4;
   white-space: pre-wrap;
   color: #e1e8f5;
@@ -1895,7 +1897,7 @@ body {
 .alternativa-desafio .letra {
   flex-shrink: 0;
   font-family: 'Press Start 2P', monospace;
-  font-size: 11px;
+  font-size: calc(11px * var(--escala-texto, 1));
   color: #ffd646;
 }
 
@@ -1905,7 +1907,7 @@ body {
   overflow-wrap: anywhere;
   line-height: 1.4;
   font-family: ui-monospace, monospace;
-  font-size: clamp(16px, 3vh, 22px);
+  font-size: calc(clamp(16px, 3vh, 22px) * var(--escala-texto, 1));
 }
 
 .alternativa-desafio:hover:not(:disabled) {
@@ -1938,7 +1940,7 @@ body {
 .resultado-desafio {
   display: grid;
   gap: 4px;
-  font-size: clamp(13px, 2.4vh, 16px);
+  font-size: calc(clamp(13px, 2.4vh, 16px) * var(--escala-texto, 1));
   line-height: 1.45;
 }
 
@@ -1959,7 +1961,7 @@ body {
   padding-inline: 24px;
   border-color: #5aff8c;
   font-family: 'Press Start 2P', monospace;
-  font-size: 11px;
+  font-size: calc(11px * var(--escala-texto, 1));
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -2027,7 +2029,7 @@ body {
   align-items: center;
   gap: 12px;
   color: #e8e0f3;
-  font: 500 clamp(13px, 1.5vw, 17px)/1.35 system-ui, sans-serif;
+  font: 500 calc(clamp(13px, 1.5vw, 17px) * var(--escala-texto, 1))/1.35 system-ui, sans-serif;
   text-align: center;
   pointer-events: none;
 }
@@ -2082,7 +2084,7 @@ body {
     grid-template-columns: 1fr auto;
     justify-items: center;
     gap: 4px;
-    font-size: 11px;
+    font-size: calc(11px * var(--escala-texto, 1));
   }
 
   #chefe-dica { grid-column: 1 / -1; grid-row: 2; }
@@ -2111,7 +2113,7 @@ body {
 .chefe-fim h2 {
   margin: 0;
   color: #ffd646;
-  font: 18px/1.6 'Press Start 2P', monospace;
+  font: calc(18px * var(--escala-texto, 1))/1.6 'Press Start 2P', monospace;
   text-align: center;
 }
 
@@ -2124,7 +2126,7 @@ body {
   border: 2px solid #44ddf2;
   background: #111a36;
   color: #f5f8ff;
-  font: 14px/1.5 system-ui, sans-serif;
+  font: calc(14px * var(--escala-texto, 1))/1.5 system-ui, sans-serif;
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -2132,4 +2134,214 @@ body {
 .botao-sobre-canvas:focus-visible {
   outline: 2px solid #ffd646;
   outline-offset: 3px;
+}
+
+/* Painel Acessibilidade: cada grupo é um conjunto de botões de opção nativos (setas trocam a opção). */
+.menu-acessibilidade .menu-jogo-painel {
+  width: min(520px, calc(100vw - 48px));
+  gap: 18px;
+}
+
+.grupo-opcoes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+
+.grupo-opcoes legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: calc(10px * var(--escala-texto, 1));
+  line-height: 1.6;
+  color: #83d7eb;
+}
+
+.grupo-opcoes label {
+  position: relative;
+  display: block;
+}
+
+.grupo-opcoes input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.grupo-opcoes span {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  height: 100%;
+  padding: 6px 4px;
+  border: 2px solid #0c0e1c;
+  background: #2a4464;
+  font: 600 calc(13px * var(--escala-texto, 1))/1.3 system-ui, sans-serif;
+  text-align: center;
+  color: #f5f8ff;
+  pointer-events: none;
+}
+
+.grupo-opcoes input:checked + span {
+  background: #ffd646;
+  color: #0c0e1c;
+  box-shadow: inset 0 -4px 0 #c9a227;
+}
+
+.grupo-opcoes input:checked + span::before {
+  content: '✓ ';
+}
+
+.grupo-opcoes input:focus-visible + span {
+  outline: 3px solid #44ddf2;
+  outline-offset: 2px;
+}
+
+.menu-acessibilidade-nota {
+  margin: 0;
+  font: calc(13px * var(--escala-texto, 1))/1.5 system-ui, sans-serif;
+  color: #b8cee1;
+}
+
+@media (max-height: 500px) {
+  .menu-acessibilidade .menu-jogo-painel { gap: 10px; }
+  .grupo-opcoes legend { margin-bottom: 4px; }
+}
+
+/* Alto contraste: fundos opacos atrás de todo texto, texto branco ou amarelo, bordas e foco mais fortes.
+   Ativado pelo painel Acessibilidade ou pela configuração de contraste do aparelho (acessibilidade.js). */
+:root[data-contraste='alto'] .pause-menu,
+:root[data-contraste='alto'] .tela-terminal,
+:root[data-contraste='alto'] .tela-desafio,
+:root[data-contraste='alto'] .chefe-fim {
+  background-color: #000;
+}
+
+:root[data-contraste='alto'] .menu-jogo-painel,
+:root[data-contraste='alto'] .titulo-painel,
+:root[data-contraste='alto'] .terminal-toque,
+:root[data-contraste='alto'] .painel-desafio,
+:root[data-contraste='alto'] .loja-cartao {
+  border: 3px solid #fff;
+  background: #000;
+  box-shadow: none;
+  color: #fff;
+}
+
+:root[data-contraste='alto'] .tela-loja,
+:root[data-contraste='alto'] #terminal-linhas,
+:root[data-contraste='alto'] #terminal-resultado,
+:root[data-contraste='alto'] .codigo-desafio,
+:root[data-contraste='alto'] .terminal-toque-cabecalho,
+:root[data-contraste='alto'] .terminal-toque-rodape,
+:root[data-contraste='alto'] .terminal-toque-missao summary {
+  background: #000;
+}
+
+:root[data-contraste='alto'] .menu-jogo-painel::before {
+  display: none;
+}
+
+/* Textos sobre a arte ou o jogo ganham uma faixa preta sólida. */
+:root[data-contraste='alto'] .titulo-dica,
+:root[data-contraste='alto'] .tela-inicio-texto,
+:root[data-contraste='alto'] .hud-message,
+:root[data-contraste='alto'] .hud-exercicios,
+:root[data-contraste='alto'] .chefe-info,
+:root[data-contraste='alto'] .chefe-tempo,
+:root[data-contraste='alto'] .botao-apagar-dados {
+  border: 2px solid #fff;
+  background: #000;
+  color: #fff;
+  text-shadow: none;
+}
+
+/* A faixa acompanha a largura do texto, sem quebrar a linha (left: 50% limitaria a largura à metade). */
+:root[data-contraste='alto'] .titulo-dica {
+  left: 50%;
+  right: auto;
+  width: max-content;
+  max-width: 96%;
+  transform: translateX(-50%);
+  padding: 2px 12px;
+}
+
+:root[data-contraste='alto'] .menu-jogo-legenda,
+:root[data-contraste='alto'] .menu-jogo-dica,
+:root[data-contraste='alto'] .menu-jogo-dica kbd,
+:root[data-contraste='alto'] .menu-som output,
+:root[data-contraste='alto'] .grupo-opcoes legend,
+:root[data-contraste='alto'] .menu-acessibilidade-nota,
+:root[data-contraste='alto'] .terminal-toque .terminal-toque-ajuda,
+:root[data-contraste='alto'] .terminal-toque summary,
+:root[data-contraste='alto'] .terminal-toque h2,
+:root[data-contraste='alto'] .codigo-comentario,
+:root[data-contraste='alto'] #terminal-linhas:empty::before,
+:root[data-contraste='alto'] .painel-confirmar-vida .aviso-tentativa,
+:root[data-contraste='alto'] .titulo-painel h2,
+:root[data-contraste='alto'] .loja-estado,
+:root[data-contraste='alto'] .categoria-desafio {
+  color: #fff;
+}
+
+:root[data-contraste='alto'] .menu-jogo-botao,
+:root[data-contraste='alto'] .menu-jogo-botao-secundario,
+:root[data-contraste='alto'] .botao-painel,
+:root[data-contraste='alto'] .loja-voltar,
+:root[data-contraste='alto'] .loja-saldo,
+:root[data-contraste='alto'] .terminal-toque button,
+:root[data-contraste='alto'] .botao-continuar-desafio,
+:root[data-contraste='alto'] .botao-sobre-canvas,
+:root[data-contraste='alto'] .grupo-opcoes span {
+  border: 2px solid #fff;
+  background: #000;
+  box-shadow: none;
+  color: #fff;
+  text-shadow: none;
+}
+
+:root[data-contraste='alto'] .menu-jogo-botao-principal,
+:root[data-contraste='alto'] .grupo-opcoes input:checked + span,
+:root[data-contraste='alto'] .terminal-toque button.selecionada {
+  border-color: #ffd646;
+  background: #ffd646;
+  color: #000;
+}
+
+/* Na Loja, as cores dos botões viram contorno: amarelo para agir, tracejado para indisponível. */
+:root[data-contraste='alto'] .loja-cartao .loja-acao {
+  border: 2px solid #ffd646;
+  background: #000;
+  color: #ffd646;
+}
+
+:root[data-contraste='alto'] .loja-cartao .loja-acao[aria-disabled='true'] {
+  border: 2px dashed #fff;
+  background: #000;
+  color: #fff;
+}
+
+:root[data-contraste='alto'] .menu-jogo-botao:focus-visible,
+:root[data-contraste='alto'] .botao-painel:focus-visible,
+:root[data-contraste='alto'] .loja-cartao:focus-within,
+:root[data-contraste='alto'] .grupo-opcoes input:focus-visible + span,
+:root[data-contraste='alto'] .menu-som input[type='range']:focus-visible {
+  outline: 4px solid #ffd646;
+  outline-offset: 3px;
+}
+
+/* Movimento reduzido: animações e transições do CSS param no primeiro quadro.
+   Os efeitos desenhados em canvas consultam movimentoReduzido() em acessibilidade.js. */
+:root[data-movimento='reduzido'] *,
+:root[data-movimento='reduzido'] ::before,
+:root[data-movimento='reduzido'] ::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

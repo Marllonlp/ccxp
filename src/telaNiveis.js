@@ -1,5 +1,6 @@
 // Tela de seleção de níveis. Desenha tudo em 480 × 270 pixels; o CSS amplia o canvas com pixel nítido.
 import { pontoNoCanvas } from './viewport.js';
+import { movimentoReduzido } from './acessibilidade.js';
 
 const PASTA = './assets/characters/Imagens_Personagens/02_cenario/tela_niveis_editavel_pacote/';
 const TOTAL_CARTOES = 5;
@@ -108,13 +109,15 @@ export function criarTelaNiveis(canvas, { onEscolher, onVoltar, onSair, implemen
     ctx.clearRect(0, 0, 480, 270);
     if (pronta(fundo)) ctx.drawImage(fundo, 0, 0);
 
+    // Com movimento reduzido, o cartão fica parado e a dica do rodapé não pisca.
+    const reduzido = movimentoReduzido();
     niveis.forEach((nivel, i) => {
       const estado = i < implementados ? nivel.estado : 'bloqueado';
       const sel = visivel && i === selecionado && !noVoltar;
       // Cartão selecionado sobe e desce entre −1 e −2 px a cada 400 ms; nome e estrelas acompanham.
-      const bob = sel ? (Math.floor(agora / 400) % 2 === 0 ? -1 : -2) : 0;
+      const bob = sel && !reduzido ? (Math.floor(agora / 400) % 2 === 0 ? -1 : -2) : 0;
       // Tremor de ±1 px por 200 ms quando um cartão travado é escolhido.
-      const tremor = (i === tremorIndice && agora < tremorAte) ? (Math.floor(agora / 50) % 2 === 0 ? 1 : -1) : 0;
+      const tremor = (!reduzido && i === tremorIndice && agora < tremorAte) ? (Math.floor(agora / 50) % 2 === 0 ? 1 : -1) : 0;
 
       const chave = sel && estado !== 'bloqueado' ? `${i + 1}-${estado}-sel` : `${i + 1}-${estado}`;
       const cartao = cartoes[chave];
@@ -143,7 +146,7 @@ export function criarTelaNiveis(canvas, { onEscolher, onVoltar, onSair, implemen
     }
 
     // Dica do rodapé: pisca a cada 800 ms.
-    if (Math.floor(agora / 800) % 2 === 0) {
+    if (reduzido || Math.floor(agora / 800) % 2 === 0) {
       ctx.font = FONTE_NOME;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
