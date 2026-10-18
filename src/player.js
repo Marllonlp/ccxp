@@ -7,6 +7,7 @@ import { registrarEfeito } from './audio.js';
 import { sprites } from './sprites.js';
 import { AnimacaoSprite } from './animacao.js';
 import { buscarSkin } from './skins.js';
+import { movimentoReduzido } from './acessibilidade.js';
 
 // Estado da animação -> tira PNG em assets/animacoes/ (o Clássico) ou na pasta da skin.
 const TIRAS_BYTE = {
@@ -161,7 +162,8 @@ export class Player {
     }
 
     this.glitchRestante = Math.max(0, this.glitchRestante - deltaTime);
-    if (efeitoSkin === 'tremor_glitch') {
+    // Com movimento reduzido, o Glitch fica só com a borda ciano e magenta dos GIFs.
+    if (efeitoSkin === 'tremor_glitch' && !movimentoReduzido()) {
       this.esperaGlitch -= deltaTime;
       if (this.esperaGlitch <= 0) {
         this.esperaGlitch = proximoGlitch();
@@ -318,7 +320,8 @@ export class Player {
 
     this.desenharRastro(ctx);
     ctx.save();
-    if (this.tempoInvulneravel > 0 && Math.floor(this.tempoInvulneravel * 10) % 2 === 0) {
+    // Invulnerável: pisca; com movimento reduzido, fica com transparência fixa.
+    if (this.tempoInvulneravel > 0 && (movimentoReduzido() || Math.floor(this.tempoInvulneravel * 10) % 2 === 0)) {
       ctx.globalAlpha *= 0.35;
     }
     animacao.desenhar(ctx, this.tempoAnimacao, dx, dy, tamanhoSprite, tamanhoSprite, flip);
