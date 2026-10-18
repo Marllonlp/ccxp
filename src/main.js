@@ -19,15 +19,19 @@ import {
   carregarFase,
   indiceFaseAtual,
   verificarMeta,
+  obterEntradaSaida,
+  fecharPortaSaida,
   infoFases,
   quantidadeFases,
   checkpoints,
   computadores,
   verificarComputadores,
   saidaBloqueada,
+  progressoExercicios,
   vaos,
   vidasItens,
   construirPonte,
+  atualizarPontes,
   limparPontes,
   mecanicasDaFase,
   reiniciarMecanicas,
@@ -41,7 +45,8 @@ import { abrirPortasDaMissao } from './mecanicas.js';
 import { criarTerminal, carregarMissoes } from './terminal.js';
 import { criarJanelaDesafio } from './desafio.js';
 import { BANCO_DESAFIOS } from './bancoDesafios.js';
-import { Poder } from './poder.js';
+import { Tiro } from './poder.js';
+import { desenharPixelsEntrada, desenharTransicaoChefe } from './portalChefe.js';
 import { criarCutscene } from './cutscene.js';
 import { criarChefe } from './chefe.js';
 import { criarTutorialAda } from './ada.js';
@@ -58,6 +63,7 @@ const contextoMoedas = canvasMoedas.getContext('2d');
 const moedaHUD = new Image();
 moedaHUD.src = 'assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif';
 const mensagemHUD = document.getElementById('hud-mensagem');
+const contadorExercicios = document.getElementById('hud-contador');
 const retratoMovel = window.matchMedia('(orientation: portrait) and (pointer: coarse)');
 let visao = calcularVisao(960, 540);
 let pixelRatio = 1;
@@ -167,11 +173,14 @@ let areaBotaoTerminal = null;
 // Missões resolvidas no terminal nesta página: o computador que abriu a missão é resolvido ao fechar o terminal.
 const missoesResolvidas = new Set();
 let computadorDoTerminal = null;
-const terminal = criarTerminal(document.getElementById('canvas-terminal'), {
+const terminal = criarTerminal(telaTerminal, {
   onFechar: () => fecharTerminal(),
   onResolvido: (idMissao) => {
     missoesResolvidas.add(idMissao);
     abrirPortasDaMissao(mecanicasDaFase, idMissao);
+    for (const item of [...computadores, ...checkpoints]) {
+      if (item.missao === idMissao) item.feito = true;
+    }
   },
 });
 
@@ -227,10 +236,62 @@ function resolverComputadorDoTerminal() {
   mensagemAte = performance.now() + 1500;
 }
 
-// Desafios do banco de perguntas: abrem nos computadores de desafio, ligados a corações, monstros e vãos.
+// Perguntas dos computadores e dos corações.
 const telaDesafio = document.getElementById('tela-desafio');
 const janelaDesafio = criarJanelaDesafio(telaDesafio);
-// Poderes </> em voo, lançados pelo Byte nos monstros cujas perguntas ele acertou.
+const confirmarVida = document.getElementById('confirmar-vida');
+let ofertaVida = null;
+let coracoesEmContato = new Set();
+let proximoAvisoVidaCheia = 0;
+
+function oferecerVida(vida) {
+  if (vida.coletado || estadoDaPartida !== 'jogando') return;
+  if (player.vidas >= 3) {
+    if (performance.now() >= proximoAvisoVidaCheia) {
+      proximoAvisoVidaCheia = performance.now() + 2200;
+    }
+    return;
+  }
+  ofertaVida = vida;
+  estadoDaPartida = 'confirmarVida';
+  controleDoJogo.stop();
+  limparAcoes();
+  confirmarVida.hidden = false;
+  atualizarInterface();
+  document.getElementById('vida-aceitar').focus({ preventScroll: true });
+}
+
+function responderOfertaVida(aceitou) {
+  if (!ofertaVida) return;
+  const vida = ofertaVida;
+  ofertaVida = null;
+  confirmarVida.hidden = true;
+  estadoDaPartida = 'jogando';
+  limparAcoes();
+  if (aceitou) {
+    abrirDesafioDeVida(vida);
+  } else {
+    atualizarInterface();
+    controleDoJogo.start();
+    botaoPausar.focus({ preventScroll: true });
+  }
+}
+document.getElementById('vida-aceitar').addEventListener('click', () => responderOfertaVida(true));
+document.getElementById('vida-recusar').addEventListener('click', () => responderOfertaVida(false));
+
+function abrirDesafioDeVida(vida) {
+  abrirDesafio(vida.desafio, {
+    textoAcerto: 'Você recuperou uma vida.',
+    textoErro: 'O coração se perdeu.',
+    onFim: (acertou) => {
+      vida.coletado = true;
+      if (acertou) player.vidas = Math.min(3, player.vidas + 1);
+      mensagem = acertou ? 'Vida recuperada' : 'Coração perdido';
+      mensagemAte = performance.now() + 1500;
+    },
+  });
+}
+// Tiros de energia em voo, lançados pelo Byte nos monstros cujas perguntas ele acertou.
 let poderes = [];
 const somAcertoPoder = new Audio('./assets/sound/bannythecoolio-impactful-damage-425132.mp3');
 registrarEfeito(somAcertoPoder, 0.6);
@@ -239,10 +300,13 @@ registrarEfeito(somAcertoPoder, 0.6);
 function lancarPoder(monstro) {
   monstro.marcarAlvo();
   player.olhandoDireita = monstro.centro().x >= player.x + player.largura / 2;
-  poderes.push(new Poder(player, monstro, () => {
+  const tiro = new Tiro(player, monstro, () => {
     somAcertoPoder.currentTime = 0;
     somAcertoPoder.play().catch((erro) => console.error('Falha ao tocar o som do poder:', erro));
-  }));
+  });
+  tiro.x = player.x + (player.olhandoDireita ? player.largura : 0);
+  tiro.y = player.y + player.altura * 0.6;
+  poderes.push(tiro);
 }
 
 /**
@@ -276,23 +340,22 @@ function abrirDesafio(id, { textoAcerto, textoErro, insistir, onFim }) {
 }
 
 /**
- * Pergunta do computador de desafio. A consequência vai para o vão, monstro ou coração com o mesmo id.
- * Cada computador pergunta uma vez por partida; no vão, o jogador tenta até acertar.
+ * Pergunta do computador: constrói a ponte ou derrota o monstro com o mesmo id.
+ * Exercícios obrigatórios permitem novas tentativas até acertar.
  */
 function abrirDesafioDoComputador(computador) {
   const id = computador.desafio;
   const vao = vaos.find((item) => item.desafio === id);
   const monstro = inimigos.find((inimigo) => inimigo.desafio === id);
-  const vida = vidasItens.find((item) => item.desafio === id);
   let opcoes;
   if (vao) {
     // Sem a ponte a fase não continua: o jogador tenta até acertar.
     opcoes = {
-      textoAcerto: 'A ponte foi construída.',
+      textoAcerto: 'Você ativou a ponte!',
       insistir: true,
       onFim: () => {
         construirPonte(vao);
-        mensagem = 'Ponte construída';
+        mensagem = 'Ponte se abrindo…';
       },
     };
   } else if (monstro) {
@@ -305,25 +368,15 @@ function abrirDesafioDoComputador(computador) {
         mensagem = acertou ? 'Poder lançado!' : `Cuidado com ${robo ? 'o sentinela' : 'a planta'}`;
       },
     };
-  } else if (vida) {
-    // Acertar recupera a vida; errar faz o coração sumir.
-    opcoes = {
-      textoAcerto: player.vidas < 3 ? 'Você recuperou uma vida.' : 'Suas vidas já estão completas.',
-      textoErro: 'O coração se perdeu.',
-      onFim: (acertou) => {
-        vida.coletado = true;
-        if (acertou) player.vidas = Math.min(3, player.vidas + 1);
-        mensagem = acertou ? 'Coração coletado' : 'Coração perdido';
-      },
-    };
   } else {
     opcoes = { textoAcerto: 'Desafio concluído.', onFim: () => { mensagem = 'Desafio concluído'; } };
   }
   const onFim = opcoes.onFim;
   abrirDesafio(id, {
     ...opcoes,
+    insistir: true,
     onFim: (acertou) => {
-      computador.feito = true;
+      computador.feito = acertou;
       onFim(acertou);
       mensagemAte = performance.now() + 1500;
     },
@@ -345,6 +398,45 @@ function desenharBotaoTerminal(ctx, cameraX, cameraY) {
   const y = topo - 37 * s + balanco;
   ctx.drawImage(imagemBotaoTerminal, x, y, largura, altura);
   areaBotaoTerminal = { x, y, largura, altura };
+}
+
+function desenharAvisos(ctx, cameraX, cameraY) {
+  if (estadoDaPartida !== 'jogando') return;
+  if (avisoCheckpoint && performance.now() < avisoCheckpoint.ate) {
+    const checkpoint = avisoCheckpoint.alvo;
+    desenharAvisoFlutuante(ctx, cameraX, cameraY, ['Checkpoint salvo'],
+      checkpoint.x + checkpoint.width / 2, checkpoint.y, '#8ef2c7');
+  }
+  let linhas;
+  if (performance.now() < avisoSaidaAte && saidaBloqueada()) {
+    const faltam = progressoExercicios().pendentes.length;
+    linhas = ['Resolva todos os exercícios', 'para liberar a saída.',
+      faltam === 1 ? 'Falta 1.' : `Faltam ${faltam}.`];
+  } else if (player.vidas >= 3 && performance.now() < proximoAvisoVidaCheia) {
+    linhas = ['Vida cheia'];
+  } else {
+    return;
+  }
+  desenharAvisoFlutuante(ctx, cameraX, cameraY, linhas,
+    player.x + player.largura / 2, player.y);
+}
+
+function desenharAvisoFlutuante(ctx, cameraX, cameraY, linhas, centroMundo, topoMundo, cor = '#ffd646') {
+  const centro = (centroMundo - cameraX) * visao.escala;
+  if (centro < 0 || centro > visao.largura) return;
+  ctx.save();
+  ctx.font = 'bold 16px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle = cor;
+  ctx.shadowColor = '#04060c';
+  ctx.shadowBlur = 3;
+  ctx.shadowOffsetY = 1;
+  const meiaLargura = Math.max(...linhas.map((linha) => ctx.measureText(linha).width)) / 2 + 8;
+  const x = Math.max(meiaLargura, Math.min(centro, visao.largura - meiaLargura));
+  const y = Math.max(24 + (linhas.length - 1) * 20, (topoMundo - cameraY) * visao.escala - 12);
+  linhas.forEach((linha, i) => ctx.fillText(linha, x, y - (linhas.length - 1 - i) * 20));
+  ctx.restore();
 }
 const somApertarPlay = new Audio('./assets/sound/apertar_play.mp3');
 registrarEfeito(somApertarPlay);
@@ -428,7 +520,7 @@ function pausarMusicaFundo() {
 
 function retomarMusicaFundo() {
   // A decodificação pode terminar depois de o jogador pausar ou minimizar o app.
-  if (document.hidden || !['jogando', 'terminal', 'desafio'].includes(estadoDaPartida)) return;
+  if (document.hidden || !['jogando', 'terminal', 'desafio', 'confirmarVida', 'entrando', 'chefe'].includes(estadoDaPartida)) return;
   contextoAudio?.resume();
 }
 
@@ -465,6 +557,8 @@ if (status) {
 // --- Integração (vidas, queda e reinício) -------------------
 let mensagem = '';
 let mensagemAte = 0;
+let avisoSaidaAte = 0;
+let avisoCheckpoint = null;
 // Estados da partida:
 // - titulo: tela de título, aberta ao carregar o jogo.
 // - inicio: tela inicial, aberta quando as vidas acabam.
@@ -472,9 +566,10 @@ let mensagemAte = 0;
 // - terminal, desafio: jogo parado com o terminal do totem ou uma pergunta do banco aberta.
 let estadoDaPartida = 'inicio';
 let estadoAntesDaPausa = 'jogando';
+let entradaSaida = null;
 
 function atualizarInterface() {
-  hud.hidden = ['inicio', 'cutscene', 'chefe'].includes(estadoDaPartida);
+  hud.hidden = ['inicio', 'cutscene', 'chefe', 'entrando'].includes(estadoDaPartida);
   controlesToque.hidden = estadoDaPartida !== 'jogando'
     && !(estadoDaPartida === 'chefe' && lutaChefe.podeControlar());
   botaoPausar.hidden = estadoDaPartida !== 'jogando'
@@ -486,6 +581,9 @@ function atualizarInterface() {
 }
 
 function atualizarHUD() {
+  const exercicios = progressoExercicios();
+  const contador = `Exercícios: ${exercicios.concluidos}/${exercicios.total}`;
+  if (contadorExercicios.textContent !== contador) contadorExercicios.textContent = contador;
   for (const ctx of [contextoVidas, contextoMoedas]) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -544,6 +642,13 @@ function reposicionar(ponto) {
 
 /** Reinicia vidas, checkpoints e posição, preservando as moedas salvas. */
 function prepararNovaPartida() {
+  entradaSaida = null;
+  missoesResolvidas.clear();
+  terminal.esquecerMissoes();
+  ofertaVida = null;
+  confirmarVida.hidden = true;
+  coracoesEmContato.clear();
+  proximoAvisoVidaCheia = 0;
   limparCheckpoints();
   limparColetaveis(progresso.moedasColetadas[indiceFaseAtual()]);
   limparPontes();
@@ -557,6 +662,8 @@ function prepararNovaPartida() {
   limparAcoes();
   mensagem = '';
   mensagemAte = 0;
+  avisoSaidaAte = 0;
+  avisoCheckpoint = null;
 }
 
 /** Esconde a tela inicial e os menus, e começa uma nova tentativa da fase. */
@@ -626,6 +733,7 @@ function montarDadosNiveis() {
 
 /** Abre a tela de níveis, com o último nível liberado selecionado. */
 function mostrarNiveis() {
+  entradaSaida = null;
   estadoDaPartida = 'niveis';
   controleDoJogo.stop();
   limparAcoes();
@@ -645,14 +753,49 @@ function escolherNivel(indice) {
   mostrarTelaInicio();
 }
 
+function iniciarEntradaSaida() {
+  const destino = obterEntradaSaida();
+  const pes = player.y + player.altura;
+  player.agachado = false;
+  player.altura = player.alturaNormal;
+  player.y = pes - player.altura;
+  player.vx = 0;
+  player.vy = 0;
+  player.olhandoDireita = true;
+  player.tempoInvulneravel = 0;
+  player.tempoAnimacao = 0;
+  entradaSaida = { tempo: 0, xInicial: player.x, yInicial: player.y,
+    xDestino: destino.x - player.largura / 2,
+    yDestino: destino.piso - (destino.nucleo ? 28 : 4) - player.altura,
+    centro: destino.x, piso: destino.piso, nucleo: destino.nucleo };
+  estadoDaPartida = 'entrando';
+  limparAcoes();
+  totemProximo = null;
+  atualizarInterface();
+}
+
+function atualizarEntradaSaida(deltaTime) {
+  entradaSaida.tempo += deltaTime;
+  const t = entradaSaida.tempo;
+  const tempoCaminhada = entradaSaida.nucleo ? 0.55 : 0.4;
+  const passo = 1 - (1 - Math.min(1, t / tempoCaminhada)) ** 3;
+  player.x = entradaSaida.xInicial + (entradaSaida.xDestino - entradaSaida.xInicial) * passo;
+  player.y = entradaSaida.yInicial + (entradaSaida.yDestino - entradaSaida.yInicial) * passo;
+  player.estadoAnimacao = t < tempoCaminhada ? 'correndo' : 'parado';
+  player.tempoAnimacao += deltaTime;
+  const tempoFechar = entradaSaida.nucleo ? 1.25 : 0.8;
+  if (t > tempoFechar) fecharPortaSaida(Math.min(deltaTime, t - tempoFechar));
+  if (t >= (entradaSaida.nucleo ? 2.15 : 1.35)) {
+    const entrarNoNucleo = entradaSaida.nucleo;
+    entradaSaida = null;
+    if (entrarNoNucleo) iniciarChefe();
+    else concluirFase();
+  }
+}
+
 /** Vitória: toca o som, guarda as estrelas (vidas restantes), libera a próxima fase e volta à tela de níveis. */
 function concluirFase() {
   const concluida = indiceFaseAtual();
-  // Último nível: o Kernel Panic aparece antes da conclusão, até ser derrotado.
-  if (concluida === quantidadeFases - 1 && !progresso.chefe_derrotado) {
-    iniciarChefe();
-    return;
-  }
   controleDoJogo.stop();
   limparAcoes();
   somVitoria.currentTime = 0;
@@ -675,8 +818,9 @@ function iniciarChefe() {
   telaInicio.hidden = true;
   telaNiveis.hidden = true;
   seletorNiveis.esconder();
-  pararMusicaFundo();
   telaChefe.hidden = false;
+  if (fonteMusica) retomarMusicaFundo();
+  else iniciarMusicaFundo();
   atualizarInterface();
   lutaChefe.iniciar();
 }
@@ -788,6 +932,7 @@ function reiniciarJogo() {
     estadoDaPartida = 'chefe';
     menuPausa.hidden = true;
     lutaChefe.reiniciar();
+    retomarMusicaFundo();
     atualizarInterface();
     return;
   }
@@ -803,17 +948,25 @@ const dependenciasDoJogo = {
   readActions: () => inputState,
 
   updatePlayer: (actions, deltaTime) => {
+    if (estadoDaPartida === 'entrando') {
+      atualizarEntradaSaida(deltaTime);
+      return;
+    }
     if (actions.pausa) {
       actions.pausa = false;
       pausarPartida();
       return;
+    }
+    // Vento e transporte alteram o movimento antes da integração e das colisões.
+    if (estadoDaPartida === 'jogando') {
+      atualizarPontes(deltaTime);
+      mecanicasDaFase.forEach((mecanica) => mecanica.atualizar(deltaTime, player));
     }
     player.atualizar(deltaTime, verificarEspaco, LIMITE_QUEDA, aguardarEscolhaDoJogador);
     if (estadoDaPartida === 'jogando') {
       inimigos.forEach((inimigo) => inimigo.atualizar(deltaTime));
       poderes.forEach((poder) => poder.atualizar(deltaTime));
       poderes = poderes.filter((poder) => !poder.terminou);
-      mecanicasDaFase.forEach((mecanica) => mecanica.atualizar(deltaTime, player));
     }
   },
 
@@ -823,24 +976,22 @@ const dependenciasDoJogo = {
 
     // Computador de desafio ou totem ativo com missão, encostado pelo Byte: mostra o botão ABRIR DESAFIO.
     totemProximo = verificarComputadores(player)
-      ?? checkpoints.find((c) => c.ativo && c.missao
+      ?? checkpoints.find((c) => c.ativo && !c.feito && c.missao !== undefined
         && player.x < c.x + c.width && player.x + player.largura > c.x
         && player.y < c.y + c.height && player.y + player.altura > c.y) ?? null;
 
     // A saída só abre depois do computador obrigatório que fica antes dela.
     if (verificarMeta(player)) {
       if (!saidaBloqueada()) {
-        concluirFase();
+        iniciarEntradaSaida();
         return;
       }
-      mensagem = 'Abra o desafio do computador antes da saída';
-      mensagemAte = performance.now() + 1500;
+      avisoSaidaAte = performance.now() + 1500;
     }
 
     const checkpoint = verificarCheckpoints(player);
     if (checkpoint) {
-      mensagem = 'Checkpoint salvo';
-      mensagemAte = performance.now() + 1500;
+      avisoCheckpoint = { alvo: checkpoint, ate: performance.now() + 1500 };
     }
 
     if (player.y > LIMITE_QUEDA) {
@@ -850,19 +1001,24 @@ const dependenciasDoJogo = {
       return;
     }
 
+    const contatoAtual = new Set();
+    for (const vida of vidasItens) {
+      if (vida.coletado || player.x + player.largura <= vida.x || player.x >= vida.x + 16
+        || player.y + player.altura <= vida.y || player.y >= vida.y + 16) continue;
+      contatoAtual.add(vida.id);
+      if (!coracoesEmContato.has(vida.id)) oferecerVida(vida);
+    }
+    coracoesEmContato = contatoAtual;
+    if (estadoDaPartida !== 'jogando') return;
+
     const coletavel = verificarColetaveis(player);
     if (coletavel) {
-      if (coletavel.id.startsWith('vida-')) {
-        player.vidas = Math.min(3, player.vidas + 1);
-        mensagem = player.vidas === 3 ? 'Vida recuperada' : 'Coração coletado';
-      } else {
-        const moedasDaFase = progresso.moedasColetadas[indiceFaseAtual()] ??= [];
-        if (!moedasDaFase.includes(coletavel.id)) {
-          moedasDaFase.push(coletavel.id);
-          salvarProgresso();
-        }
-        mensagem = 'Moeda coletada';
+      const moedasDaFase = progresso.moedasColetadas[indiceFaseAtual()] ??= [];
+      if (!moedasDaFase.includes(coletavel.id)) {
+        moedasDaFase.push(coletavel.id);
+        salvarProgresso();
       }
+      mensagem = 'Moeda coletada';
       mensagemAte = performance.now() + 1000;
     }
 
@@ -892,12 +1048,52 @@ const dependenciasDoJogo = {
     aplicarCameraMundo(ctx, cameraX, visao, cameraY);
     inimigos.forEach((inimigo) => inimigo.desenhar(ctx));
     mecanicasDaFase.forEach((mecanica) => mecanica.desenhar(ctx));
-    player.desenhar(ctx);
+    if (entradaSaida) {
+      const nucleo = entradaSaida.nucleo;
+      const sumir = Math.min(1, Math.max(0, (entradaSaida.tempo - (nucleo ? 0.55 : 0.4)) / (nucleo ? 0.7 : 0.4)));
+      const escalaEntrada = 1 - sumir * (nucleo ? 0.6 : 0.35);
+      const centro = player.x + player.largura / 2;
+      const pes = player.y + player.altura;
+      ctx.save();
+      if (sumir > 0) {
+        ctx.beginPath();
+        if (nucleo) {
+          ctx.rect(entradaSaida.centro - 42, entradaSaida.piso - 108, 84, 84);
+          ctx.clip();
+          ctx.beginPath();
+          ctx.rect(player.x - 30, player.y + player.altura * sumir, player.largura + 60, player.altura * (1 - sumir));
+        } else {
+          ctx.rect(entradaSaida.centro - 24, entradaSaida.piso - 80, 48, 76);
+        }
+        ctx.clip();
+      }
+      ctx.globalAlpha = 1 - sumir;
+      ctx.translate(centro, pes);
+      ctx.scale(escalaEntrada, escalaEntrada);
+      ctx.translate(-centro, -pes);
+      player.desenhar(ctx);
+      ctx.restore();
+      if (nucleo) desenharPixelsEntrada(ctx, entradaSaida);
+    } else {
+      player.desenhar(ctx);
+    }
     poderes.forEach((poder) => poder.desenhar(ctx));
     ctx.restore();
 
     desenharBotaoTerminal(ctx, cameraX, cameraY);
+    desenharAvisos(ctx, cameraX, cameraY);
     atualizarHUD();
+    if (entradaSaida?.nucleo) {
+      desenharTransicaoChefe(ctx, visao, entradaSaida.tempo,
+        (entradaSaida.centro - cameraX) * visao.escala,
+        (entradaSaida.piso - 66 - cameraY) * visao.escala);
+    } else if (entradaSaida && entradaSaida.tempo > 1) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, (entradaSaida.tempo - 1) / 0.35);
+      ctx.fillStyle = '#0b1424';
+      ctx.fillRect(0, 0, visao.largura, visao.altura);
+      ctx.restore();
+    }
   },
 };
 
@@ -928,7 +1124,7 @@ function aguardarEscolhaDoJogador() {
 }
 
 function pausarPartida() {
-  if (estadoDaPartida !== 'jogando' && estadoDaPartida !== 'chefe') return;
+  if (!['jogando', 'chefe', 'entrando'].includes(estadoDaPartida)) return;
 
   estadoAntesDaPausa = estadoDaPartida;
   estadoDaPartida = 'pausado';
@@ -951,10 +1147,8 @@ function retomarPartida() {
   menuPausa.hidden = true;
   atualizarInterface();
   if (estadoDaPartida === 'chefe') lutaChefe.retomar();
-  else {
-    controleDoJogo.start();
-    retomarMusicaFundo();
-  }
+  else controleDoJogo.start();
+  retomarMusicaFundo();
   botaoPausar.focus({ preventScroll: true });
 }
 
@@ -1119,6 +1313,28 @@ canvas.addEventListener('click', (evento) => {
 });
 
 window.addEventListener('keydown', (evento) => {
+  if (estadoDaPartida === 'entrando') {
+    if (['p', 'P', 'Escape'].includes(evento.key)) {
+      evento.preventDefault();
+      pausarPartida();
+    }
+    return;
+  }
+  if (estadoDaPartida === 'confirmarVida') {
+    if (evento.key === 'Escape') {
+      evento.preventDefault();
+      responderOfertaVida(false);
+    } else if (evento.key === 'Tab') {
+      const aceitar = document.getElementById('vida-aceitar');
+      const recusar = document.getElementById('vida-recusar');
+      if ((!evento.shiftKey && document.activeElement === recusar)
+        || (evento.shiftKey && document.activeElement === aceitar)) {
+        evento.preventDefault();
+        (evento.shiftKey ? recusar : aceitar).focus();
+      }
+    }
+    return;
+  }
   // Os controles de instalação usam o comportamento nativo de Enter e espaço.
   if (evento.target.closest?.('.pwa-controls')) return;
   // Os botões Apagar dados e Tela cheia não estão no menu de setas: Enter neles usa o clique nativo.
@@ -1162,6 +1378,7 @@ window.addEventListener('keydown', (evento) => {
   // E ou Enter abrem o desafio do computador ou o terminal do totem ativo com missão.
   if (estadoDaPartida === 'jogando' && totemProximo && ['e', 'E', 'Enter'].includes(evento.key)) {
     evento.preventDefault();
+    setInput('pausa', false);
     abrirDoTotem();
     return;
   }

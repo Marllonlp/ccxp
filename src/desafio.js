@@ -123,6 +123,17 @@ export function criarJanelaDesafio(secao) {
     /** Teclas: A/B/C ou 1/2/3 respondem; setas trocam a alternativa; Esc continua depois da resposta. */
     tratarTecla(evento) {
       if (!atual) return;
+      if (evento.key === 'Tab') {
+        const disponiveis = [...secao.querySelectorAll('button:not(:disabled)')]
+          .filter(botao => !botao.hidden);
+        const primeiro = disponiveis[0], ultimo = disponiveis.at(-1);
+        if ((evento.shiftKey && document.activeElement === primeiro)
+          || (!evento.shiftKey && document.activeElement === ultimo)) {
+          evento.preventDefault();
+          (evento.shiftKey ? ultimo : primeiro)?.focus();
+        }
+        return;
+      }
       if (acertou !== null) {
         if (evento.key === 'Escape') {
           evento.preventDefault();

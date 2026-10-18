@@ -26,7 +26,7 @@ body {
 }
 
 .game-shell {
-  --control-size: clamp(48px, 12dvh, 72px);
+  --control-size: clamp(64px, 18dvh, 80px);
   position: relative;
   width: 100%;
   height: 100vh;
@@ -34,6 +34,14 @@ body {
   overflow: hidden;
   isolation: isolate;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.game-shell img,
+.game-shell canvas {
+  -webkit-user-drag: none;
 }
 
 [hidden] {
@@ -619,7 +627,7 @@ body {
 .movement-controls,
 .action-controls {
   display: flex;
-  gap: 8px;
+  gap: 12px;
 }
 
 .controls-layout {
@@ -627,8 +635,8 @@ body {
 }
 
 .mobile-controls button {
-  min-width: 48px;
-  min-height: 48px;
+  min-width: 64px;
+  min-height: 64px;
   width: var(--control-size);
   height: var(--control-size);
   padding: 0;
@@ -805,6 +813,17 @@ body {
 }
 
 @media (pointer: coarse) {
+  .pause-button,
+  .botao-ajuda,
+  .botao-tela-cheia {
+    width: 48px;
+    height: 48px;
+  }
+
+  .botao-ajuda { top: max(12px, env(safe-area-inset-top)); }
+  .botao-titulo { min-height: 44px; }
+  .botao-apagar-dados { min-height: 44px; font-size: 12px; }
+
   .menu-jogo-dica {
     display: none;
   }
@@ -1258,7 +1277,7 @@ body {
   font-size: 1.3cqw;
 }
 
-/* Terminal do totem: canvas 480 × 270 ampliado com pixel nítido, sobre o jogo pausado. */
+/* Terminal do totem: painel com texto nativo sobre o jogo pausado. */
 .tela-terminal {
   position: absolute;
   inset: 0;
@@ -1272,17 +1291,10 @@ body {
   display: none;
 }
 
-.canvas-terminal {
-  display: block;
-  width: min(100%, calc(100vh * 16 / 9));
-  aspect-ratio: 16 / 9;
-  image-rendering: pixelated;
-}
-
-/* A edição por toque compartilha as missões e os testes do terminal em canvas. */
+/* Texto nativo em todas as telas: sem rasterizar e ampliar letras pequenas. */
 .terminal-toque {
-  display: none;
-  width: min(1000px, calc(100% - 24px));
+  display: block;
+  width: min(1240px, calc(100% - 24px));
   max-height: calc(100dvh - 24px);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1290,6 +1302,7 @@ body {
   background: #1b254b;
   color: #e1e8f5;
   font: 16px/1.5 system-ui, sans-serif;
+  box-shadow: 6px 6px 0 #080e20;
 }
 
 .terminal-toque-cabecalho {
@@ -1319,17 +1332,19 @@ body {
 
 .terminal-toque-corpo {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(0, 2fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   padding: 16px;
 }
 
 .terminal-toque-missao,
-.terminal-toque-editor {
+.terminal-toque-editor,
+.terminal-toque-banco {
   min-width: 0;
 }
 
-.terminal-toque-editor {
+.terminal-toque-editor,
+.terminal-toque-banco {
   display: grid;
   align-content: start;
   gap: 12px;
@@ -1384,9 +1399,18 @@ body {
   overflow-wrap: anywhere;
 }
 
+.codigo-string { color: #ffd66e; }
+.codigo-numero { color: #ffa046; }
+.codigo-funcao { color: #3ce6ff; }
+.codigo-palavra { color: #ec78ff; }
+.codigo-comentario { color: #a9bdd6; }
+.terminal-erro { color: #ff9098; }
+.terminal-ok { color: #5aff8c; }
+.terminal-dica { color: #ffd646; }
+
 #terminal-linhas {
   min-height: 54px;
-  max-height: min(32dvh, 240px);
+  max-height: min(48dvh, 420px);
   margin: 0;
   padding: 6px 6px 6px 36px;
   overflow-y: auto;
@@ -1448,15 +1472,40 @@ body {
   display: none;
 }
 
+.terminal-toque-missao { grid-column: 1 / -1; }
+.terminal-toque-banco { grid-column: auto; }
+#terminal-trechos { grid-template-columns: 1fr; }
+
+@media (min-width: 1000px) {
+  .terminal-toque-corpo {
+    grid-template-columns: minmax(200px, 1fr) minmax(300px, 1.5fr) minmax(250px, 1.1fr);
+  }
+  .terminal-toque-banco { grid-column: auto; }
+  .terminal-toque-missao { grid-column: auto; }
+  #terminal-trechos { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .terminal-toque-corpo { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 12px; }
+  .terminal-toque-cabecalho { padding: 10px 12px 10px 56px; }
+  .terminal-toque h2 { font-size: 10px; }
+}
+
+.hud-exercicios {
+  padding: 8px 10px;
+  color: #ffd646;
+  background: #111e37;
+  border: 1px solid #486780;
+  font: 14px/1.4 system-ui, sans-serif;
+  white-space: nowrap;
+}
+.painel-confirmar-vida { max-width: 520px; }
+.painel-confirmar-vida h2 { color: #ffd646; }
+.painel-confirmar-vida p { font: 16px/1.5 system-ui, sans-serif; }
+.painel-confirmar-vida .aviso-tentativa { color: #b8cee1; }
+.confirmar-vida-acoes { display: flex; flex-wrap: wrap; gap: 12px; }
+
 @media (hover: none), (pointer: coarse) {
-  .canvas-terminal {
-    display: none;
-  }
-
-  .terminal-toque {
-    display: block;
-  }
-
   .tela-inicio-texto {
     padding: 10px;
     font: 16px/1.5 system-ui, sans-serif;
@@ -1469,6 +1518,7 @@ body {
   inset: 0;
   z-index: 7;
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
   padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   overflow-y: auto;
@@ -1483,12 +1533,20 @@ body {
   display: grid;
   gap: clamp(8px, 1.8vh, 16px);
   width: min(640px, 100%);
+  min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
   padding: clamp(14px, 3vh, 28px);
   border: 3px solid #28384f;
   border-radius: 4px;
   background-color: #0b1424;
   box-shadow: 0 8px 0 #04060c, 0 20px 60px rgb(0 0 0 / 45%);
   color: #e1e8f5;
+}
+
+.painel-desafio > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .painel-desafio p,
@@ -1538,7 +1596,7 @@ body {
 
 .alternativas-desafio {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 8px;
 }
 
@@ -1559,16 +1617,23 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  width: 100%;
   text-align: left;
 }
 
 .alternativa-desafio .letra {
+  flex-shrink: 0;
   font-family: 'Press Start 2P', monospace;
   font-size: 11px;
   color: #ffd646;
 }
 
 .alternativa-desafio code {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
   font-family: 'CozetteTerm', ui-monospace, monospace;
   font-size: clamp(16px, 3vh, 22px);
 }
@@ -1652,25 +1717,120 @@ body {
   image-rendering: pixelated;
 }
 
-/* Luta contra o chefe: canvas 480 × 270 ampliado com pixel nítido, sobre fundo preto. */
+/* Arena com instruções nítidas e espaço para os controles de toque. */
 .tela-chefe {
   position: absolute;
   inset: 0;
   z-index: 6;
   display: grid;
   place-items: center;
-  background-color: #000;
+  padding: 16px;
+  background: radial-gradient(ellipse at center, #352454, #100f24 78%);
 }
 
 .tela-chefe[hidden] {
   display: none;
 }
 
+.chefe-palco {
+  position: relative;
+  width: min(100%, calc((100dvh - 32px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px #645080, 0 20px 60px #080c20;
+}
+
 .canvas-chefe {
   display: block;
-  width: min(100%, calc(100vh * 16 / 9));
+  width: 100%;
+  height: 100%;
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
+}
+
+.chefe-info {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  color: #e8e0f3;
+  font: 500 clamp(13px, 1.5vw, 17px)/1.35 system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+
+.chefe-abrir-desafio {
+  position: absolute;
+  left: clamp(78px, var(--terminal-x, 15%), calc(100% - 78px));
+  top: var(--terminal-y, 52%);
+  transform: translate(-50%, -100%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 2px solid #66e9ff;
+  border-bottom: 4px solid #14516d;
+  border-radius: 2px;
+  background: #187ba0;
+  color: #fff;
+  font: 700 14px/1.25 system-ui, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.chefe-abrir-desafio span { color: #a4faff; font-family: monospace; }
+.chefe-abrir-desafio:hover { background: #2196b8; }
+.chefe-abrir-desafio:focus-visible { outline: 3px solid #ffe18a; outline-offset: 3px; }
+
+.chefe-etapa,
+.chefe-tempo {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 1px solid #766393;
+  border-radius: 4px;
+  background: #17172c;
+  color: #d9b6ff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.chefe-info[data-estado='vulneravel'] #chefe-dica,
+.chefe-info[data-estado='dano'] #chefe-dica {
+  color: #8ef2c7;
+}
+
+.chefe-info[data-estado='laser'] #chefe-dica {
+  color: #ffe28b;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .tela-chefe {
+    --rodape-chefe: calc(var(--control-size) + max(20px, env(safe-area-inset-bottom)));
+    padding: 8px max(12px, env(safe-area-inset-right)) var(--rodape-chefe) max(12px, env(safe-area-inset-left));
+  }
+
+  .chefe-palco {
+    width: min(100%, calc((100dvh - var(--rodape-chefe) - 8px) * 16 / 9));
+  }
+
+  .chefe-info {
+    left: 8px;
+    right: 8px;
+    bottom: 6px;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .chefe-etapa,
+  .chefe-tempo { padding: 3px 5px; }
+
+  .chefe-abrir-desafio { min-height: 44px; }
 }
 
 .game-shell[data-estado='chefe'] .mobile-controls {

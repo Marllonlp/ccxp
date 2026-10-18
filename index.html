@@ -53,6 +53,7 @@
           <div class="hud-coins">
             <canvas id="hud-moedas" width="74" height="32" role="img" aria-label="Moedas coletadas: 0"></canvas>
           </div>
+          <span id="hud-contador" class="hud-exercicios" role="status">Exercícios: 0/0</span>
         </div>
         <p id="hud-mensagem" class="hud-message" role="status" hidden></p>
       </div>
@@ -168,9 +169,8 @@
         <canvas id="canvas-niveis" class="canvas-niveis" role="img" aria-label="Seleção de níveis"></canvas>
       </section>
 
-      <!-- Terminal do totem: mini editor de Python, desenhado em canvas 480 × 270. -->
-      <section id="tela-terminal" class="tela-terminal" aria-label="Terminal do totem" hidden>
-        <canvas id="canvas-terminal" class="canvas-terminal" role="img" aria-label="Terminal do totem"></canvas>
+      <!-- Texto HTML permanece nítido na resolução nativa do navegador. -->
+      <section id="tela-terminal" class="tela-terminal" role="dialog" aria-modal="true" aria-label="Terminal do totem" hidden>
         <div class="terminal-toque">
           <header class="terminal-toque-cabecalho">
             <h2>Terminal do totem</h2>
@@ -180,28 +180,42 @@
             <section class="terminal-toque-missao" aria-labelledby="terminal-missao-titulo">
               <h3 id="terminal-missao-titulo"></h3>
               <p id="terminal-enunciado"></p>
-              <details>
+              <details open>
                 <summary>Entrada, saída e exemplos</summary>
                 <div id="terminal-detalhes"></div>
               </details>
             </section>
             <section class="terminal-toque-editor" aria-labelledby="terminal-programa-titulo">
               <h3 id="terminal-programa-titulo">Seu programa</h3>
-              <p class="terminal-toque-ajuda">Toque nos trechos para montar o código. Selecione uma linha para movê-la ou removê-la.</p>
+              <p class="terminal-toque-ajuda">Escolha os trechos para montar o código. Selecione uma linha para movê-la ou removê-la.</p>
               <ol id="terminal-linhas"></ol>
               <div class="terminal-toque-edicao" role="group" aria-label="Editar linha selecionada">
                 <button type="button" id="terminal-subir">Subir</button>
                 <button type="button" id="terminal-descer">Descer</button>
                 <button type="button" id="terminal-remover">Remover</button>
               </div>
-              <h3>Trechos disponíveis</h3>
+              <div id="terminal-resultado" role="status" aria-live="polite"></div>
+            </section>
+            <section class="terminal-toque-banco" aria-labelledby="terminal-trechos-titulo">
+              <h3 id="terminal-trechos-titulo">Trechos disponíveis</h3>
               <div id="terminal-trechos"></div>
               <div class="terminal-toque-acoes">
                 <button type="button" id="terminal-testar">Testar código</button>
                 <button type="button" id="terminal-dica">Dica</button>
               </div>
-              <div id="terminal-resultado" role="status" aria-live="polite"></div>
             </section>
+          </div>
+        </div>
+      </section>
+
+      <section id="confirmar-vida" class="tela-desafio" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmar-vida" hidden>
+        <div class="painel-desafio painel-confirmar-vida">
+          <h2 id="titulo-confirmar-vida">Ganhar uma vida</h2>
+          <p>Quer resolver um desafio para ganhar uma vida?</p>
+          <p class="aviso-tentativa">Você tem uma tentativa. Se errar, este coração desaparece.</p>
+          <div class="confirmar-vida-acoes">
+            <button type="button" id="vida-aceitar" class="menu-jogo-botao menu-jogo-botao-principal">Sim, resolver</button>
+            <button type="button" id="vida-recusar" class="menu-jogo-botao">Agora não</button>
           </div>
         </div>
       </section>
@@ -232,12 +246,22 @@
 
       <!-- Luta contra o chefe (nível 5): desenhada em canvas 480 × 270 pelo módulo chefe.js. -->
       <section id="tela-chefe" class="tela-chefe" aria-label="Luta contra o chefe" hidden>
-        <canvas id="canvas-chefe" class="canvas-chefe" role="img" aria-label="Luta contra o Kernel Panic"></canvas>
-        <div id="chefe-fim" class="chefe-fim" hidden>
-          <div class="menu-jogo-painel">
-            <h2>Fim de jogo</h2>
-            <button type="button" id="chefe-tentar" class="menu-jogo-botao menu-jogo-botao-principal">Tentar de novo</button>
-            <button type="button" id="chefe-sair" class="menu-jogo-botao">Voltar aos níveis</button>
+        <div class="chefe-palco">
+          <canvas id="canvas-chefe" class="canvas-chefe" role="img" aria-label="Luta contra o Kernel Panic" aria-describedby="chefe-dica"></canvas>
+          <button type="button" id="chefe-abrir-desafio" class="chefe-abrir-desafio" hidden>
+            <span aria-hidden="true">›_</span> Abrir desafio
+          </button>
+          <div class="chefe-info">
+            <span id="chefe-etapa" class="chefe-etapa">PATCH 1/3</span>
+            <span id="chefe-dica" aria-live="polite">Observe os avisos para desviar dos ataques.</span>
+            <span id="chefe-tempo" class="chefe-tempo" aria-hidden="true" hidden></span>
+          </div>
+          <div id="chefe-fim" class="chefe-fim" hidden>
+            <div class="menu-jogo-painel">
+              <h2>Fim de jogo</h2>
+              <button type="button" id="chefe-tentar" class="menu-jogo-botao menu-jogo-botao-principal">Tentar de novo</button>
+              <button type="button" id="chefe-sair" class="menu-jogo-botao">Voltar aos níveis</button>
+            </div>
           </div>
         </div>
       </section>
