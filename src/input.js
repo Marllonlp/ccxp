@@ -95,6 +95,7 @@ export function configurarControlesToque() {
     // Cancela apenas esse gesto na partida; o movimento continua pelos Pointer Events.
     areaDoJogo.addEventListener('touchend', (evento) => {
         if (evento.changedTouches.length !== 1
+            || evento.target.closest('#tela-terminal, #tela-desafio, #confirmar-vida')
             || !['jogando', 'chefe'].includes(areaDoJogo.dataset.estado)) {
             ultimoToque = null;
             return;

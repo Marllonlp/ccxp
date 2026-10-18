@@ -1265,10 +1265,12 @@ body {
 
 /* Texto nativo em todas as telas: sem rasterizar e ampliar letras pequenas. */
 .terminal-toque {
-  display: block;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(1240px, calc(100% - 24px));
+  height: min(820px, calc(100dvh - 24px));
   max-height: calc(100dvh - 24px);
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
   border: 2px solid #44ddf2;
   background: #1b254b;
@@ -1282,7 +1284,7 @@ body {
   top: 0;
   z-index: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 10px 16px;
@@ -1307,12 +1309,15 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   padding: 16px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .terminal-toque-missao,
 .terminal-toque-editor,
 .terminal-toque-banco {
   min-width: 0;
+  min-height: 0;
 }
 
 .terminal-toque-editor,
@@ -1321,6 +1326,12 @@ body {
   align-content: start;
   gap: 12px;
 }
+
+.terminal-toque-editor { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.terminal-toque-banco { grid-template-rows: auto minmax(0, 1fr); }
+.terminal-toque-missao { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.terminal-toque-missao summary { position: sticky; top: 0; background: #111a36; font-weight: 700; }
+.terminal-toque-ver { margin-left: 8px; font-size: 13px; font-weight: 400; }
 
 .terminal-toque p {
   margin: 8px 0;
@@ -1381,11 +1392,11 @@ body {
 .terminal-dica { color: #ffd646; }
 
 #terminal-linhas {
-  min-height: 54px;
-  max-height: min(48dvh, 420px);
+  min-height: 0;
   margin: 0;
   padding: 6px 6px 6px 36px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: #0b1424;
 }
 
@@ -1422,6 +1433,26 @@ body {
   text-align: left;
 }
 
+#terminal-trechos {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  align-content: start;
+  padding: 2px;
+}
+
+.terminal-toque-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 2px solid #33466b;
+  background: #111a36;
+}
+
+.terminal-toque-acoes { flex-shrink: 0; }
+
 #terminal-trechos .trecho-entrada {
   border-left-color: #ffa046;
 }
@@ -1438,26 +1469,44 @@ body {
 #terminal-resultado {
   padding-inline: 10px;
   background: #0b1424;
+  flex: 1;
+  min-width: 0;
+  max-height: 72px;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  font-size: 14px;
 }
 
 #terminal-resultado:empty {
   display: none;
 }
 
-.terminal-toque-missao { grid-column: 1 / -1; }
+.terminal-toque-missao[open] { max-height: 35dvh; }
 #terminal-trechos { grid-template-columns: 1fr; }
 
-@media (min-width: 1000px) {
-  .terminal-toque-corpo {
-    grid-template-columns: minmax(200px, 1fr) minmax(300px, 1.5fr) minmax(250px, 1.1fr);
-  }
-  .terminal-toque-missao { grid-column: auto; }
+@media (max-width: 999px) {
+  .tela-terminal { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  .terminal-toque { width: 100%; height: 100%; max-height: 100%; box-shadow: none; }
+  .terminal-toque-cabecalho { padding: 4px 10px 4px 60px; }
+  .terminal-toque h2 { font-size: 10px; }
+  .terminal-toque h3 { font: 700 14px/1.4 system-ui, sans-serif; }
+  .terminal-toque-corpo { gap: 12px; padding: 8px 10px; }
+  .terminal-toque-editor { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .terminal-toque-editor, .terminal-toque-banco { gap: 6px; }
+  .terminal-toque .terminal-toque-ajuda { display: none; }
+  .terminal-toque-missao summary { padding-block: 8px; }
+  .terminal-toque button { padding: 8px; }
+  #terminal-linhas li { padding-block: 1px; }
+  .terminal-toque-rodape { gap: 8px; padding: 6px 10px; }
+  .terminal-toque-acoes { font-size: 14px; }
+  #terminal-resultado { max-height: 52px; }
 }
 
 @media (max-width: 520px) {
-  .terminal-toque-corpo { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 12px; }
-  .terminal-toque-cabecalho { padding: 10px 12px 10px 56px; }
-  .terminal-toque h2 { font-size: 10px; }
+  .terminal-toque-corpo { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(160px, 1fr) minmax(160px, 1fr); overflow-y: auto; }
+  .terminal-toque-ver { display: inline-block; }
+  .terminal-toque-rodape { flex-wrap: wrap; }
+  #terminal-resultado { flex-basis: 100%; }
 }
 
 .hud-exercicios {
@@ -1651,6 +1700,22 @@ body {
   border-color: #5aff8c;
   font-family: 'Press Start 2P', monospace;
   font-size: 11px;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .painel-desafio:not(.painel-confirmar-vida) {
+    width: min(980px, 100%);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+    padding: 12px;
+  }
+  .painel-desafio > .categoria-desafio { grid-column: 1; grid-row: 1; }
+  .painel-desafio > .titulo-desafio { grid-column: 1; grid-row: 2; }
+  .painel-desafio > .enunciado-desafio { grid-column: 1; grid-row: 3; }
+  .painel-desafio > .codigo-desafio { grid-column: 1; grid-row: 4; }
+  .painel-desafio > .alternativas-desafio { grid-column: 2; grid-row: 1 / 5; grid-template-columns: 1fr; align-content: start; }
+  .painel-desafio > .resultado-desafio { grid-column: 1 / -1; }
+  .painel-desafio > .botao-continuar-desafio { grid-column: 2; position: sticky; bottom: 0; }
 }
 
 /* Cutscene: canvas 480 × 270 ampliado com pixel nítido, sobre fundo preto. */

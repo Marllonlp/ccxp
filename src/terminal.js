@@ -95,6 +95,9 @@ export function criarTerminal(secao, { onFechar, onResolvido }) {
       || elementos.trechos.contains(document.activeElement);
     acao();
     atualizar();
+    if (ativo && selecionado >= 0) {
+      elementos.linhas.querySelectorAll('button')[selecionado]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
     if (restaurarFoco && ativo) {
       (elementos.linhas.querySelectorAll('button')[selecionado]
         ?? elementos.trechos.querySelector('button') ?? elementos.testar).focus({ preventScroll: true });
@@ -200,8 +203,8 @@ export function criarTerminal(secao, { onFechar, onResolvido }) {
         ...missao.exemplos.map(exemplo => `Exemplo: ${exemplo.entrada} → ${exemplo.saida}`),
       ].map(texto => Object.assign(document.createElement('p'), { textContent: texto })));
       atualizar();
-      secao.querySelector('.terminal-toque-missao details').open = window.matchMedia('(min-width: 1000px)').matches;
-      secao.querySelector('.terminal-toque').scrollTop = 0;
+      secao.querySelector('.terminal-toque-missao').open = window.matchMedia('(min-width: 1000px)').matches;
+      for (const painel of secao.querySelectorAll('.terminal-toque-missao, #terminal-linhas, #terminal-trechos, #terminal-resultado')) painel.scrollTop = 0;
       elementos.fechar.focus({ preventScroll: true });
     },
     fechar() { ativo = false; },
