@@ -1400,13 +1400,36 @@ body {
   background: #0b1424;
 }
 
+/* As linhas montadas parecem um editor: sem caixas, numeração na margem e a linha selecionada realçada. */
 #terminal-linhas li {
-  padding-block: 3px;
+  padding: 0;
 }
 
-#terminal-linhas button {
+#terminal-linhas li::marker {
+  color: #5d7493;
+  font: 14px/1.5 ui-monospace, monospace;
+}
+
+.terminal-toque #terminal-linhas button {
+  display: block;
   width: 100%;
+  min-height: 0;
+  padding: 2px 8px;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: transparent;
   text-align: left;
+}
+
+.terminal-toque #terminal-linhas button:hover {
+  background: #14213a;
+}
+
+.terminal-toque #terminal-linhas button.selecionada,
+.terminal-toque #terminal-linhas button:focus-visible {
+  outline: 0;
+  border-left-color: #ffd646;
+  background: #1a2a48;
 }
 
 #terminal-linhas:empty::before {
@@ -1496,7 +1519,6 @@ body {
   .terminal-toque .terminal-toque-ajuda { display: none; }
   .terminal-toque-missao summary { padding-block: 8px; }
   .terminal-toque button { padding: 8px; }
-  #terminal-linhas li { padding-block: 1px; }
   .terminal-toque-rodape { gap: 8px; padding: 6px 10px; }
   .terminal-toque-acoes { font-size: 14px; }
   #terminal-resultado { max-height: 52px; }
@@ -1692,6 +1714,10 @@ body {
 
 .resultado-desafio.erro strong {
   color: #ff606e;
+}
+
+.resultado-desafio .motivo-erro {
+  color: #ffb3ba;
 }
 
 .botao-continuar-desafio {
