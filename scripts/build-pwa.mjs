@@ -20,8 +20,10 @@ async function listar(pasta) {
   return arquivos;
 }
 
+// assets/loja/ guarda o pacote original da Loja (GIFs e guia); o jogo usa as cópias convertidas.
 const caminhos = ['index.html', 'manifest.webmanifest',
-  ...await listar('src'), ...await listar('styles'), ...await listar('assets')].sort();
+  ...await listar('src'), ...await listar('styles'),
+  ...(await listar('assets')).filter((caminho) => !caminho.startsWith('assets/loja/'))].sort();
 const modeloWorker = await readFile(join(raiz, 'pwa/service-worker.js'), 'utf8');
 const hashVersao = createHash('sha256').update(modeloWorker);
 const arquivos = [];
