@@ -73,14 +73,20 @@ function carregarImagem(url) {
   });
 }
 
+/** Carrega um sprite. O número de quadros vem do nome do arquivo ("_Nf"). */
+async function carregarSprite(url) {
+  const img = await carregarImagem(url);
+  const padrao = /_(\d+)f(?=_|\.|$)/.exec(url);
+  const quadros = padrao ? Number(padrao[1]) : 1;
+  return { img, quadros, largura: img.naturalWidth / quadros, altura: img.naturalHeight };
+}
+
+// Sprites 48 × 48 do Byte. Com uma skin equipada, os mesmos arquivos vêm da pasta `arena/` da skin.
+const SPRITES_BYTE = Object.keys(ARQUIVOS).filter((nome) => nome.startsWith('byte_'));
+
 /** Carrega imagens, fonte, configuração e missões da luta. */
 async function carregarRecursos(pasta) {
-  const imagens = Object.entries(ARQUIVOS).map(async ([nome, arquivo]) => {
-    const img = await carregarImagem(pasta + arquivo);
-    const padrao = /_(\d+)f(?=_|\.|$)/.exec(arquivo);
-    const quadros = padrao ? Number(padrao[1]) : 1;
-    return [nome, { img, quadros, largura: img.naturalWidth / quadros, altura: img.naturalHeight }];
-  });
+  const imagens = Object.entries(ARQUIVOS).map(async ([nome, arquivo]) => [nome, await carregarSprite(pasta + arquivo)]);
   const [lista, config, missoes] = await Promise.all([
     Promise.all(imagens),
     fetch(pasta + 'chefe_config.json').then((resposta) => resposta.json()),
@@ -111,16 +117,20 @@ function quadroDe(tempo, msPorFrame, quadros, loop) {
  * - pasta: pasta da luta (assets/chefe/);
  * - terminal e telaTerminal: o mesmo terminal do projeto e a seção que o mostra;
  * - onVitoria(): o chefe foi derrotado e a recuperação terminou;
- * - onSair(): o jogador desistiu depois de perder todas as vidas.
+ * - onSair(): o jogador desistiu depois de perder todas as vidas;
+ * - pastaByte(): pasta dos sprites 48 × 48 da skin equipada, ou null para o Byte clássico.
  * Devolve { iniciar(), parar() }.
  */
-export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, onSair, onAtualizarInterface = () => {} }) {
+export function criarChefe(canvas, {
+  pasta, terminal, telaTerminal, onVitoria, onSair, onAtualizarInterface = () => {}, pastaByte = () => null,
+}) {
   canvas.width = LARGURA;
   canvas.height = ALTURA;
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
 
   let recursos = null;
+  let pastaByteCarregada = null;
   let rodando = false;
   let ultimoQuadro = 0;
   let retornosAnteriores = null;
@@ -1115,6 +1125,15 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       const tentativa = ++inicializacao;
       pausado = false;
       if (!recursos) recursos = await carregarRecursos(pasta);
+      const pastaSkin = pastaByte();
+      if (pastaSkin !== pastaByteCarregada) {
+        const sprites = await Promise.all(SPRITES_BYTE.map(async (nome) => {
+          const url = pastaSkin ? pastaSkin + ARQUIVOS[nome].split('/').pop() : pasta + ARQUIVOS[nome];
+          return [nome, await carregarSprite(url)];
+        }));
+        Object.assign(recursos.sprites, Object.fromEntries(sprites));
+        pastaByteCarregada = pastaSkin;
+      }
       if (tentativa !== inicializacao) return;
       novaPartida();
       retornosAnteriores = terminal.definirRetornos({ onFechar: aoFecharTerminal, onResolvido: aoResolverPatch });

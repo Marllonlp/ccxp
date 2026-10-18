@@ -1,6 +1,6 @@
 // src/main.js
 import { startGame } from './game.js';
-import { Player, desenharVidas } from './player.js';
+import { Player, desenharVidas, carregarAnimacoesByte, pastaDaSkin } from './player.js';
 import { Planta, Sentinela } from './enemies.js';
 import { inputState, setInput, configurarControlesToque, limparAcoes, tecladoPrincipal } from './input.js';
 import {
@@ -50,6 +50,8 @@ import { desenharPixelsEntrada, desenharTransicaoChefe } from './portalChefe.js'
 import { criarCutscene } from './cutscene.js';
 import { criarChefe } from './chefe.js';
 import { criarTutorialAda } from './ada.js';
+import { criarLoja } from './loja.js';
+import { IDS_SKINS, buscarSkin, skinLiberada } from './skins.js';
 
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
@@ -81,9 +83,10 @@ const avisoOrientacao = document.getElementById('aviso-orientacao');
 
 const telaTitulo = document.getElementById('tela-titulo');
 const botaoTituloJogar = document.getElementById('botao-titulo-jogar');
+const botaoTituloLoja = document.getElementById('botao-titulo-loja');
 const botaoTituloComo = document.getElementById('botao-titulo-como');
 const botaoTituloSobre = document.getElementById('botao-titulo-sobre');
-const botoesTitulo = [botaoTituloJogar, botaoTituloComo, botaoTituloSobre];
+const botoesTitulo = [botaoTituloJogar, botaoTituloLoja, botaoTituloComo, botaoTituloSobre];
 const cursorTitulo = document.getElementById('cursor-titulo');
 const painelTitulo = document.getElementById('painel-titulo');
 const tituloPainel = document.getElementById('titulo-painel');
@@ -108,13 +111,19 @@ fetch(PASTA_NIVEIS + 'niveis.json')
   .then((json) => { dadosJsonNiveis = json.niveis ?? []; })
   .catch((erro) => console.error('Falha ao carregar niveis.json:', erro));
 
-// Progresso: níveis, estrelas e IDs das moedas coletadas por fase. Fica salvo no navegador.
+// Progresso: níveis, estrelas, IDs das moedas coletadas por fase, carteira e skins da Loja.
+// Fica salvo no navegador. Saves antigos sem os campos da Loja recebem os valores padrão.
 const CHAVE_PROGRESSO = 'byte-progresso';
+/** Ids de skin válidos e sem repetição, sempre com `obrigatorios` incluídos. */
+function listaDeSkins(lista, obrigatorios = []) {
+  const validos = Array.isArray(lista) ? lista.filter((id) => IDS_SKINS.has(id)) : [];
+  return [...new Set([...obrigatorios, ...validos])];
+}
 function carregarProgresso() {
   try {
     const salvo = JSON.parse(localStorage.getItem(CHAVE_PROGRESSO));
     if (salvo && Number.isInteger(salvo.liberados)) {
-      return {
+      const progressoSalvo = {
         liberados: Math.min(Math.max(salvo.liberados, 1), NIVEIS_NA_TELA),
         estrelas: Array.isArray(salvo.estrelas) ? salvo.estrelas : [],
         moedasColetadas: Array.from({ length: quantidadeFases }, (_, indice) => (
@@ -124,12 +133,25 @@ function carregarProgresso() {
         )),
         intro_nivel1_vista: salvo.intro_nivel1_vista === true,
         chefe_derrotado: salvo.chefe_derrotado === true,
+        carteira: Number.isInteger(salvo.carteira) && salvo.carteira > 0 ? salvo.carteira : 0,
+        skinsCompradas: listaDeSkins(salvo.skinsCompradas, ['classico']),
+        skinsSociais: listaDeSkins(salvo.skinsSociais),
+        skinEquipada: 'classico',
       };
+      // Uma skin que deixou de existir ou não está liberada volta ao Clássico.
+      if (IDS_SKINS.has(salvo.skinEquipada)
+        && skinLiberada(buscarSkin(salvo.skinEquipada), progressoSalvo, NIVEIS_NA_TELA)) {
+        progressoSalvo.skinEquipada = salvo.skinEquipada;
+      }
+      return progressoSalvo;
     }
   } catch {
     // Progresso ilegível ou sem armazenamento: começa do primeiro nível.
   }
-  return { liberados: 1, estrelas: [], moedasColetadas: [], intro_nivel1_vista: false, chefe_derrotado: false };
+  return {
+    liberados: 1, estrelas: [], moedasColetadas: [], intro_nivel1_vista: false, chefe_derrotado: false,
+    carteira: 0, skinsCompradas: ['classico'], skinsSociais: [], skinEquipada: 'classico',
+  };
 }
 function salvarProgresso() {
   try {
@@ -139,6 +161,18 @@ function salvarProgresso() {
   }
 }
 let progresso = carregarProgresso();
+carregarAnimacoesByte(progresso.skinEquipada);
+// Moedas pegas na partida atual (inclusive as já coletadas antes): viram saldo ao concluir a fase.
+let moedasDaPartida = 0;
+
+const telaLoja = document.getElementById('tela-loja');
+const loja = criarLoja(telaLoja, {
+  progresso: () => progresso,
+  salvar: salvarProgresso,
+  totalNiveis: NIVEIS_NA_TELA,
+  onEquipar: (id) => carregarAnimacoesByte(id),
+  onVoltar: () => mostrarTitulo(botoesTitulo.indexOf(botaoTituloLoja)),
+});
 
 // Cutscene de introdução do Nível 1 (roteiro em cutscene_intro_nivel1.json).
 const telaCutscene = document.getElementById('tela-cutscene');
@@ -193,6 +227,7 @@ const lutaChefe = criarChefe(document.getElementById('canvas-chefe'), {
   onVitoria: () => aoVencerChefe(),
   onSair: () => sairDoChefe(),
   onAtualizarInterface: atualizarInterface,
+  pastaByte: () => (progresso.skinEquipada === 'classico' ? null : `./${pastaDaSkin(progresso.skinEquipada)}arena/`),
 });
 
 /** Abre o que o totem encostado oferece: a pergunta do computador de desafio ou o terminal da missão. */
@@ -438,7 +473,7 @@ function desenharAvisoFlutuante(ctx, cameraX, cameraY, linhas, centroMundo, topo
   linhas.forEach((linha, i) => ctx.fillText(linha, x, y - (linhas.length - 1 - i) * 20));
   ctx.restore();
 }
-const somApertarPlay = new Audio('./assets/sound/apertar_play.mp3');
+const somApertarPlay = new Audio('./assets/sound/apertar_play.wav');
 registrarEfeito(somApertarPlay);
 const somPerder = new Audio('./assets/sound/perder.mp3');
 registrarEfeito(somPerder);
@@ -473,9 +508,9 @@ configurarControlesToque();
 function tocarSomApertarPlay() {
   try {
     somApertarPlay.currentTime = 0;
-    somApertarPlay.play().catch((erro) => console.error('Falha ao tocar apertar_play.mp3:', erro));
+    somApertarPlay.play().catch((erro) => console.error('Falha ao tocar apertar_play.wav:', erro));
   } catch (erro) {
-    console.error('Falha ao tocar apertar_play.mp3:', erro);
+    console.error('Falha ao tocar apertar_play.wav:', erro);
   }
 }
 
@@ -630,6 +665,7 @@ function redimensionarJogo() {
   } else if (!retratoMovel.matches && document.activeElement === avisoOrientacao) {
     const proximoFoco = !menuSom.hidden ? controleMusica
       : estadoDaPartida === 'titulo' ? botoesTitulo[indiceTitulo]
+      : estadoDaPartida === 'loja' ? document.getElementById('botao-loja-voltar')
       : estadoDaPartida === 'inicio' ? botaoJogar : botaoRetomar;
     proximoFoco.focus({ preventScroll: true });
   }
@@ -664,6 +700,7 @@ function prepararNovaPartida() {
   mensagemAte = 0;
   avisoSaidaAte = 0;
   avisoCheckpoint = null;
+  moedasDaPartida = 0;
 }
 
 /** Esconde a tela inicial e os menus, e começa uma nova tentativa da fase. */
@@ -792,7 +829,10 @@ function atualizarEntradaSaida(deltaTime) {
   }
 }
 
-/** Vitória: toca o som, guarda as estrelas (vidas restantes), libera a próxima fase e volta à tela de níveis. */
+/**
+ * Vitória: toca o som, guarda as estrelas (vidas restantes), soma as moedas da partida à carteira,
+ * libera a próxima fase e volta à tela de níveis.
+ */
 function concluirFase() {
   const concluida = indiceFaseAtual();
   controleDoJogo.stop();
@@ -803,6 +843,8 @@ function concluirFase() {
   const estrelasGanhas = Math.min(Math.max(player.vidas, 1), ESTRELAS_MAXIMAS);
   progresso.estrelas[concluida] = Math.max(progresso.estrelas[concluida] ?? 0, estrelasGanhas);
   progresso.liberados = Math.max(progresso.liberados, Math.min(concluida + 2, NIVEIS_NA_TELA));
+  progresso.carteira += moedasDaPartida;
+  moedasDaPartida = 0;
   salvarProgresso();
   mostrarNiveis();
 }
@@ -839,8 +881,8 @@ function sairDoChefe() {
   mostrarNiveis();
 }
 
-/** Abre a tela de título, com o botão Jogar selecionado. Usada ao carregar a página. */
-function mostrarTitulo() {
+/** Abre a tela de título, com o botão `indice` selecionado (Jogar ao carregar a página). */
+function mostrarTitulo(indice = 0) {
   if (!telaChefe.hidden) {
     lutaChefe.parar();
     telaChefe.hidden = true;
@@ -852,9 +894,20 @@ function mostrarTitulo() {
   telaInicio.hidden = true;
   telaNiveis.hidden = true;
   seletorNiveis.esconder();
+  loja.esconder();
   telaTitulo.hidden = false;
   pararMusicaFundo();
-  selecionarBotaoTitulo(0);
+  selecionarBotaoTitulo(indice);
+  atualizarInterface();
+  if (indice > 0) botoesTitulo[indice].focus({ preventScroll: true });
+}
+
+/** Abre a Loja de skins por cima da tela de título. */
+function mostrarLoja() {
+  estadoDaPartida = 'loja';
+  limparAcoes();
+  telaTitulo.hidden = true;
+  loja.mostrar();
   atualizarInterface();
 }
 
@@ -885,7 +938,7 @@ const PAINEIS_TITULO = {
     ],
   },
   sobre: { titulo: 'Sobre', linhas: ['As aventuras de Byte', 'Versão 1.0', 'Jogo de plataforma em desenvolvimento.'] },
-  apagar: { titulo: 'Apagar dados', linhas: ['Isso apaga os níveis liberados, as estrelas, as moedas e o chefe derrotado.', 'O jogo volta para o Nível 1. Não dá para desfazer.'] },
+  apagar: { titulo: 'Apagar dados', linhas: ['Isso apaga os níveis liberados, as estrelas, as moedas, a carteira, as skins e o chefe derrotado.', 'O jogo volta para o Nível 1 com o Byte Clássico. Não dá para desfazer.'] },
 };
 
 function abrirPainelTitulo(conteudo) {
@@ -1012,6 +1065,7 @@ const dependenciasDoJogo = {
 
     const coletavel = verificarColetaveis(player);
     if (coletavel) {
+      moedasDaPartida += 1;
       const moedasDaFase = progresso.moedasColetadas[indiceFaseAtual()] ??= [];
       if (!moedasDaFase.includes(coletavel.id)) {
         moedasDaFase.push(coletavel.id);
@@ -1254,6 +1308,7 @@ botoesTitulo.forEach((botao, i) => {
   botao.addEventListener('mouseenter', () => selecionarBotaoTitulo(i));
 });
 botaoTituloJogar.addEventListener('click', iniciarPeloTitulo);
+botaoTituloLoja.addEventListener('click', mostrarLoja);
 botaoTituloComo.addEventListener('click', () => abrirPainelTitulo('como'));
 botaoTituloSobre.addEventListener('click', () => abrirPainelTitulo('sobre'));
 botaoFecharPainel.addEventListener('click', fecharPainelTitulo);
@@ -1379,6 +1434,12 @@ window.addEventListener('keydown', (evento) => {
     evento.preventDefault();
     setInput('pausa', false);
     abrirDoTotem();
+    return;
+  }
+
+  // Loja: setas movem o foco entre os cartões, Enter confirma e Esc volta ao título.
+  if (estadoDaPartida === 'loja') {
+    loja.tratarTecla(evento);
     return;
   }
 

@@ -1021,7 +1021,7 @@ body {
 .titulo-menu {
   position: absolute;
   left: 34.1%;
-  top: 41.2%;
+  top: 37%;
   width: 31.8%;
   display: grid;
   gap: 1.2%;
@@ -1039,6 +1039,10 @@ body {
   touch-action: manipulation;
 }
 
+#botao-titulo-loja {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_loja_normal_156x32_4x.png');
+}
+
 #botao-titulo-como {
   background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_como_jogar_normal_156x32_4x.png');
 }
@@ -1051,6 +1055,10 @@ body {
   background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_jogar_selecionado_156x32_4x.png');
 }
 
+#botao-titulo-loja.selecionado {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_loja_selecionado_156x32_4x.png');
+}
+
 #botao-titulo-como.selecionado {
   background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_como_jogar_selecionado_156x32_4x.png');
 }
@@ -1061,6 +1069,10 @@ body {
 
 .botao-titulo:active {
   background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_jogar_pressionado_156x32_4x.png');
+}
+
+#botao-titulo-loja:active {
+  background-image: url('../assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_botao_loja_pressionado_156x32_4x.png');
 }
 
 #botao-titulo-como:active {
@@ -1229,6 +1241,228 @@ body {
   width: min(100%, calc(100vh * 16 / 9));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
+}
+
+/* Loja de skins: cabeçalho fixo e grade de cartões que rola quando não cabe (celular na horizontal). */
+.tela-loja {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background-color: #0e1430;
+  font-family: 'Press Start 2P', monospace;
+  color: #f9fafb;
+}
+
+.loja-topo {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 1200px);
+  margin: 0 auto 12px;
+  /* Espaço do botão de tela cheia, fixo no canto superior esquerdo. */
+  padding-left: 52px;
+}
+
+.loja-topo h2 {
+  margin: 0;
+  font-size: clamp(14px, 2.4vw, 28px);
+  line-height: 1.4;
+  text-align: center;
+  color: #38d6f5;
+  text-shadow: 2px 2px 0 #0b0f1a;
+}
+
+.loja-voltar {
+  justify-self: start;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 2px solid #64748b;
+  border-radius: 6px;
+  background-color: #1b2342;
+  color: #f9fafb;
+  font: inherit;
+  font-size: clamp(10px, 1.1vw, 13px);
+  cursor: pointer;
+}
+
+.loja-saldo {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 2px solid #facc15;
+  border-radius: 6px;
+  background-color: #1b2342;
+  font-size: clamp(12px, 1.4vw, 18px);
+  color: #fde68a;
+}
+
+.loja-saldo img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.loja-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr));
+  align-content: start;
+  gap: clamp(8px, 1.4vw, 18px);
+  width: min(100%, 1200px);
+  min-height: 0;
+  /* Centraliza quando sobra espaço; quando não cabe, as margens zeram e a grade rola. */
+  margin: auto;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-color: #475569 transparent;
+}
+
+@media (min-width: 900px) and (min-aspect-ratio: 4 / 3) {
+  .loja-grade { grid-template-columns: repeat(5, 1fr); }
+}
+
+.loja-cartao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid var(--cor-skin);
+  background-color: #171d3d;
+}
+
+.loja-cartao:focus-within {
+  outline: 3px solid #ffd646;
+  outline-offset: 2px;
+}
+
+.loja-cartao.tremendo {
+  animation: tremor-loja 0.2s steps(4);
+}
+
+@keyframes tremor-loja {
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+/* Céu e grama do cartão, como na arte de referência loja_skins_byte.png. */
+.loja-retrato {
+  display: grid;
+  place-items: end center;
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  max-height: 22vh;
+  background: linear-gradient(#2f80d4 0 30%, #4d98e2 30% 55%, #7cb6ee 55% 85%, #2f9e44 85%);
+}
+
+/* Byte parado: tira de 2 quadros de 96 × 96, 1 s cada. */
+.loja-byte {
+  height: 100%;
+  aspect-ratio: 1;
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation: byte-parado-loja 2s steps(1) infinite;
+}
+
+@keyframes byte-parado-loja {
+  0% { background-position: 0 0; }
+  50% { background-position: 100% 0; }
+}
+
+.loja-cartao[data-situacao='bloqueada'] .loja-byte {
+  filter: brightness(0.35) saturate(0.4);
+}
+
+.loja-nome {
+  margin: 0;
+  min-height: 2.8em;
+  display: grid;
+  place-items: center;
+  font-size: clamp(8px, 0.85vw, 11px);
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.loja-estado {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  font: 13px/1.3 system-ui, sans-serif;
+  text-align: center;
+  color: #cbd5e1;
+}
+
+.loja-cartao[data-situacao='venda'] .loja-estado {
+  padding: 2px 10px;
+  border: 1px solid #facc15;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: #fde68a;
+}
+
+.loja-cartao[data-situacao='venda'] .loja-estado::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  background: url('../assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif') center / contain no-repeat;
+  image-rendering: pixelated;
+}
+
+.loja-cartao[data-situacao='bloqueada'] .loja-estado::before {
+  content: '🔒';
+}
+
+.loja-cartao[data-situacao='equipada'] .loja-estado {
+  font-weight: 700;
+  color: #86efac;
+}
+
+.loja-acao {
+  width: 100%;
+  min-height: 40px;
+  margin-top: auto;
+  padding: 6px 8px;
+  border: 2px solid #0b0f1a;
+  border-radius: 4px;
+  background-color: #16a34a;
+  color: #f9fafb;
+  font: inherit;
+  font-size: clamp(8px, 0.8vw, 10px);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.loja-cartao[data-situacao='venda'] .loja-acao { background-color: #ea8a1a; }
+.loja-cartao[data-situacao='social'] .loja-acao { background-color: #9333ea; }
+
+.loja-cartao .loja-acao[aria-disabled='true'] {
+  background-color: #3b4256;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.loja-acao:focus-visible {
+  outline: none;
+}
+
+.loja-aviso {
+  min-height: 1.6em;
+  margin: 10px 0 0;
+  font: 600 15px/1.6 system-ui, sans-serif;
+  text-align: center;
+  color: #fde68a;
 }
 
 /* Rótulo "NÍVEL 0X" da tela do nível: cobre o rótulo fixo da arte, com o número da fase. */

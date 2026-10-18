@@ -145,6 +145,7 @@
           <img class="titulo-logo" src="./assets/characters/Imagens_Personagens/02_cenario/tela_titulo_pacote/titulo_logo_308x98_4x.png" alt="" />
           <div class="titulo-menu" role="group" aria-label="Menu principal">
             <button type="button" id="botao-titulo-jogar" class="botao-titulo"><span class="sr-only">Jogar</span></button>
+            <button type="button" id="botao-titulo-loja" class="botao-titulo"><span class="sr-only">Loja</span></button>
             <button type="button" id="botao-titulo-como" class="botao-titulo"><span class="sr-only">Como jogar</span></button>
             <button type="button" id="botao-titulo-sobre" class="botao-titulo"><span class="sr-only">Sobre</span></button>
           </div>
@@ -165,6 +166,20 @@
       <!-- Tela de níveis: desenhada em canvas 480 × 270 pelo módulo telaNiveis.js. -->
       <section id="tela-niveis" class="tela-niveis" aria-label="Seleção de níveis" hidden>
         <canvas id="canvas-niveis" class="canvas-niveis" role="img" aria-label="Seleção de níveis"></canvas>
+      </section>
+
+      <!-- Loja de skins: os cartões são montados pelo módulo loja.js. -->
+      <section id="tela-loja" class="tela-loja" aria-labelledby="titulo-loja" hidden>
+        <header class="loja-topo">
+          <button type="button" id="botao-loja-voltar" class="loja-voltar">Voltar</button>
+          <h2 id="titulo-loja">Loja de skins</h2>
+          <p class="loja-saldo" aria-label="Saldo: 0 moedas">
+            <img src="./assets/characters/Imagens_Personagens/04_vidas_e_itens/07_moeda.gif" alt="" />
+            <span id="loja-saldo" aria-hidden="true">0</span>
+          </p>
+        </header>
+        <ul id="loja-grade" class="loja-grade" aria-label="Skins do Byte"></ul>
+        <p id="loja-aviso" class="loja-aviso" role="status"></p>
       </section>
 
       <!-- Texto HTML permanece nítido na resolução nativa do navegador. -->
