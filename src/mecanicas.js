@@ -1,7 +1,7 @@
 // Mecânicas do pacote obstaculos_mecanicas_pacote, em unidades do mundo da fase.
 // Perigos machucam ao toque (tipo "pular" e "abaixar"). Superfícies sólidas são retângulos
 // que entram em `obstaculos` (level.js) e são resolvidos pela colisão comum. Cada mecânica
-// tem o seu tempo próprio e segue o comportamento descrito em OBSTACULOS_GUIA.md.
+// tem seu próprio tempo de animação, movimento e colisão.
 
 const PASTA = './assets/characters/Imagens_Personagens/02_cenario/obstaculos_mecanicas_pacote/';
 const CHAO = 480;
@@ -16,12 +16,8 @@ const FORCA_VENTILADOR = 1500;
 const VELOCIDADE_MAXIMA_VENTILADOR = 330;
 const TEMPO_PORTA_ABERTA = 4;
 
-// Missões resolvidas nesta sessão: a porta ligada a uma missão continua aberta depois de reiniciar a fase.
-const missoesResolvidas = new Set();
-
 /** Abre, para sempre, as portas ligadas à missão resolvida (o terminal do totem as abre). */
 export function abrirPortasDaMissao(mecanicas, idMissao) {
-  missoesResolvidas.add(idMissao);
   for (const mecanica of mecanicas) {
     if (mecanica.tipo === 'porta' && mecanica.spec.missao === idMissao) mecanica.abrirParaSempre();
   }
@@ -152,12 +148,12 @@ class Mecanica {
     this.lancadoEm = null;
     this.abertaAte = 0;
     this.abertaParaSempre = false;
+    this.abertura = 0;
     this.pressionado = false;
     for (const retangulo of this.rects) retangulo.ativo = true;
     if (this.tipo === 'elevador') this.retangulo.y = CHAO - this.base - 16;
     if (this.tipo === 'porta') {
       this.retangulo.ativo = true;
-      if (this.spec.missao !== undefined && missoesResolvidas.has(this.spec.missao)) this.abrirParaSempre();
     }
   }
 
@@ -184,8 +180,7 @@ class Mecanica {
         : 0;
     }
     if (this.tipo === 'porta') {
-      const aberta = this.abertaParaSempre || this.tempo < this.abertaAte;
-      return aberta ? Math.min(3, Math.floor((this.tempo - (this.abertaAte - TEMPO_PORTA_ABERTA)) / 0.1)) : 0;
+      return Math.floor(this.abertura);
     }
     if (this.tipo === 'botao') {
       return this.pressionado ? 1 : 0;
@@ -220,7 +215,10 @@ class Mecanica {
           const tempoDesde = this.tempo - this.pisadaEm;
           retangulo.ativo = tempoDesde < 0.6;
           // Volta ao quadro inicial depois de 3 s, como no guia.
-          if (tempoDesde >= 3.6) this.pisadaEm = null;
+          if (tempoDesde >= 3.6) {
+            this.pisadaEm = null;
+            retangulo.ativo = true;
+          }
         }
         break;
       case 'holografico':
@@ -239,9 +237,16 @@ class Mecanica {
         retangulo.y = novoY;
         break;
       }
-      case 'porta':
-        retangulo.ativo = !(this.abertaParaSempre || this.tempo < this.abertaAte);
+      case 'porta': {
+        const ocupada = !retangulo.ativo && interseca(
+          personagem.x, personagem.y, personagem.largura, personagem.altura,
+          retangulo.x, retangulo.y, retangulo.width, retangulo.height,
+        );
+        const aberta = this.abertaParaSempre || this.tempo < this.abertaAte || ocupada;
+        this.abertura = Math.max(0, Math.min(3, this.abertura + (aberta ? 1 : -1) * dt * 10));
+        retangulo.ativo = this.abertura < 3;
         break;
+      }
       case 'botao':
         this.pressionado = emCimaDe(personagem, retangulo);
         break;
@@ -261,7 +266,24 @@ class Mecanica {
 
   /** Desenha a mecânica. Chamado com a câmera do mundo já aplicada. */
   desenhar(ctx) {
-    if (!this.imagem.complete || this.imagem.naturalWidth === 0) return;
+    if (!this.imagem.complete || this.imagem.naturalWidth === 0) {
+      // Uma superfície sólida continua visível mesmo se o PNG falhar.
+      ctx.save();
+      ctx.fillStyle = '#59728c';
+      ctx.strokeStyle = '#83e9f5';
+      for (const r of this.rects) {
+        if (r.ativo === false) continue;
+        ctx.fillRect(r.x, r.y, r.width, r.height);
+        ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.width - 1, r.height - 1);
+      }
+      const perigo = this.caixaDePerigo();
+      if (perigo) {
+        ctx.fillStyle = '#ff606e';
+        ctx.fillRect(perigo.x, perigo.y, perigo.width, perigo.height);
+      }
+      ctx.restore();
+      return;
+    }
     const quadro = this.quadro();
     const alturaSprite = this.imagem.naturalHeight;
     const origemX = quadro * this.largura;

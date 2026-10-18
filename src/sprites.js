@@ -15,7 +15,6 @@ const dados = {
   },
   vidaVazia: { largura: 32, altura: 32, quadros: 1, duracao: 80 },
   vidaUltima: { largura: 32, altura: 32, quadros: 2, duracao: 500 },
-  poder: { largura: 16, altura: 15, quadros: 4, duracao: 80 },
   vidaItem: { largura: 16, altura: 16, quadros: 4, duracao: 200 },
   moeda: { largura: 16, altura: 16, quadros: 4, duracao: 140 },
   planta: { largura: 96, altura: 96, quadros: 12, duracao: 250 },

@@ -1,7 +1,4 @@
-// Responsável: Pedro. Arquivo reservado para o módulo de teclado e toque.
-// A integração espera as ações: esquerda, direita, pulo e agachamento.
-// Os elementos de toque estão em index.html, identificados por data-action.
-// Implemente a captura aqui e conecte a leitura em main.js, conforme o README.
+// Teclado e controles de toque, ligados aos botões data-action do index.html.
 
 // A mesma detecção orienta os controles, as instruções e o terminal.
 export const tecladoPrincipal = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -80,11 +77,19 @@ window.addEventListener('keyup', (e) => {
 
 // Limpa as ações se a janela do jogo perder o foco
 window.addEventListener('blur', limparAcoes);
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) limparAcoes();
+});
 
 // Configuração dinâmica lendo o HTML
 export function configurarControlesToque() {
     const areaDoJogo = document.querySelector('.game-shell');
     let ultimoToque = null;
+    areaDoJogo.addEventListener('dragstart', evento => evento.preventDefault());
+    areaDoJogo.addEventListener('contextmenu', evento => {
+        if (evento.pointerType === 'touch' || !tecladoPrincipal.matches) evento.preventDefault();
+    });
+    areaDoJogo.querySelectorAll('img').forEach(imagem => { imagem.draggable = false; });
 
     // No iOS, o segundo toque ainda pode acionar zoom apesar do touch-action.
     // Cancela apenas esse gesto na partida; o movimento continua pelos Pointer Events.
@@ -118,6 +123,7 @@ export function configurarControlesToque() {
         const ponteiros = new Set();
         ponteirosPorBotao.set(botao, ponteiros);
         botao.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
             e.preventDefault();
             ponteiros.add(e.pointerId);
             botao.setPointerCapture(e.pointerId);
