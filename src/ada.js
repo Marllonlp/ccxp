@@ -1,4 +1,4 @@
-// Tutorial da ADA no começo de cada nível (INSTRUCOES_ADA_TUTORIAL.md, pacote ada_tutorial_pacote).
+// Tutorial da ADA no começo de cada nível.
 // Desenhado em 480 × 270, como a cutscene da intro, cuja fonte e máquina de escrever são reaproveitadas.
 // Falas, código de exemplo e destaques vêm de assets/ada/tutoriais.json.
 import { carregarFonte, escrever, quebrar } from './cutscene.js';
@@ -37,15 +37,15 @@ const ANIMACOES_ADA = {
 };
 
 const ARQUIVOS = {
-  cenario: 'cenario_intro_dia_480x270.png',
-  byte_parado: 'byte_parado_2f_48x48.png',
+  cenario: '../compartilhados/cenario_intro_dia_480x270.png',
+  byte_parado: '../compartilhados/byte_parado_2f_48x48.png',
   byte_olhando: 'byte_olhando_tela_1f_48x48.png',
   caixa_ada: 'caixa_dialogo_ada_468x82.png',
-  caixa_byte: 'caixa_dialogo_byte_468x82.png',
+  caixa_byte: '../compartilhados/caixa_dialogo_byte_468x82.png',
   retrato_ada: 'retrato_ada_44x44.png',
-  retrato_byte: 'retrato_byte_44x44.png',
+  retrato_byte: '../compartilhados/retrato_byte_44x44.png',
   painel: 'painel_holograma_220x96.png',
-  balao_surpresa: 'balao_surpresa_16x16.png',
+  balao_surpresa: '../compartilhados/balao_surpresa_16x16.png',
   ...Object.fromEntries(Object.entries(ANIMACOES_ADA).map(([nome, anim]) => [`ada_${nome}`, anim.arquivo])),
 };
 
@@ -59,9 +59,9 @@ function carregarImagem(url) {
 }
 
 async function carregarRecursos(pasta) {
-  const cozette = new FontFace('CozetteAda', `url(${pasta}CozetteVector.ttf)`);
+  const cozette = new FontFace('CozetteAda', 'url(./assets/fontes/CozetteVector.ttf)');
   const fontes = Promise.all([
-    carregarFonte(pasta),
+    carregarFonte(),
     cozette.load().then(() => document.fonts.add(cozette)).catch((erro) => console.error('Falha ao carregar a fonte Cozette:', erro)),
   ]);
   const imagens = Promise.all(Object.entries(ARQUIVOS).map(async ([nome, arquivo]) => [nome, await carregarImagem(pasta + arquivo)]));
@@ -103,7 +103,7 @@ function pontosDaReta(x0, y0, x1, y1, passo) {
 }
 
 /**
- * Cria o tutorial dentro de `canvas` (480 × 270). `pasta` tem as imagens, as fontes e tutoriais.json.
+ * Cria o tutorial dentro de `canvas` (480 × 270). `pasta` tem as imagens e tutoriais.json.
  * tocar(nivel, { aoTerminar }) toca o tutorial do nível (1 = primeiro); aoTerminar roda ao acabar ou ao pular.
  */
 export function criarTutorialAda(canvas, { pasta }) {

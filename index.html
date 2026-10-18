@@ -14,8 +14,6 @@
   <link rel="stylesheet" href="./styles/main.css" />
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/pwa.js"></script>
-  <script type="module" src="./src/input.js"></script>
-  <script type="module" src="./src/player.js"></script>
   <script type="module" src="./src/telaCheia.js"></script>
 </head>
 
@@ -31,7 +29,7 @@
 
     <header class="page-header">
       <h1>Base do jogo</h1>
-      <p id="game-status" role="status">Carregando a área de teste…</p>
+      <p id="game-status" role="status">Carregando o jogo…</p>
     </header>
 
     <!-- Fica por cima de todas as telas: entra e sai da tela cheia (telaCheia.js). -->
@@ -40,7 +38,7 @@
       <svg class="icone-sair" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 1v5H1M15 6h-5V1M10 15v-5h5M1 10h5v5" /></svg>
     </button>
 
-    <section class="game-area" aria-label="Área de teste do jogo">
+    <section class="game-area" aria-label="Área do jogo">
       <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Fase de plataforma com Byte, inimigos e checkpoints">
         Seu navegador não oferece suporte ao Canvas.
       </canvas>
@@ -267,7 +265,6 @@
       </section>
 
       <!-- Tela do nível: aparece antes de cada partida e quando as vidas acabam. -->
-      <!-- A arte de fundo já traz o painel e os títulos; os botões e o texto são desenhados aqui. -->
       <!-- A arte de fundo já traz o painel e os títulos; os botões e o texto são desenhados aqui. -->
       <section id="tela-inicio" class="tela-inicio" aria-labelledby="titulo-inicio" hidden>
         <div class="tela-inicio-palco">

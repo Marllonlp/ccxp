@@ -680,7 +680,6 @@ function iniciarPartida() {
   botaoPausar.focus({ preventScroll: true });
 }
 
-/** Abre a tela inicial e para o jogo. Usada ao carregar a página e ao perder todas as vidas. */
 /** Abre a tela do nível atual (nome e texto da fase carregada) e para o jogo. */
 function mostrarTelaInicio() {
   estadoDaPartida = 'inicio';
@@ -1350,7 +1349,7 @@ window.addEventListener('keydown', (evento) => {
     }
     return;
   }
-  // F8 (teste): revê a introdução do Nível 1 a partir da tela de níveis ou da tela do nível.
+  // F8: revê a introdução do Nível 1 a partir da tela de níveis ou da tela do nível.
   if (evento.key === 'F8' && (estadoDaPartida === 'inicio' || estadoDaPartida === 'niveis')) {
     evento.preventDefault();
     const voltarPara = estadoDaPartida;

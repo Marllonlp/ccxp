@@ -63,6 +63,8 @@ node scripts/build-pwa.mjs
 
 A Vercel executa o build e publica `dist/`, conforme `vercel.json`. A pasta é gerada automaticamente e não deve ser editada.
 
+O build ignora prévias e guias de arte (`*_preview*` e `*_guia*`). Mantenha em `assets/` apenas os recursos usados pelo jogo. Imagens idênticas usadas por várias telas ficam em `assets/compartilhados/`; as fontes ficam em `assets/fontes/`. Reutilize esses caminhos ao adicionar telas.
+
 Para abrir a versão de produção localmente:
 
 ```bash
@@ -78,8 +80,11 @@ O aviso na tela de título aparece somente quando há uma atualização pronta. 
 | Caminho | Conteúdo |
 | --- | --- |
 | `index.html` | Interface, menus e controles. |
-| `src/` | Lógica do jogo, fases, desafios e animações em PNG. |
+| `src/` | Lógica do jogo, fases, desafios e interfaces. |
 | `styles/` | Estilos e adaptação às telas. |
 | `assets/` | Imagens, sons, fontes e dados das missões. |
+| `assets/animacoes/` | Animações do personagem, inimigos e coletáveis em PNG. |
+| `assets/compartilhados/` | Imagens reutilizadas pela introdução, ADA, portal e chefe. |
+| `assets/fontes/` | Uma cópia de cada fonte usada no jogo. |
 | `pwa/` | Service worker para cache offline e atualizações. |
 | `scripts/build-pwa.mjs` | Build de produção. |

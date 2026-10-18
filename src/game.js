@@ -1,40 +1,24 @@
 // Segundos: um intervalo de atualização nunca ultrapassa 50 ms.
 const MAX_DELTA_TIME = 0.05;
 
-// Reutilizamos este objeto enquanto o módulo de controles não estiver integrado.
-const EMPTY_ACTIONS = Object.freeze({
-  esquerda: false,
-  direita: false,
-  pulo: false,
-  agachamento: false,
-});
-
-function doNothing() {}
-
-function drawTestRectangle(context) {
-  context.fillStyle = '#e63946';
-  context.fillRect(100, 100, 50, 80);
-}
-
 /**
- * Inicia a coordenação dos módulos, com um desenho de teste como padrão.
- * As funções recebidas permitem integrar a equipe sem reescrever o ciclo.
+ * Inicia o ciclo de atualização e desenho com os módulos fornecidos por main.js.
  *
  * @param {HTMLCanvasElement} canvas Superfície de desenho, em pixels internos.
  * @param {CanvasRenderingContext2D} context Contexto de desenho 2D.
- * @param {object} [modules] Funções fornecidas pela integração em main.js.
- * @param {function(): object} [modules.readActions] Retorna as ações atuais.
- * @param {function(object, number): void} [modules.updatePlayer] Recebe ações e deltaTime.
- * @param {function(number): void} [modules.resolveCollisions] Recebe deltaTime.
- * @param {function(CanvasRenderingContext2D, HTMLCanvasElement): void} [modules.drawScene] Desenha o estado final.
+ * @param {object} modules Funções fornecidas pela integração em main.js.
+ * @param {function(): object} modules.readActions Retorna as ações atuais.
+ * @param {function(object, number): void} modules.updatePlayer Recebe ações e deltaTime.
+ * @param {function(number): void} modules.resolveCollisions Recebe deltaTime.
+ * @param {function(CanvasRenderingContext2D, HTMLCanvasElement): void} modules.drawScene Desenha o estado final.
  * @returns {{start: function, stop: function, draw: function, destroy: function}} Controle do ciclo e desenho.
  */
 export function startGame(canvas, context, {
-  readActions = () => EMPTY_ACTIONS,
-  updatePlayer = doNothing,
-  resolveCollisions = doNothing,
-  drawScene = drawTestRectangle,
-} = {}) {
+  readActions,
+  updatePlayer,
+  resolveCollisions,
+  drawScene,
+}) {
   let previousTime = null;
   let animationFrameId = null;
   let running = false;

@@ -1,4 +1,4 @@
-// Responsável: Dudu. Dados do cenário, obstáculos e checkpoints da fase de teste.
+// Cenários, obstáculos, coletáveis e checkpoints das cinco fases.
 // Convenções acordadas: x cresce para a direita, y cresce para baixo.
 // Todo obstáculo é um retângulo com x, y, width e height, em coordenadas do mundo.
 // A fase tem LARGURA_FASE de comprimento; a janela visível se adapta à tela.
@@ -381,11 +381,6 @@ export function obterPontoSeguro() {
   return { x, y };
 }
 
-/** Último checkpoint ativado, ou null. Útil para a interface do Kelvis. */
-export function obterUltimoCheckpoint() {
-  return ultimoCheckpoint;
-}
-
 /**
  * Ativa por contato o checkpoint tocado pelo personagem.
  * Devolve o checkpoint recém-ativado, ou null. Um checkpoint já ativo não
@@ -487,8 +482,6 @@ function carregarImagem(arquivo) {
   return imagem;
 }
 
-const plataformaTerra = carregarImagem('plataforma_terra_96x24_1f.png');
-
 // Outros estilos de plataforma (cristal, metal, holo). Cada largura tem a sua peça desenhada,
 // então a imagem só é esticada quando a largura da colisão não existe no pacote.
 // As peças são carregadas já ao abrir o jogo, para a plataforma não trocar de visual no meio da fase,
@@ -501,6 +494,7 @@ for (const [estilo, quadros] of Object.entries(QUADROS_PLATAFORMA)) {
     pecasPlataforma.set(`${estilo}_${tamanho}`, { imagem: carregarImagem(`plataforma_${estilo}_${tamanho}x24_${quadros}f.png`), tamanho });
   }
 }
+const plataformaTerra = pecasPlataforma.get('terra_96').imagem;
 
 function pecaPlataforma(estilo, largura) {
   const tamanho = LARGURAS_PLATAFORMA.includes(largura) ? largura : 96;

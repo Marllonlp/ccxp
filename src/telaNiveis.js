@@ -1,5 +1,4 @@
 // Tela de seleção de níveis. Desenha tudo em 480 × 270 pixels; o CSS amplia o canvas com pixel nítido.
-// Posições, tempos e regras seguem INSTRUCOES_TELA_NIVEIS.md da pasta tela_niveis_editavel_pacote.
 import { pontoNoCanvas } from './viewport.js';
 
 const PASTA = './assets/characters/Imagens_Personagens/02_cenario/tela_niveis_editavel_pacote/';
@@ -22,7 +21,7 @@ function pronta(imagem) {
   return imagem.complete && imagem.naturalWidth > 0;
 }
 
-const fonte = new FontFace('PressStart2PNiveis', `url(${PASTA}PressStart2P-Regular.ttf)`);
+const fonte = new FontFace('PressStart2PNiveis', 'url(./assets/fontes/PressStart2P-Regular.ttf)');
 fonte.load()
   .then(() => document.fonts.add(fonte))
   .catch((erro) => console.error('Falha ao carregar a fonte da tela de níveis:', erro));
@@ -37,7 +36,7 @@ function escreverComSombra(ctx, texto, x, y, cor) {
 
 /**
  * Escreve um nome centralizado. A fonte mostra o Í maiúsculo como minúsculo, então desenha-se
- * o I e o acento agudo com pixels, na mesma cor e com a mesma sombra (INSTRUCOES_TELA_NIVEIS.md).
+ * o I e o acento agudo com pixels, na mesma cor e com a mesma sombra.
  */
 function escreverNome(ctx, texto, centroX, y, cor) {
   const semAcento = texto.replace(/Í/g, 'I');

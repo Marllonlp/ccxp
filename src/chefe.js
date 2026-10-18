@@ -1,4 +1,4 @@
-// Arena da luta contra o Kernel Panic (INSTRUCOES_CHEFE_KERNEL_PANIC.md).
+// Arena da luta contra o Kernel Panic.
 // Desenhada em 480 × 270 com a câmera travada. Os números vêm de chefe_config.json.
 // A física do Byte (velocidade, gravidade e salto) não está no guia: os valores abaixo foram escolhidos
 // para o salto alcançar as duas plataformas.
@@ -33,7 +33,7 @@ const PACOTE_CHAO_Y = CHAO - 12;
 
 // Arquivos da pasta da luta, pelo nome usado no código. Sprites com N quadros lado a lado: "_Nf".
 const ARQUIVOS = {
-  arena: 'arena_chefe_fundo_480x270.png',
+  arena: '../compartilhados/arena_chefe_fundo_480x270.png',
   faixa: 'faixa_chefe_final_480x57.png',
   hud_vazia: 'hud_barra_chefe_vazia_208x26.png',
   hud_cheia: 'hud_barra_chefe_cheia_208x26.png',
@@ -42,25 +42,25 @@ const ARQUIVOS = {
   chefe_vulneravel_4f: 'chefe_com_notebook_vulneravel_4f_128x128.png',
   chefe_dano_2f: 'chefe_com_notebook_dano_2f_128x128.png',
   chefe_derrota_6f: 'chefe_kernel_panic_derrota_6f_128x128.png',
-  pacote_2f: 'projetil_pacote_erro_2f_12x12.png',
+  pacote_2f: '../compartilhados/projetil_pacote_erro_2f_12x12.png',
   laser_aviso_2f: 'laser_aviso_2f_16x4.png',
   laser_feixe_2f: 'laser_feixe_2f_16x10.png',
   laser_ponta_2f: 'laser_ponta_2f_12x14.png',
   bugzinho_andando_4f: 'bugzinho_andando_4f_18x14.png',
   bugzinho_morte_2f: 'bugzinho_morte_2f_18x14.png',
-  notebook_2f: 'notebook_frente_2f_18x15.png',
-  plataforma_2f: 'reutilizados/plataforma_metal_64x24_2f.png',
-  totem_4f: 'reutilizados/totem_terminal_ativo_32x64_4f.png',
-  byte_parado_2f: 'reutilizados/byte_parado_2f_48x48.png',
-  byte_correndo_8f: 'reutilizados/byte_correndo_8f_48x48.png',
-  byte_pulando_2f: 'reutilizados/byte_pulando_2f_48x48.png',
-  byte_caindo_2f: 'reutilizados/byte_caindo_2f_48x48.png',
-  byte_agachado_2f: 'reutilizados/byte_agachado_2f_48x48.png',
-  byte_dano_2f: 'reutilizados/byte_dano_2f_48x48.png',
-  byte_morte_3f: 'reutilizados/byte_morte_3f_48x48.png',
-  balao_exclamacao: 'reutilizados/balao_exclamacao_16x16.png',
-  caixa_byte: 'reutilizados/caixa_dialogo_byte_468x82.png',
-  retrato_byte: 'reutilizados/retrato_byte_44x44.png',
+  notebook_2f: '../compartilhados/notebook_frente_2f_18x15.png',
+  plataforma_2f: '../characters/Imagens_Personagens/02_cenario/plataformas_totens_pacote/plataforma_metal_64x24_2f.png',
+  totem_4f: '../characters/Imagens_Personagens/02_cenario/plataformas_totens_pacote/totem_terminal_ativo_32x64_4f.png',
+  byte_parado_2f: '../compartilhados/byte_parado_2f_48x48.png',
+  byte_correndo_8f: '../compartilhados/byte_correndo_8f_48x48.png',
+  byte_pulando_2f: '../compartilhados/byte_pulando_2f_48x48.png',
+  byte_caindo_2f: '../compartilhados/byte_caindo_2f_48x48.png',
+  byte_agachado_2f: '../compartilhados/byte_agachado_2f_48x48.png',
+  byte_dano_2f: '../compartilhados/byte_dano_2f_48x48.png',
+  byte_morte_3f: '../compartilhados/byte_morte_3f_48x48.png',
+  balao_exclamacao: '../compartilhados/balao_exclamacao_16x16.png',
+  caixa_byte: '../compartilhados/caixa_dialogo_byte_468x82.png',
+  retrato_byte: '../compartilhados/retrato_byte_44x44.png',
 };
 
 function carregarImagem(url) {
@@ -84,7 +84,7 @@ async function carregarRecursos(pasta) {
     Promise.all(imagens),
     fetch(pasta + 'chefe_config.json').then((resposta) => resposta.json()),
     fetch(pasta + 'missoes_chefe.json').then((resposta) => resposta.json()),
-    carregarFonte(pasta),
+    carregarFonte(),
   ]);
   return { sprites: Object.fromEntries(lista), config, missoes: missoes.missoes };
 }

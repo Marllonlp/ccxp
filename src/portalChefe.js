@@ -1,6 +1,6 @@
 // O último acesso transforma um computador do cenário em passagem para o núcleo.
 const arena = new Image();
-arena.src = './assets/chefe/arena_chefe_fundo_480x270.png';
+arena.src = './assets/compartilhados/arena_chefe_fundo_480x270.png';
 
 export function desenharPortalChefe(ctx, centro, piso, abertura, exercicios) {
   const x = centro - 58;

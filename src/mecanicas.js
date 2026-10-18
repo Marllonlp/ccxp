@@ -1,7 +1,7 @@
 // Mecânicas do pacote obstaculos_mecanicas_pacote, em unidades do mundo da fase.
 // Perigos machucam ao toque (tipo "pular" e "abaixar"). Superfícies sólidas são retângulos
 // que entram em `obstaculos` (level.js) e são resolvidos pela colisão comum. Cada mecânica
-// tem o seu tempo próprio e segue o comportamento descrito em OBSTACULOS_GUIA.md.
+// tem seu próprio tempo de animação, movimento e colisão.
 
 const PASTA = './assets/characters/Imagens_Personagens/02_cenario/obstaculos_mecanicas_pacote/';
 const CHAO = 480;

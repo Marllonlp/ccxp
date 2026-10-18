@@ -1,7 +1,4 @@
-// Responsável: Pedro. Arquivo reservado para o módulo de teclado e toque.
-// A integração espera as ações: esquerda, direita, pulo e agachamento.
-// Os elementos de toque estão em index.html, identificados por data-action.
-// Implemente a captura aqui e conecte a leitura em main.js, conforme o README.
+// Teclado e controles de toque, ligados aos botões data-action do index.html.
 
 // A mesma detecção orienta os controles, as instruções e o terminal.
 export const tecladoPrincipal = window.matchMedia('(hover: hover) and (pointer: fine)');
