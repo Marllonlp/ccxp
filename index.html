@@ -171,20 +171,19 @@
       <section id="tela-terminal" class="tela-terminal" role="dialog" aria-modal="true" aria-label="Terminal do totem" hidden>
         <div class="terminal-toque">
           <header class="terminal-toque-cabecalho">
-            <h2>Terminal do totem</h2>
+            <h2 class="sr-only">Terminal do totem</h2>
+            <details class="terminal-toque-missao" open>
+              <summary><span id="terminal-missao-titulo"></span> <span class="terminal-toque-ver">Enunciado e exemplos</span></summary>
+              <div class="terminal-toque-instrucoes">
+                <p id="terminal-enunciado"></p>
+                <div id="terminal-detalhes"></div>
+              </div>
+            </details>
             <button type="button" id="terminal-fechar" aria-label="Fechar terminal">Fechar</button>
           </header>
           <div class="terminal-toque-corpo">
-            <section class="terminal-toque-missao" aria-labelledby="terminal-missao-titulo">
-              <h3 id="terminal-missao-titulo"></h3>
-              <p id="terminal-enunciado"></p>
-              <details open>
-                <summary>Entrada, saída e exemplos</summary>
-                <div id="terminal-detalhes"></div>
-              </details>
-            </section>
             <section class="terminal-toque-editor" aria-labelledby="terminal-programa-titulo">
-              <h3 id="terminal-programa-titulo">Seu programa</h3>
+              <h3 id="terminal-programa-titulo">Seu código</h3>
               <p class="terminal-toque-ajuda">Escolha os trechos para montar o código. Selecione uma linha para movê-la ou removê-la.</p>
               <ol id="terminal-linhas"></ol>
               <div class="terminal-toque-edicao" role="group" aria-label="Editar linha selecionada">
@@ -192,17 +191,19 @@
                 <button type="button" id="terminal-descer">Descer</button>
                 <button type="button" id="terminal-remover">Remover</button>
               </div>
-              <div id="terminal-resultado" role="status" aria-live="polite"></div>
             </section>
             <section class="terminal-toque-banco" aria-labelledby="terminal-trechos-titulo">
-              <h3 id="terminal-trechos-titulo">Trechos disponíveis</h3>
+              <h3 id="terminal-trechos-titulo">Trechos de código</h3>
               <div id="terminal-trechos"></div>
-              <div class="terminal-toque-acoes">
-                <button type="button" id="terminal-testar">Testar código</button>
-                <button type="button" id="terminal-dica">Dica</button>
-              </div>
             </section>
           </div>
+          <footer class="terminal-toque-rodape">
+            <div id="terminal-resultado" role="status" aria-live="polite"></div>
+            <div class="terminal-toque-acoes">
+              <button type="button" id="terminal-testar">Testar código</button>
+              <button type="button" id="terminal-dica">Dica</button>
+            </div>
+          </footer>
         </div>
       </section>
 
