@@ -1670,30 +1670,25 @@ body {
   image-rendering: pixelated;
 }
 
-/* Arena com instruções nítidas e espaço para os controles de toque. */
+/* O cenário da arena ocupa a janela, como nas outras fases. */
 .tela-chefe {
   position: absolute;
   inset: 0;
   z-index: 6;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  background: radial-gradient(ellipse at center, #352454, #100f24 78%);
+  background: #302967;
 }
 
 .chefe-palco {
   position: relative;
-  width: min(100%, calc((100dvh - 32px) * 16 / 9));
-  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  box-shadow: 0 0 0 2px #645080, 0 20px 60px #080c20;
 }
 
 .canvas-chefe {
   display: block;
   width: 100%;
   height: 100%;
-  aspect-ratio: 16 / 9;
   image-rendering: pixelated;
 }
 
@@ -1714,27 +1709,22 @@ body {
 
 .chefe-abrir-desafio {
   position: absolute;
-  left: clamp(78px, var(--terminal-x, 15%), calc(100% - 78px));
+  left: clamp(calc(var(--desafio-largura, 154px) / 2 + 8px), var(--terminal-x, 15%), calc(100% - var(--desafio-largura, 154px) / 2 - 8px));
   top: var(--terminal-y, 52%);
   transform: translate(-50%, -100%);
   display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 6px 10px;
-  border: 2px solid #66e9ff;
-  border-bottom: 4px solid #14516d;
-  border-radius: 2px;
-  background: #187ba0;
-  color: #fff;
-  font: 700 14px/1.25 system-ui, sans-serif;
-  white-space: nowrap;
+  align-items: flex-end;
+  width: var(--desafio-largura, 154px);
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
   touch-action: manipulation;
 }
 
-.chefe-abrir-desafio span { color: #a4faff; font-family: monospace; }
-.chefe-abrir-desafio:hover { background: #2196b8; }
+.chefe-abrir-desafio img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.chefe-abrir-desafio:hover { filter: brightness(1.1); }
 .chefe-abrir-desafio:focus-visible { outline: 3px solid #ffe18a; outline-offset: 3px; }
 
 .chefe-etapa,
@@ -1759,27 +1749,21 @@ body {
 }
 
 @media (hover: none), (pointer: coarse) {
-  .tela-chefe {
-    --rodape-chefe: calc(var(--control-size) + max(20px, env(safe-area-inset-bottom)));
-    padding: 8px max(12px, env(safe-area-inset-right)) var(--rodape-chefe) max(12px, env(safe-area-inset-left));
-  }
-
-  .chefe-palco {
-    width: min(100%, calc((100dvh - var(--rodape-chefe) - 8px) * 16 / 9));
-  }
-
   .chefe-info {
-    left: 8px;
-    right: 8px;
-    bottom: 6px;
-    gap: 8px;
-    font-size: 12px;
+    left: calc(2 * var(--control-size) + 36px);
+    right: calc(2 * var(--control-size) + 36px);
+    bottom: max(8px, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: 1fr auto;
+    justify-items: center;
+    gap: 4px;
+    font-size: 11px;
   }
+
+  #chefe-dica { grid-column: 1 / -1; grid-row: 2; }
 
   .chefe-etapa,
   .chefe-tempo { padding: 3px 5px; }
-
-  .chefe-abrir-desafio { min-height: 44px; }
 }
 
 .game-shell[data-estado='chefe'] .mobile-controls {

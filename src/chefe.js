@@ -1,5 +1,5 @@
 // Arena da luta contra o Kernel Panic.
-// Desenhada em 480 × 270 com a câmera travada. Os números vêm de chefe_config.json.
+// A física usa uma arena de 480 × 270; a visão acompanha o tamanho da tela.
 // A física do Byte (velocidade, gravidade e salto) não está no guia: os valores abaixo foram escolhidos
 // para o salto alcançar as duas plataformas.
 import { inputState, limparAcoes } from './input.js';
@@ -7,6 +7,7 @@ import { desenharVidas } from './player.js';
 import { carregarFonte, escrever, escreverCartela, quebrar } from './cutscene.js';
 import { Tiro } from './poder.js';
 import { tocarEfeitoEletronico } from './audio.js';
+import { ajustarCanvas } from './viewport.js';
 
 const LARGURA = 480;
 const ALTURA = 270;
@@ -129,6 +130,7 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   let pausado = false;
   let controlesAnteriores = false;
   let inicializacao = 0;
+  let visao = { largura: LARGURA, altura: ALTURA, escala: 1, x: 0, y: 0, pixelRatio: 1, vidasX: 64, hudY: 12 };
   const menuFim = canvas.parentElement.querySelector('#chefe-fim');
   const botaoTentar = menuFim.querySelector('#chefe-tentar');
   const informacoes = canvas.parentElement.querySelector('.chefe-info');
@@ -136,6 +138,23 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   const dica = informacoes.querySelector('#chefe-dica');
   const tempoRestante = informacoes.querySelector('#chefe-tempo');
   const botaoDesafio = canvas.parentElement.querySelector('#chefe-abrir-desafio');
+
+  function redimensionar() {
+    const { width: largura, height: altura } = canvas.getBoundingClientRect();
+    if (!largura || !altura) return;
+    const escala = Math.min(largura / LARGURA, altura / ALTURA);
+    const telaCheia = document.getElementById('botao-tela-cheia').getBoundingClientRect();
+    visao = { largura, altura, escala,
+      x: (largura - LARGURA * escala) / 2,
+      y: (altura - ALTURA * escala) / 2,
+      pixelRatio: ajustarCanvas(canvas, { largura, altura }),
+      vidasX: Math.max(64, telaCheia.right + 12),
+      hudY: Math.max(12, telaCheia.top),
+    };
+    if (rodando) desenhar();
+  }
+
+  new ResizeObserver(redimensionar).observe(canvas);
 
   function podeControlar() {
     return rodando && !pausado && !dialogo && !s.terminalAberto && s.byte.vidas > 0
@@ -150,8 +169,12 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     botaoDesafio.hidden = !rodando || pausado || !podeAbrirTerminal();
     if (rodando) {
       const totem = posicaoTotem();
-      botaoDesafio.style.setProperty('--terminal-x', `${(totem.x + 16) / LARGURA * 100}%`);
-      botaoDesafio.style.setProperty('--terminal-y', `${(totem.y - 8) / ALTURA * 100}%`);
+      // Mesma arte, tamanho e balanço do botão das fases, em pixels da tela.
+      const escalaBotao = visao.altura / 540;
+      const balanco = Math.floor(performance.now() / 400) % 2 === 0 ? 0 : escalaBotao;
+      botaoDesafio.style.setProperty('--desafio-largura', `${154 * escalaBotao}px`);
+      botaoDesafio.style.setProperty('--terminal-x', `${visao.x + (totem.x + 16) * visao.escala}px`);
+      botaoDesafio.style.setProperty('--terminal-y', `${visao.y + totem.y * visao.escala - 9 * escalaBotao + balanco}px`);
     }
     if (mudouFim && mostrarFim) {
       limparAcoes();
@@ -714,8 +737,12 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   // --- Desenho --------------------------------------------------------------
 
   function desenhar() {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, LARGURA, ALTURA);
+    ctx.setTransform(visao.pixelRatio, 0, 0, visao.pixelRatio, 0, 0);
+    ctx.clearRect(0, 0, visao.largura, visao.altura);
+    ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    ctx.translate(visao.x, visao.y);
+    ctx.scale(visao.escala, visao.escala);
     // Derrota: a tela treme 2 px.
     const tremorTela = s.estado === 'derrota' ? (Math.floor(s.total / 50) % 2 === 0 ? 2 : -2) : 0;
     ctx.save();
@@ -744,11 +771,34 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
     atualizarInformacoes();
     if (dialogo) desenharDialogo();
     if (s.estado === 'vitoria') escreverCartela(ctx, 'VITÓRIA!', (LARGURA - 8 * 24) / 2, 110, 24, '#FFD646', '#C9A227');
+    ctx.restore();
     atualizarInterfaceChefe();
   }
 
   function desenharCenario() {
-    ctx.drawImage(recursos.sprites.arena.img, 0, 0);
+    const fundo = recursos.sprites.arena.img;
+    const esquerda = -visao.x / visao.escala;
+    const topo = -visao.y / visao.escala;
+    const largura = visao.largura / visao.escala;
+    ctx.drawImage(fundo, 0, 0);
+    // Prolonga só as bordas, preservando as proporções e sem repetir o sol.
+    for (const lado of [-1, 1]) {
+      const margem = lado < 0 ? -esquerda : esquerda + largura - LARGURA;
+      for (let i = 0; i < Math.ceil(margem / 32); i++) {
+        ctx.save();
+        ctx.translate(lado < 0 ? -(i + 1) * 32 : LARGURA + i * 32, 0);
+        if (i % 2 === 0) {
+          ctx.translate(32, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(fundo, lado < 0 ? 0 : LARGURA - 32, 0, 32, ALTURA, 0, 0, 32, ALTURA);
+        ctx.restore();
+      }
+    }
+    if (topo < 0) {
+      ctx.drawImage(fundo, 0, 0, LARGURA, 1, esquerda, topo, largura, -topo);
+      ctx.drawImage(fundo, 0, ALTURA - 1, LARGURA, 1, esquerda, ALTURA, largura, -topo);
+    }
     for (const p of cfg().arena.plataformas) desenharSprite('plataforma_2f', quadroSprite('plataforma_2f', s.total, 500, true), p.x, p.y);
     const totem = posicaoTotem();
     if (s.total - s.totemTrocaT < TOTEM_TROCA_MS && Math.floor(s.total / 50) % 2 === 0) return;
@@ -839,24 +889,28 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
   }
 
   function desenharHUD() {
-    const x = 136;
-    ctx.drawImage(recursos.sprites.hud_vazia.img, x, 0);
+    ctx.save();
+    ctx.setTransform(visao.pixelRatio, 0, 0, visao.pixelRatio, 0, 0);
+    const larguraBarra = Math.min(416, Math.max(140, visao.largura - visao.vidasX - 194));
+    const x = Math.max(visao.vidasX + 126, (visao.largura - larguraBarra) / 2);
+    ctx.save();
+    ctx.translate(x, visao.hudY);
+    ctx.scale(larguraBarra / 208, larguraBarra / 208);
+    ctx.drawImage(recursos.sprites.hud_vazia.img, 0, 0);
     // Barra cheia: só a área de preenchimento (x 4–203, y 14–21), com largura 200 × vida / 3.
     const largura = Math.round(200 * s.vida / 3);
     const piscando = s.estado === 'dano' && Math.floor(s.t / 50) % 2 === 1;
     if (largura > 0 && !piscando) {
       const cheia = recursos.sprites.hud_cheia.img;
-      ctx.drawImage(cheia, 4, 14, largura, 8, x + 4, 14, largura, 8);
+      ctx.drawImage(cheia, 4, 14, largura, 8, 4, 14, largura, 8);
     }
     // Ao tomar dano, a moldura fica rosa por 1 frame.
     if (s.estado === 'dano' && s.t < 16) {
       ctx.strokeStyle = '#FF6078';
-      ctx.strokeRect(x + 0.5, 0.5, 207, 25);
+      ctx.strokeRect(0.5, 0.5, 207, 25);
     }
-    ctx.save();
-    ctx.translate(12, 32);
-    ctx.scale(0.625, 0.625);
-    desenharVidas(ctx, s.byte.vidas, s.total / 1000, { x: 0, y: 0 });
+    ctx.restore();
+    desenharVidas(ctx, s.byte.vidas, s.total / 1000, { x: visao.vidasX, y: visao.hudY });
     ctx.restore();
   }
 
@@ -1066,6 +1120,7 @@ export function criarChefe(canvas, { pasta, terminal, telaTerminal, onVitoria, o
       retornosAnteriores = terminal.definirRetornos({ onFechar: aoFecharTerminal, onResolvido: aoResolverPatch });
       rodando = true;
       ultimoQuadro = performance.now();
+      redimensionar();
       atualizarInterfaceChefe();
       onAtualizarInterface();
       window.addEventListener('keydown', aoTecla);
