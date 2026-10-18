@@ -83,6 +83,10 @@
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 6h3V4h2V2h2v12H6v-2H4v-2H1zm9-2h2v2h-2zm2 2h2v4h-2zm-2 4h2v2h-2z" /></svg>
               <span>Som</span>
             </button>
+            <button type="button" id="botao-acessibilidade" class="menu-jogo-botao" aria-controls="menu-acessibilidade">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 0h4v4H6zM1 5h14v2h-5v3l2 6H9.8L8 11l-1.8 5H4l2-6V7H1z" /></svg>
+              <span>Acessibilidade</span>
+            </button>
             <button type="button" id="botao-reiniciar" class="menu-jogo-botao" disabled>
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1h2v2h6v2h2v2h2v5h-2v2H6v-2H4V9h2v3h5v-2h2V7h-2V5H5v2H1V3h2z" /></svg>
               <span>Reiniciar fase</span>
@@ -117,6 +121,41 @@
             </div>
           </div>
           <button type="button" id="botao-voltar-som" class="menu-jogo-botao">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h2v4h7v4H8v4H6v-2H4v-2H2V6h2V4h2z" /></svg>
+            <span>Voltar</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Opções de acessibilidade: abertas pelo menu de pausa. Salvas no navegador pelo módulo acessibilidade.js. -->
+      <section id="menu-acessibilidade" class="pause-menu menu-som menu-acessibilidade" hidden aria-labelledby="titulo-acessibilidade">
+        <div class="menu-jogo-painel">
+          <header class="menu-jogo-cabecalho">
+            <div>
+              <p class="menu-jogo-legenda">As aventuras de Byte</p>
+              <h2 id="titulo-acessibilidade">Acessibilidade</h2>
+            </div>
+          </header>
+          <fieldset class="grupo-opcoes">
+            <legend>Tamanho do texto</legend>
+            <label><input type="radio" name="texto" value="normal" /><span>Normal</span></label>
+            <label><input type="radio" name="texto" value="grande" /><span>Grande</span></label>
+            <label><input type="radio" name="texto" value="muito_grande" /><span>Muito grande</span></label>
+          </fieldset>
+          <fieldset class="grupo-opcoes">
+            <legend>Alto contraste</legend>
+            <label><input type="radio" name="contraste" value="auto" /><span>Automático</span></label>
+            <label><input type="radio" name="contraste" value="ligado" /><span>Ligado</span></label>
+            <label><input type="radio" name="contraste" value="desligado" /><span>Desligado</span></label>
+          </fieldset>
+          <fieldset class="grupo-opcoes">
+            <legend>Reduzir movimento</legend>
+            <label><input type="radio" name="movimento" value="auto" /><span>Automático</span></label>
+            <label><input type="radio" name="movimento" value="ligado" /><span>Ligado</span></label>
+            <label><input type="radio" name="movimento" value="desligado" /><span>Desligado</span></label>
+          </fieldset>
+          <p class="menu-acessibilidade-nota">Automático segue a configuração do aparelho.</p>
+          <button type="button" id="botao-voltar-acessibilidade" class="menu-jogo-botao">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2h2v4h7v4H8v4H6v-2H4v-2H2V6h2V4h2z" /></svg>
             <span>Voltar</span>
           </button>

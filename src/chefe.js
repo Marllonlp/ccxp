@@ -8,6 +8,7 @@ import { carregarFonte, escrever, escreverCartela, quebrar } from './cutscene.js
 import { Tiro } from './poder.js';
 import { tocarEfeitoEletronico } from './audio.js';
 import { ajustarCanvas } from './viewport.js';
+import { movimentoReduzido } from './acessibilidade.js';
 
 const LARGURA = 480;
 const ALTURA = 270;
@@ -863,8 +864,10 @@ export function criarChefe(canvas, {
 
   function desenharByte() {
     const b = s.byte;
-    const piscando = b.invulneravelAte > s.total && Math.floor(s.total / 100) % 2 === 0;
-    if (piscando && !b.morto && !['carregando', 'contra_ataque'].includes(s.estado)) return;
+    const invulneravel = b.invulneravelAte > s.total && !b.morto && !['carregando', 'contra_ataque'].includes(s.estado);
+    // Com movimento reduzido, a invulnerabilidade aparece como transparência fixa em vez de piscar.
+    const reduzido = movimentoReduzido();
+    if (invulneravel && !reduzido && Math.floor(s.total / 100) % 2 === 0) return;
     let nome = 'byte_parado_2f';
     let quadro = quadroSprite(nome, s.total, 550, true);
     if (b.morto) {
@@ -886,6 +889,7 @@ export function criarChefe(canvas, {
     const x = Math.round(b.x);
     const topo = Math.round(b.pes - ALTURA_BYTE);
     ctx.save();
+    if (invulneravel && reduzido) ctx.globalAlpha = 0.5;
     if (b.facing === -1) {
       // Os sprites olham para a direita: espelha quando o Byte anda para a esquerda.
       ctx.translate(x + LARGURA_BYTE, topo);
@@ -909,7 +913,7 @@ export function criarChefe(canvas, {
     ctx.drawImage(recursos.sprites.hud_vazia.img, 0, 0);
     // Barra cheia: só a área de preenchimento (x 4–203, y 14–21), com largura 200 × vida / 3.
     const largura = Math.round(200 * s.vida / 3);
-    const piscando = s.estado === 'dano' && Math.floor(s.t / 50) % 2 === 1;
+    const piscando = s.estado === 'dano' && !movimentoReduzido() && Math.floor(s.t / 50) % 2 === 1;
     if (largura > 0 && !piscando) {
       const cheia = recursos.sprites.hud_cheia.img;
       ctx.drawImage(cheia, 4, 14, largura, 8, 4, 14, largura, 8);
