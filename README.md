@@ -1,4 +1,4 @@
-# As aventuras de Byte (CCXP)
+# As aventuras de Byte (CCXP) 
 
 Jogo de plataforma 2D em pixel art com desafios de programação em Python. Desenvolvido com HTML, CSS e JavaScript para computador e celular.
 
