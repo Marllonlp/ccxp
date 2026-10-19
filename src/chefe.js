@@ -25,6 +25,9 @@ const DANO_BYTE_MS = 400;
 const APRESENTACAO_MS = 1500;
 const CARREGAR_PODER_MS = 350;
 const INTERVALO_TIRO_MS = 220;
+// Com a simulação do código na tela, os tiros saem mais devagar para cada repetição ser lida.
+const INTERVALO_SIMULACAO_MS = 650;
+const RESUMO_SIMULACAO_MS = 1300;
 const TOTEM_TROCA_MS = 300;
 const DANO_CHEFE_MS = 400;
 const DERROTA_MS = 1000;
@@ -455,14 +458,16 @@ export function criarChefe(canvas, {
           lancarPoder();
         }
         break;
-      case 'contra_ataque':
-        if (s.rajada.lancados < s.rajada.total && t >= s.rajada.lancados * INTERVALO_TIRO_MS) lancarPoder();
+      case 'contra_ataque': {
+        const intervalo = s.rajada.simulacao ? INTERVALO_SIMULACAO_MS : INTERVALO_TIRO_MS;
+        if (s.rajada.lancados < s.rajada.total && t >= s.rajada.lancados * intervalo) lancarPoder();
         for (const poder of s.poderes) poder.atualizar(dt);
         s.poderes = s.poderes.filter(poder => !poder.terminou);
         if (s.rajada.acertos === s.rajada.total) entrar('dano', null);
         break;
+      }
       case 'dano':
-        if (t >= DANO_CHEFE_MS) {
+        if (t >= DANO_CHEFE_MS + (s.rajada?.simulacao ? RESUMO_SIMULACAO_MS : 0)) {
           if (s.vida <= 0) {
             entrar('derrota', null);
           } else {
@@ -483,7 +488,9 @@ export function criarChefe(canvas, {
         atualizarNotebook(dt);
         if (t >= BALAO_MS) {
           s.notebook = null;
-          abrirDialogo('BYTE', 'Meu notebook! Recuperei!', () => entrar('vitoria', null));
+          abrirDialogo('BYTE', 'Meu notebook! Recuperei!', () => {
+            abrirDialogo('BYTE', textoAprendizado(), () => entrar('vitoria', null));
+          });
         }
         break;
       case 'vitoria':
@@ -718,7 +725,9 @@ export function criarChefe(canvas, {
     s.byte.andando = false;
     s.byte.agachado = false;
     const missao = recursos.missoes.find(missao => missao.id === idMissao);
-    s.rajada = { total: missao.disparos ?? 1, lancados: 0, acertos: 0, ultimoEm: -Infinity };
+    s.rajada = {
+      total: missao.disparos ?? 1, lancados: 0, acertos: 0, ultimoEm: -Infinity, simulacao: missao.simulacao ?? null,
+    };
     s.poderes = [];
     entrar('carregando', null);
   }
@@ -778,6 +787,7 @@ export function criarChefe(canvas, {
     ctx.restore();
 
     desenharHUD();
+    desenharSimulacao();
     if (s.estado === 'apresentacao') desenharFaixa();
     atualizarInformacoes();
     if (dialogo) desenharDialogo();
@@ -822,7 +832,7 @@ export function criarChefe(canvas, {
     const { chefe } = cfg();
     const ms = chefe.ms_por_frame;
     // Dano: o chefe treme ±3 px durante a animação de dano.
-    const tremor = s.estado === 'dano' ? (Math.floor(s.t / 50) % 2 === 0 ? 3 : -3) : 0;
+    const tremor = s.estado === 'dano' && s.t < DANO_CHEFE_MS ? (Math.floor(s.t / 50) % 2 === 0 ? 3 : -3) : 0;
     let nome = 'chefe_parado_6f';
     let quadro = quadroSprite(nome, s.total, ms.parado, true);
     if (s.estado === 'pacotes' || s.estado === 'chuva') {
@@ -913,7 +923,7 @@ export function criarChefe(canvas, {
     ctx.drawImage(recursos.sprites.hud_vazia.img, 0, 0);
     // Barra cheia: só a área de preenchimento (x 4–203, y 14–21), com largura 200 × vida / 3.
     const largura = Math.round(200 * s.vida / 3);
-    const piscando = s.estado === 'dano' && !movimentoReduzido() && Math.floor(s.t / 50) % 2 === 1;
+    const piscando = s.estado === 'dano' && s.t < DANO_CHEFE_MS && !movimentoReduzido() && Math.floor(s.t / 50) % 2 === 1;
     if (largura > 0 && !piscando) {
       const cheia = recursos.sprites.hud_cheia.img;
       ctx.drawImage(cheia, 4, 14, largura, 8, 4, 14, largura, 8);
@@ -926,6 +936,83 @@ export function criarChefe(canvas, {
     ctx.restore();
     desenharVidas(ctx, s.byte.vidas, s.total / 1000, { x: visao.vidasX, y: visao.hudY });
     ctx.restore();
+  }
+
+  /**
+   * O jogo não executa o código do jogador: ele reproduz os passos da solução (`simulacao` da missão),
+   * por isso o painel se apresenta como simulação. Cada repetição muda o valor da variável e lança um tiro.
+   */
+  function desenharSimulacao() {
+    const sim = s.rajada?.simulacao;
+    if (!sim || !['carregando', 'contra_ataque', 'dano'].includes(s.estado)) return;
+    const comInicio = sim.inicio !== undefined;
+    const valores = comInicio ? [sim.inicio, ...sim.passos] : sim.passos;
+    // Com valor inicial, cada tiro avança uma caixa; sem ele, cada tiro acende a caixa do seu passo.
+    const atual = s.rajada.lancados - (comInicio ? 0 : 1);
+    const terminou = s.estado === 'dano';
+    const titulo = `SIMULAÇÃO: ${sim.codigo}`;
+    let rodape = `TIRO ${s.rajada.lancados}/${s.rajada.total}: ${sim.linha}`;
+    if (terminou) rodape = sim.fim;
+    else if (s.rajada.lancados === 0) rodape = `CADA TIRO: ${sim.linha}`;
+
+    const letra = 8;
+    const caixa = Math.max(...valores.map((valor) => valor.length)) * letra + 8;
+    const seta = 14;
+    const rotulo = `${sim.variavel}:`;
+    const larguraCadeia = rotulo.length * letra + 6 + valores.length * caixa + (valores.length - 1) * seta;
+    const largura = Math.max(Math.max(titulo.length, rodape.length) * letra, larguraCadeia) + 16;
+    const x = 12;
+    const y = 34;
+    ctx.fillStyle = 'rgba(11, 13, 26, 0.88)';
+    ctx.fillRect(x, y, largura, 60);
+    ctx.strokeStyle = '#3ce6ff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, largura - 1, 59);
+    escrever(ctx, titulo, x + 8, y + 6, 8, '#3ce6ff');
+
+    const yCaixa = y + 19;
+    let cx = x + 8;
+    escrever(ctx, rotulo, cx, yCaixa + 5, 8, '#FFFFFF');
+    cx += rotulo.length * letra + 6;
+    valores.forEach((valor, i) => {
+      const ativo = i === atual;
+      const passado = i < atual;
+      ctx.fillStyle = ativo ? '#3ce6ff' : '#1b2140';
+      ctx.fillRect(cx, yCaixa, caixa, 18);
+      ctx.strokeStyle = ativo ? '#efffff' : '#5a6b8c';
+      ctx.strokeRect(cx + 0.5, yCaixa + 0.5, caixa - 1, 17);
+      let cor = '#cfe9ff';
+      if (ativo) cor = '#0B0D1A';
+      else if (passado) cor = '#5a6b8c';
+      escrever(ctx, valor, cx + (caixa - valor.length * letra) / 2, yCaixa + 5, 8, cor);
+      cx += caixa;
+      if (i < valores.length - 1) {
+        // A seta acende quando a repetição que leva ao próximo valor já disparou.
+        ctx.fillStyle = i < atual ? '#ffd064' : '#5a6b8c';
+        ctx.fillRect(cx + 2, yCaixa + 8, 7, 2);
+        ctx.fillRect(cx + 8, yCaixa + 6, 2, 6);
+        ctx.fillRect(cx + 10, yCaixa + 7, 2, 4);
+        ctx.fillRect(cx + 12, yCaixa + 8, 1, 2);
+        cx += seta;
+      }
+    });
+    escrever(ctx, rodape, x + 8, y + 45, 8, terminou ? '#FFD646' : '#FFFFFF');
+  }
+
+  /** Texto do painel para leitores de tela (#chefe-dica é uma região viva). */
+  function textoSimulacao(sim) {
+    const { lancados, total } = s.rajada;
+    if (lancados > 0) {
+      return `Simulação, tiro ${lancados} de ${total}: ${sim.linha} (${sim.variavel} = ${sim.passos[lancados - 1]}).`;
+    }
+    if (sim.inicio !== undefined) return `Patch resolvido! Simulação do código: ${sim.variavel} começa em ${sim.inicio}.`;
+    return `Patch resolvido! Simulação do código: ${total === 1 ? 'um tiro' : `${total} tiros`}.`;
+  }
+
+  /** Fecha a jornada ligando cada patch ao conceito que ele usou. */
+  function textoAprendizado() {
+    const partes = recursos.missoes.map((missao) => missao.aprendizado);
+    return `Aprendi: ${partes.slice(0, -1).join(', ')} e ${partes.at(-1)}. Com código, derrotei o vírus!`;
   }
 
   /** Faixa de apresentação: o fundo abre do centro, depois aparecem as linhas do texto de cima para baixo. */
@@ -987,6 +1074,7 @@ export function criarChefe(canvas, {
 
   function atualizarInformacoes() {
     const totalTiros = s.rajada?.total ?? 1;
+    const sim = s.rajada?.simulacao;
     const textos = {
       apresentacao: 'Recupere o notebook aplicando três patches.',
       parado: s.pacotes.length ? 'Pule os pacotes ou use as plataformas.' : 'Prepare-se para o próximo ataque.',
@@ -995,13 +1083,13 @@ export function criarChefe(canvas, {
       chuva: 'Saia das marcas no chão antes dos pacotes caírem.',
       bugzinhos: 'Pule por cima dos bugs.',
       vulneravel: dentroDoTotem() ? 'Abra o desafio no computador.' : 'Escudo desligado! Alcance o computador iluminado.',
-      carregando: `Patch resolvido! Preparando ${totalTiros === 1 ? 'um tiro' : `${totalTiros} tiros`}.`,
-      contra_ataque: `Byte está lançando ${totalTiros === 1 ? 'um tiro' : `${totalTiros} tiros`} no núcleo!`,
-      dano: 'Acertou! O Kernel Panic perdeu uma vida.',
+      carregando: sim ? textoSimulacao(sim) : `Patch resolvido! Preparando ${totalTiros === 1 ? 'um tiro' : `${totalTiros} tiros`}.`,
+      contra_ataque: sim ? textoSimulacao(sim) : `Byte está lançando ${totalTiros === 1 ? 'um tiro' : `${totalTiros} tiros`} no núcleo!`,
+      dano: sim ? `${sim.fim}. O Kernel Panic perdeu uma vida.` : 'Acertou! O Kernel Panic perdeu uma vida.',
       derrota: 'Você venceu! O notebook está caindo.',
       recuperar: 'Pegue seu notebook no chão.',
       pegando: 'Notebook recuperado!',
-      dialogo: 'Notebook recuperado!',
+      dialogo: dialogo?.texto,
       vitoria: 'Kernel Panic derrotado!',
       morte: 'Tente novamente: observe os avisos de cada ataque.',
       fim: 'Tente novamente: observe os avisos de cada ataque.',
@@ -1021,7 +1109,7 @@ export function criarChefe(canvas, {
 
   function abrirDialogo(quem, texto, aoFechar) {
     const linhas = quebrar(texto, 46);
-    dialogo = { quem, linhas, total: linhas.reduce((soma, linha) => soma + linha.length, 0), letras: 0, aoFechar };
+    dialogo = { quem, texto, linhas, total: linhas.reduce((soma, linha) => soma + linha.length, 0), letras: 0, aoFechar };
     s.estado = 'dialogo';
   }
 
