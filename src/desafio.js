@@ -4,6 +4,16 @@
 const LETRAS = ['A', 'B', 'C', 'D'];
 const NOMES_CATEGORIA = { vida: 'Coração', monstro: 'Monstro', ponte: 'Ponte' };
 
+/** Índices 0..n-1 em ordem aleatória (Fisher-Yates). */
+function embaralhar(n) {
+  const ordem = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ordem[i], ordem[j]] = [ordem[j], ordem[i]];
+  }
+  return ordem;
+}
+
 /**
  * Cria a janela dentro de `secao` (elemento #tela-desafio do index.html).
  * Devolve abrir(id, desafio, { textoAcerto, textoErro, insistir, onFim }), ativo() e tratarTecla(evento).
@@ -19,9 +29,21 @@ export function criarJanelaDesafio(secao) {
   const resultado = secao.querySelector('.resultado-desafio');
   const botaoContinuar = secao.querySelector('.botao-continuar-desafio');
 
-  let atual = null;      // { desafio, textoAcerto, textoErro, insistir, onFim }
+  // atual.opcoes e atual.correta seguem a ordem embaralhada mostrada na tela, não a do banco.
+  let atual = null;      // { desafio, opcoes, correta, textoAcerto, textoErro, insistir, onFim }
   let acertou = null;    // null enquanto não respondeu
   let botoes = [];
+  // Última ordem mostrada de cada pergunta: ao reabrir, a ordem nunca se repete.
+  const ultimaOrdem = new Map();
+
+  /** Embaralha só as alternativas da pergunta `id`; enunciado e código ficam como no banco. */
+  function ordemNova(id, n) {
+    const anterior = ultimaOrdem.get(id);
+    let ordem = embaralhar(n);
+    while (n > 1 && ordem.join() === anterior) ordem = embaralhar(n);
+    ultimaOrdem.set(id, ordem.join());
+    return ordem;
+  }
 
   /** Mostra o código com a lacuna destacada. Depois da resposta, a lacuna recebe a alternativa certa. */
   function mostrarCodigo(preenchimento = null) {
@@ -52,21 +74,21 @@ export function criarJanelaDesafio(secao) {
 
   function responder(indice) {
     if (!atual || acertou !== null || botoes[indice].disabled) return;
-    const { desafio, textoAcerto, textoErro, insistir } = atual;
-    if (insistir && indice !== desafio.correta) {
+    const { desafio, opcoes, correta, textoAcerto, textoErro, insistir } = atual;
+    if (insistir && indice !== correta) {
       tentarDeNovo(indice);
       return;
     }
-    acertou = indice === desafio.correta;
+    acertou = indice === correta;
 
     botoes.forEach((botao, i) => {
       botao.disabled = true;
-      if (i === desafio.correta) botao.classList.add('certa');
+      if (i === correta) botao.classList.add('certa');
       else if (i === indice) botao.classList.add('errada');
     });
-    mostrarCodigo(desafio.alternativas[desafio.correta]);
+    mostrarCodigo(opcoes[correta]);
 
-    const certa = `${LETRAS[desafio.correta]}) ${desafio.alternativas[desafio.correta]}`;
+    const certa = `${LETRAS[correta]}) ${opcoes[correta]}`;
     resultado.className = `resultado-desafio ${acertou ? 'acerto' : 'erro'}`;
     resultado.replaceChildren(
       Object.assign(document.createElement('strong'), {
@@ -92,7 +114,13 @@ export function criarJanelaDesafio(secao) {
 
   return {
     abrir(id, desafio, { textoAcerto, textoErro = '', insistir = false, onFim }) {
-      atual = { desafio, textoAcerto, textoErro, insistir, onFim };
+      const ordem = ordemNova(id, desafio.alternativas.length);
+      atual = {
+        desafio,
+        opcoes: ordem.map((i) => desafio.alternativas[i]),
+        correta: ordem.indexOf(desafio.correta),
+        textoAcerto, textoErro, insistir, onFim,
+      };
       acertou = null;
 
       categoria.textContent = `${NOMES_CATEGORIA[desafio.categoria] ?? 'Desafio'} · ${id}`;
@@ -100,7 +128,7 @@ export function criarJanelaDesafio(secao) {
       enunciado.textContent = desafio.enunciado;
       mostrarCodigo();
 
-      botoes = desafio.alternativas.map((texto, i) => {
+      botoes = atual.opcoes.map((texto, i) => {
         const botao = document.createElement('button');
         botao.type = 'button';
         botao.className = 'alternativa-desafio';

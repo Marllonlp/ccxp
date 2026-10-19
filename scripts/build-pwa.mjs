@@ -20,10 +20,11 @@ async function listar(pasta) {
   return arquivos;
 }
 
-// assets/loja/ guarda o pacote original da Loja (GIFs e guia); o jogo usa as cópias convertidas.
+// assets/loja/ e assets/tela_carregamento_pacote/ guardam os pacotes originais (guias e referências);
+// o jogo usa as cópias integradas em src/, styles/ e assets/.
 const caminhos = ['index.html', 'manifest.webmanifest',
   ...await listar('src'), ...await listar('styles'),
-  ...(await listar('assets')).filter((caminho) => !caminho.startsWith('assets/loja/'))].sort();
+  ...(await listar('assets')).filter((caminho) => !/^assets\/(loja|tela_carregamento_pacote)\//.test(caminho))].sort();
 const modeloWorker = await readFile(join(raiz, 'pwa/service-worker.js'), 'utf8');
 const hashVersao = createHash('sha256').update(modeloWorker);
 const arquivos = [];
