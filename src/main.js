@@ -51,6 +51,8 @@ import { criarCutscene } from './cutscene.js';
 import { criarChefe } from './chefe.js';
 import { criarTutorialAda } from './ada.js';
 import { criarLoja } from './loja.js';
+import { criarSobre } from './sobre.js';
+import { iniciarTelaCarregamento } from './carregamento.js';
 import { IDS_SKINS, buscarSkin, skinLiberada } from './skins.js';
 import {
   escalaTexto, altoContraste, lerPreferencia, definirPreferencia, aoMudarAcessibilidade,
@@ -177,6 +179,13 @@ const loja = criarLoja(telaLoja, {
   onVoltar: () => mostrarTitulo(botoesTitulo.indexOf(botaoTituloLoja)),
 });
 
+// Sobre: créditos animados da equipe, com o Byte da skin equipada.
+const telaSobre = document.getElementById('tela-sobre');
+const sobre = criarSobre(telaSobre, {
+  pastaByte: () => pastaDaSkin(progresso.skinEquipada),
+  onVoltar: () => mostrarTitulo(botoesTitulo.indexOf(botaoTituloSobre)),
+});
+
 // Cutscene de introdução do Nível 1 (roteiro em cutscene_intro_nivel1.json).
 const telaCutscene = document.getElementById('tela-cutscene');
 const cutsceneIntro = criarCutscene(document.getElementById('canvas-cutscene'), {
@@ -269,8 +278,12 @@ function resolverComputadorDoTerminal() {
   if (!computador || !missoesResolvidas.has(computador.missao)) return;
   computador.feito = true;
   const monstro = inimigos.find((inimigo) => inimigo.missao === computador.missao && inimigo.estado === 'ativo');
-  if (monstro) lancarPoder(monstro);
-  mensagem = monstro ? 'Poder lançado!' : 'Missão concluída';
+  // Derrotar o monstro não mostra aviso: o próprio poder voando já mostra o que aconteceu.
+  if (monstro) {
+    lancarPoder(monstro);
+    return;
+  }
+  mensagem = 'Missão concluída';
   mensagemAte = performance.now() + 1500;
 }
 
@@ -391,9 +404,10 @@ function abrirDesafioDoComputador(computador) {
     opcoes = {
       textoAcerto: 'Você ativou a ponte!',
       insistir: true,
+      // Sem aviso: a ponte se montando na tela já mostra o resultado.
       onFim: () => {
         construirPonte(vao);
-        mensagem = 'Ponte se abrindo…';
+        mensagem = '';
       },
     };
   } else if (monstro) {
@@ -403,7 +417,8 @@ function abrirDesafioDoComputador(computador) {
       textoErro: robo ? 'O robô continua patrulhando.' : 'A planta continua no caminho.',
       onFim: (acertou) => {
         if (acertou && monstro.estado === 'ativo') lancarPoder(monstro);
-        mensagem = acertou ? 'Poder lançado!' : `Cuidado com ${robo ? 'o sentinela' : 'a planta'}`;
+        // Acertou: sem aviso (o poder voando já mostra). Errou: lembra que o monstro continua.
+        mensagem = acertou ? '' : `Cuidado com ${robo ? 'o sentinela' : 'a planta'}`;
       },
     };
   } else {
@@ -686,6 +701,7 @@ function redimensionarJogo() {
       : !menuAcessibilidade.hidden ? menuAcessibilidade.querySelector('input:checked')
       : estadoDaPartida === 'titulo' ? botoesTitulo[indiceTitulo]
       : estadoDaPartida === 'loja' ? document.getElementById('botao-loja-voltar')
+      : estadoDaPartida === 'sobre' ? document.getElementById('botao-sobre-voltar')
       : estadoDaPartida === 'inicio' ? botaoJogar : botaoRetomar;
     proximoFoco.focus({ preventScroll: true });
   }
@@ -915,11 +931,21 @@ function mostrarTitulo(indice = 0) {
   telaNiveis.hidden = true;
   seletorNiveis.esconder();
   loja.esconder();
+  sobre.esconder();
   telaTitulo.hidden = false;
   pararMusicaFundo();
   selecionarBotaoTitulo(indice);
   atualizarInterface();
   if (indice > 0) botoesTitulo[indice].focus({ preventScroll: true });
+}
+
+/** Abre os créditos (Sobre) por cima da tela de título. */
+function mostrarSobre() {
+  estadoDaPartida = 'sobre';
+  limparAcoes();
+  telaTitulo.hidden = true;
+  sobre.mostrar();
+  atualizarInterface();
 }
 
 /** Abre a Loja de skins por cima da tela de título. */
@@ -944,34 +970,101 @@ function selecionarBotaoTitulo(indice) {
   cursorTitulo.style.top = `${topo}%`;
 }
 
+// Painéis do título. `secoes` mostra um subtítulo por seção; `linhasToque` substitui `linhas` no celular.
 const PAINEIS_TITULO = {
   como: {
     titulo: 'Como jogar',
-    linhas: ['SETAS ou A/D: andar', 'SETA PARA CIMA, W ou ESPAÇO: pular', 'SETA PARA BAIXO ou S: agachar', 'E ou ENTER: abrir o desafio do computador', 'P ou ESC: pausar', 'R: reiniciar a fase'],
-    linhasToque: [
-      'Segure as setas da esquerda para andar.',
-      'Toque na seta para cima, à direita, para pular. Você pode andar e pular ao mesmo tempo.',
-      'Segure a seta para baixo para agachar.',
-      'Encoste no computador e toque em ABRIR DESAFIO para responder.',
-      'Toque em Pausar para retomar, ajustar o som ou reiniciar.',
-      'No terminal, toque nos trechos de código. Selecione uma linha para movê-la ou removê-la.',
+    secoes: [
+      {
+        titulo: 'Objetivo',
+        linhas: [
+          'Ajude o Byte a atravessar as cinco fases aprendendo Python. No fim, enfrente o Kernel Panic e recupere o notebook.',
+          'Cada fase tem quatro exercícios obrigatórios. O contador Exercícios mostra quantos já foram resolvidos, e a porta de saída só abre quando todos estiverem prontos.',
+        ],
+      },
+      {
+        titulo: 'Controles',
+        linhas: [
+          'SETAS ou A/D: andar. SETA PARA CIMA, W ou ESPAÇO: pular. SETA PARA BAIXO ou S: agachar.',
+          'E ou ENTER: abrir o desafio do computador. P ou ESC: pausar. R: reiniciar a fase.',
+          'Durante a fase, o botão ? mostra de novo o tutorial da ADA.',
+        ],
+        linhasToque: [
+          'Segure as setas da esquerda para andar. Toque na seta para cima, à direita, para pular; dá para andar e pular ao mesmo tempo. Segure a seta para baixo para agachar.',
+          'Encoste no computador e toque em ABRIR DESAFIO para responder.',
+          'Toque em Pausar para retomar, reiniciar a fase ou ajustar o som e a acessibilidade. O botão ? mostra de novo o tutorial da ADA.',
+        ],
+      },
+      {
+        titulo: 'Desafios',
+        linhas: [
+          'Encoste num computador para abrir o desafio. Ele pode ser uma pergunta ou uma missão no terminal.',
+          'Pergunta: escolha a alternativa certa com o mouse ou com A/B/C (ou 1/2/3). Acertar constrói a ponte ou faz o Byte lançar o poder no monstro. Nos exercícios obrigatórios, você tenta de novo até acertar.',
+          'Terminal: monte o programa escolhendo os trechos de código na ordem certa e use Testar código. ALT + SETAS move a linha selecionada, DELETE a remove e ESC fecha o terminal.',
+        ],
+        linhasToque: [
+          'Encoste num computador para abrir o desafio. Ele pode ser uma pergunta ou uma missão no terminal.',
+          'Pergunta: toque na alternativa certa. Acertar constrói a ponte ou faz o Byte lançar o poder no monstro. Nos exercícios obrigatórios, você tenta de novo até acertar.',
+          'Terminal: toque nos trechos de código na ordem certa e use Testar código. Selecione uma linha para subi-la, descê-la ou removê-la.',
+        ],
+      },
+      {
+        titulo: 'Vidas e estrelas',
+        linhas: [
+          'O Byte tem três vidas. Monstros, perigos e quedas tiram uma vida, e ele volta ao último checkpoint (os totens pelo caminho).',
+          'Corações são opcionais: com menos de três vidas, aceite a pergunta do coração para recuperar uma. Se errar, o coração some, mas você não perde vida.',
+          'Ao concluir a fase, você ganha uma estrela por vida restante. Se as vidas acabarem, volte à tela do nível e tente de novo.',
+        ],
+      },
+      {
+        titulo: 'Moedas e Loja',
+        linhas: [
+          'As moedas coletadas entram na sua carteira quando você conclui a fase. Repetir uma fase rende moedas de novo; as que você já pegou antes aparecem transparentes.',
+          'Na LOJA, no menu inicial, use as moedas para comprar skins do Byte. Outras skins se liberam com 3 estrelas em todos os níveis, derrotando o Kernel Panic ou abrindo os perfis no Instagram.',
+        ],
+      },
+      {
+        titulo: 'Chefe final',
+        linhas: [
+          'No fim do último nível, o computador corrompido leva à luta contra o Kernel Panic. Pule os pacotes e os bugs, e agache ou suba nas plataformas para fugir do laser.',
+          'Quando o escudo cair, alcance o computador iluminado e resolva o patch: o Byte lança tiros no núcleo. Três patches derrotam o chefe.',
+        ],
+      },
+      {
+        titulo: 'Acessibilidade e som',
+        linhas: [
+          'Pause o jogo (P, ESC ou o botão Pausar) e abra Acessibilidade:',
+          'Tamanho do texto: Normal, Grande ou Muito grande, para menus, perguntas, terminal e avisos.',
+          'Alto contraste: fundos escuros sólidos, textos claros e bordas fortes, para ler melhor.',
+          'Reduzir movimento: diminui animações, tremores e piscadas.',
+          'No modo Automático, o contraste e o movimento seguem a configuração do aparelho. As escolhas ficam salvas, mesmo se você apagar os dados do jogo.',
+          'No mesmo menu, Som ajusta o volume da música e dos efeitos.',
+        ],
+        linhasToque: [
+          'Toque em Pausar e abra Acessibilidade:',
+          'Tamanho do texto: Normal, Grande ou Muito grande, para menus, perguntas, terminal e avisos.',
+          'Alto contraste: fundos escuros sólidos, textos claros e bordas fortes, para ler melhor.',
+          'Reduzir movimento: diminui animações, tremores e piscadas.',
+          'No modo Automático, o contraste e o movimento seguem a configuração do aparelho. As escolhas ficam salvas, mesmo se você apagar os dados do jogo.',
+          'No mesmo menu, Som ajusta o volume da música e dos efeitos.',
+        ],
+      },
     ],
   },
-  sobre: { titulo: 'Sobre', linhas: ['As aventuras de Byte', 'Versão 1.0', 'Jogo de plataforma em desenvolvimento.'] },
   apagar: { titulo: 'Apagar dados', linhas: ['Isso apaga os níveis liberados, as estrelas, as moedas, a carteira, as skins e o chefe derrotado.', 'O jogo volta para o Nível 1 com o Byte Clássico. Não dá para desfazer.'] },
 };
 
 function abrirPainelTitulo(conteudo) {
-  const { titulo, linhas, linhasToque } = PAINEIS_TITULO[conteudo];
+  const { titulo, linhas, secoes = [{ linhas }] } = PAINEIS_TITULO[conteudo];
   painelTitulo.dataset.conteudo = conteudo;
   tituloPainel.textContent = titulo;
   botaoConfirmarApagar.hidden = conteudo !== 'apagar';
-  const instrucoes = !tecladoPrincipal.matches && linhasToque ? linhasToque : linhas;
-  textoPainel.replaceChildren(...instrucoes.map((linha) => {
-    const paragrafo = document.createElement('p');
-    paragrafo.textContent = linha;
-    return paragrafo;
+  textoPainel.replaceChildren(...secoes.flatMap((secao) => {
+    const instrucoes = !tecladoPrincipal.matches && secao.linhasToque ? secao.linhasToque : secao.linhas;
+    const paragrafos = instrucoes.map((linha) => Object.assign(document.createElement('p'), { textContent: linha }));
+    return secao.titulo ? [Object.assign(document.createElement('h3'), { textContent: secao.titulo }), ...paragrafos] : paragrafos;
   }));
+  textoPainel.scrollTop = 0;
   painelTitulo.hidden = false;
   botaoFecharPainel.focus({ preventScroll: true });
 }
@@ -1091,8 +1184,6 @@ const dependenciasDoJogo = {
         moedasDaFase.push(coletavel.id);
         salvarProgresso();
       }
-      mensagem = 'Moeda coletada';
-      mensagemAte = performance.now() + 1000;
     }
 
     // Inimigos e perigos das mecânicas machucam ao toque.
@@ -1330,7 +1421,7 @@ botoesTitulo.forEach((botao, i) => {
 botaoTituloJogar.addEventListener('click', iniciarPeloTitulo);
 botaoTituloLoja.addEventListener('click', mostrarLoja);
 botaoTituloComo.addEventListener('click', () => abrirPainelTitulo('como'));
-botaoTituloSobre.addEventListener('click', () => abrirPainelTitulo('sobre'));
+botaoTituloSobre.addEventListener('click', mostrarSobre);
 botaoFecharPainel.addEventListener('click', fecharPainelTitulo);
 botaoApagarDados.addEventListener('click', () => abrirPainelTitulo('apagar'));
 botaoConfirmarApagar.addEventListener('click', apagarDadosDoJogo);
@@ -1483,6 +1574,12 @@ window.addEventListener('keydown', (evento) => {
     return;
   }
 
+  // Sobre: Esc, Enter ou espaço voltam ao título.
+  if (estadoDaPartida === 'sobre') {
+    sobre.tratarTecla(evento);
+    return;
+  }
+
   // Loja: setas movem o foco entre os cartões, Enter confirma e Esc volta ao título.
   if (estadoDaPartida === 'loja') {
     loja.tratarTecla(evento);
@@ -1530,3 +1627,5 @@ window.addEventListener('keydown', (evento) => {
     reiniciarJogo();
   }
 });
+
+iniciarTelaCarregamento();

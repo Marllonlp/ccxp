@@ -1,0 +1,20 @@
+<!-- 1) No <head>, ANTES de <link rel="stylesheet" ...>: pré-carrega o que a tela de carregamento usa. -->
+<link rel="preload" as="image" href="./assets/characters/Imagens_Personagens/01_byte/01_byte_correndo.gif" />
+<link rel="preload" as="image" href="./assets/ada/ada_parado_4f_32x32.png" />
+
+<!-- 2) Logo depois de <body>, como PRIMEIRO elemento (antes de <main class="game-shell">): -->
+<div id="tela-carregamento" class="tela-carregamento" role="status" aria-live="polite" aria-label="Carregando o jogo">
+  <div class="carregamento-conteudo">
+    <p class="carregamento-subtitulo">AS AVENTURAS DE</p>
+    <p class="carregamento-titulo">BYTE</p>
+    <div class="carregamento-pista">
+      <img class="carregamento-byte" src="./assets/characters/Imagens_Personagens/01_byte/01_byte_correndo.gif" alt="" />
+      <div class="carregamento-barra"><div class="carregamento-preenchimento"></div></div>
+    </div>
+    <p class="carregamento-texto"><span>CARREGANDO</span> <span id="carregamento-porcentagem">0%</span></p>
+    <div class="carregamento-dica">
+      <span class="carregamento-ada" aria-hidden="true"></span>
+      <p id="carregamento-dica-texto">Em Python, o recuo (os espaços) faz parte do código!</p>
+    </div>
+  </div>
+</div>
