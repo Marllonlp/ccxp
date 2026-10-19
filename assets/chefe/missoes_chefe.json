@@ -61,7 +61,16 @@
         }
       ],
       "dica": "O while repete enquanto a condição for verdadeira. Diminua o escudo dentro do laço (recuado) e mostre a mensagem depois, fora dele.",
-      "disparos": 4
+      "disparos": 4,
+      "simulacao": {
+        "codigo": "while e > 0:",
+        "variavel": "e",
+        "inicio": "100",
+        "passos": ["75", "50", "25", "0"],
+        "linha": "e = e - 25",
+        "fim": "e > 0 é falso: DESLIGOU"
+      },
+      "aprendizado": "o while tirou 25 do escudo até chegar a 0"
     },
     {
       "id": "patch_2",
@@ -142,7 +151,15 @@
         }
       ],
       "dica": "Para comparar use == (dois iguais). Um = só serve para guardar um valor numa variável.",
-      "disparos": 1
+      "disparos": 1,
+      "simulacao": {
+        "codigo": "if s == \"byte\":",
+        "variavel": "s",
+        "passos": ["\"byte\""],
+        "linha": "print(\"LIBERADO\")",
+        "fim": "s == \"byte\" é verdadeiro: LIBERADO"
+      },
+      "aprendizado": "o if conferiu a senha"
     },
     {
       "id": "patch_3",
@@ -203,7 +220,15 @@
         }
       ],
       "dica": "O for com range(3) repete 3 vezes o que está recuado embaixo dele. O print do OFF fica fora do laço.",
-      "disparos": 3
+      "disparos": 3,
+      "simulacao": {
+        "codigo": "for i in range(3):",
+        "variavel": "i",
+        "passos": ["0", "1", "2"],
+        "linha": "print(\"ZAP\")",
+        "fim": "range(3) acabou: OFF"
+      },
+      "aprendizado": "o for lançou ZAP 3 vezes"
     }
   ]
 }
