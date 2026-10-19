@@ -1,8 +1,17 @@
 // Animação por quadros em PNG, sem depender de ImageDecoder.
+import { registrarCarregamento } from './carregamento.js';
+
 export class AnimacaoSprite {
   constructor({ arquivo, largura, altura, quadros, duracao }) {
     this.img = new Image();
     this.img.src = arquivo;
+    // A tela de carregamento espera a imagem; erro também conta como pronto, para não travar.
+    this.pronto = new Promise((resolve) => {
+      if (this.img.complete) return resolve();
+      this.img.addEventListener('load', resolve, { once: true });
+      this.img.addEventListener('error', resolve, { once: true });
+    });
+    registrarCarregamento(this.pronto);
     this.largura = largura;
     this.altura = altura;
     this.quadros = quadros;

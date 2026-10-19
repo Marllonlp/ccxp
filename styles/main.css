@@ -1200,6 +1200,29 @@ body {
   font: calc(16px * var(--escala-texto, 1))/1.6 system-ui, sans-serif;
 }
 
+/* Subtítulos das seções do Como jogar. */
+.titulo-painel-texto h3 {
+  margin: 20px 0 10px;
+  font-size: calc(11px * var(--escala-texto, 1));
+  font-weight: 400;
+  line-height: 1.6;
+  color: #ffd646;
+}
+
+.titulo-painel-texto h3:first-child {
+  margin-top: 0;
+}
+
+/* A área rola com as setas quando recebe o foco (Tab). */
+.titulo-painel-texto:focus-visible {
+  outline: 3px solid #bde0fe;
+  outline-offset: 4px;
+}
+
+:root[data-contraste='alto'] .titulo-painel-texto h3 {
+  color: #ffd646;
+}
+
 .botao-painel {
   justify-self: center;
   align-self: center;
@@ -2318,4 +2341,337 @@ body {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+
+/* Tela de carregamento (pacote tela_carregamento_pacote). */
+.tela-carregamento {
+  --progresso: 0;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background-color: #0e1228;
+  background-image: radial-gradient(#1c2350 1.5px, transparent 1.6px);
+  background-size: 16px 16px;
+  color: #ffffff;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  image-rendering: pixelated;
+  opacity: 1;
+  transition: opacity 0.45s ease;
+}
+.tela-carregamento.saindo { opacity: 0; pointer-events: none; }
+.tela-carregamento.oculta { display: none; }
+
+.carregamento-conteudo {
+  width: min(86vw, 720px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2.2vh, 22px);
+  text-align: center;
+}
+.carregamento-subtitulo {
+  margin: 0;
+  font-size: clamp(10px, 1.6vw, 18px);
+  color: #ffd646;
+  text-shadow: 3px 3px 0 #5a3a08;
+}
+.carregamento-titulo {
+  margin: 0;
+  font-size: clamp(36px, 7vw, 84px);
+  line-height: 1;
+  color: #3ce6ff;
+  text-shadow: 4px 4px 0 #0f4a6e, 8px 8px 0 #05060f;
+}
+
+/* Pista: o Byte corre em cima da barra, acompanhando o progresso. */
+.carregamento-pista { position: relative; width: 100%; padding-top: clamp(56px, 9vh, 84px); }
+/* Byte correndo: a tira byteCorrendo.png tem 8 quadros de 96 × 96, 80 ms cada. */
+.carregamento-byte {
+  position: absolute;
+  bottom: calc(100% - clamp(56px, 9vh, 84px) - 6px);
+  left: calc(var(--progresso) * (100% - clamp(56px, 9vh, 84px)));
+  width: clamp(56px, 9vh, 84px);
+  aspect-ratio: 1;
+  background: url('../assets/animacoes/byteCorrendo.png') 0 0 / 800% 100% no-repeat;
+  animation: carregamento-byte 0.64s steps(8, jump-none) infinite;
+  transition: left 0.2s linear;
+}
+@keyframes carregamento-byte { to { background-position: 100% 0; } }
+.carregamento-barra {
+  height: clamp(18px, 3vh, 28px);
+  border: 4px solid #05060f;
+  outline: 3px solid #3ce6ff;
+  outline-offset: -7px;
+  background: #141a3c;
+  overflow: hidden;
+}
+.carregamento-preenchimento {
+  height: 100%;
+  width: calc(var(--progresso) * 100%);
+  background: repeating-linear-gradient(90deg, #3ce6ff 0 12px, #1aa8d6 12px 16px);
+  box-shadow: inset 0 4px 0 #a8f4ff;
+  transition: width 0.2s linear;
+}
+.carregamento-texto {
+  margin: 0;
+  font-size: clamp(10px, 1.4vw, 16px);
+  letter-spacing: 1px;
+}
+.carregamento-texto span:first-child::after { content: ''; animation: carregamento-pontos 1.2s steps(4) infinite; }
+@keyframes carregamento-pontos {
+  0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; }
+}
+
+/* Dica da ADA */
+.carregamento-dica {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 100%;
+  padding: 10px 16px;
+  border: 3px solid #5affb4;
+  background: #141a3c;
+  box-shadow: 4px 4px 0 #05060f;
+}
+.carregamento-ada {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  background: url('../assets/ada/ada_parado_4f_32x32.png') 0 0 / 256px 64px no-repeat;
+  animation: carregamento-ada 0.8s steps(4) infinite;
+}
+@keyframes carregamento-ada { to { background-position: -256px 0; } }
+#carregamento-dica-texto {
+  margin: 0;
+  text-align: left;
+  font-size: clamp(9px, 1.15vw, 13px);
+  line-height: 1.7;
+}
+#carregamento-dica-texto::before { content: 'DICA: '; color: #5affb4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .carregamento-ada, .carregamento-byte, .carregamento-texto span:first-child::after { animation: none; }
+  .carregamento-byte, .carregamento-preenchimento { transition: none; }
+}
+
+/* Tela Sobre: créditos animados da equipe (sobre.js). Fundo noturno com estrelas e brilho de queijo
+   atrás da logo; o Byte entra correndo pelo chão do título e, depois, aparecem a equipe e os nomes. */
+.tela-sobre {
+  --tamanho-byte: clamp(56px, 13vh, 112px);
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 45% 40% at 50% 30%, rgb(255 184 40 / 24%), transparent 70%),
+    radial-gradient(circle at 13% 21%, #ffffff 1px, transparent 1.5px) 0 0 / 173px 131px,
+    radial-gradient(circle at 71% 64%, #9fdcff 1px, transparent 1.5px) 0 0 / 229px 167px,
+    radial-gradient(circle at 42% 88%, #ffffff 1px, transparent 1.5px) 0 0 / 311px 199px,
+    #05060f;
+  font-family: 'Press Start 2P', monospace;
+  color: #f9fafb;
+  text-align: center;
+}
+
+/* Estrelas piscando por cima do fundo. */
+.tela-sobre::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 37% 43%, #ffd646 1.5px, transparent 2px) 0 0 / 263px 181px;
+  animation: sobre-estrelas 2.4s steps(2) infinite;
+  pointer-events: none;
+}
+
+@keyframes sobre-estrelas {
+  50% { opacity: 0.15; }
+}
+
+.sobre-voltar {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(64px, calc(env(safe-area-inset-left) + 52px));
+  z-index: 1;
+}
+
+.sobre-conteudo {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 2.2vh, 22px);
+  padding: clamp(8px, 3vh, 32px) 16px 0;
+  overflow-y: auto;
+}
+
+/* O preto da logo some com screen: só o queijo e as letras ficam sobre o brilho. */
+.sobre-logo {
+  height: clamp(84px, 32vh, 320px);
+  width: auto;
+  mix-blend-mode: screen;
+}
+
+.sobre-titulo {
+  margin: 0;
+  text-shadow: 2px 2px 0 #000;
+  font-size: calc(clamp(10px, 1.6vw, 18px) * var(--escala-texto, 1));
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.sobre-titulo strong {
+  font-weight: 400;
+  color: #ffc83d;
+  text-shadow: 3px 3px 0 #7a4a00;
+}
+
+.sobre-nomes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 1.6vw, 18px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sobre-nomes li {
+  padding: clamp(6px, 1.4vh, 12px) clamp(10px, 1.4vw, 18px);
+  border: 3px solid #ffc83d;
+  background: #141a3c;
+  box-shadow: 4px 4px 0 #000;
+  font-size: calc(clamp(9px, 1.15vw, 14px) * var(--escala-texto, 1));
+  line-height: 1.5;
+}
+
+.sobre-nomes li::before {
+  content: '► ';
+  color: #ffc83d;
+}
+
+.sobre-local {
+  margin: 0;
+  text-shadow: 2px 2px 0 #000;
+  font-size: calc(clamp(8px, 1vw, 12px) * var(--escala-texto, 1));
+  line-height: 1.6;
+  color: #5affb4;
+}
+
+.sobre-versao {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: 8px;
+  z-index: 1;
+  margin: 0;
+  font-size: calc(clamp(7px, 0.8vw, 10px) * var(--escala-texto, 1));
+  color: #d6e4f0;
+  text-shadow: 2px 2px 0 #000;
+}
+
+/* Chão do título; a superfície da grama fica a 25% da altura da peça. */
+.sobre-chao {
+  position: relative;
+  flex-shrink: 0;
+  height: clamp(56px, 18vh, 150px);
+  background: url('../assets/characters/Imagens_Personagens/02_cenario/pedacos_de_chao_pacote/chao_normal_256x80_4x.png') left bottom / auto 100% repeat-x;
+  image-rendering: pixelated;
+}
+
+/* Byte: tiras de 96 × 96 (correndo, 8 quadros de 80 ms; parado, 2 quadros de 1 s). */
+.sobre-byte {
+  position: absolute;
+  bottom: 75%;
+  left: calc(50% - var(--tamanho-byte) / 2);
+  width: var(--tamanho-byte);
+  aspect-ratio: 1;
+  margin-bottom: calc(var(--tamanho-byte) * -2 / 96);
+  background: var(--byte-parado) 0 0 / 200% 100% no-repeat;
+  image-rendering: pixelated;
+}
+
+/* Sequência, reiniciada a cada abertura pela classe .animando. */
+.tela-sobre.animando .sobre-byte {
+  background-image: var(--byte-correndo);
+  background-size: 800% 100%;
+  animation:
+    sobre-entrada 1.8s linear both,
+    sobre-corrida 0.64s steps(8, jump-none) infinite;
+}
+
+.tela-sobre.byte-chegou .sobre-byte {
+  background-image: var(--byte-parado);
+  background-size: 200% 100%;
+  animation: sobre-parado 2s steps(1) infinite;
+}
+
+@keyframes sobre-entrada {
+  from { left: calc(-1 * var(--tamanho-byte)); }
+  to { left: calc(50% - var(--tamanho-byte) / 2); }
+}
+
+@keyframes sobre-corrida {
+  to { background-position: 100% 0; }
+}
+
+@keyframes sobre-parado {
+  0% { background-position: 0 0; }
+  50% { background-position: 100% 0; }
+}
+
+.tela-sobre.animando .sobre-logo {
+  animation: sobre-logo 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) 1.6s both;
+}
+
+.tela-sobre.animando .sobre-titulo {
+  animation: sobre-subir 0.5s ease-out 2.2s both;
+}
+
+.tela-sobre.animando .sobre-nomes li {
+  animation: sobre-placa 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.tela-sobre.animando .sobre-nomes li:nth-child(1) { animation-delay: 2.7s; }
+.tela-sobre.animando .sobre-nomes li:nth-child(2) { animation-delay: 2.95s; }
+.tela-sobre.animando .sobre-nomes li:nth-child(3) { animation-delay: 3.2s; }
+.tela-sobre.animando .sobre-nomes li:nth-child(4) { animation-delay: 3.45s; }
+
+.tela-sobre.animando .sobre-local {
+  animation: sobre-subir 0.5s ease-out 3.9s both;
+}
+
+@keyframes sobre-logo {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sobre-subir {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sobre-placa {
+  from { opacity: 0; transform: translateY(-16px) scale(0.7); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Movimento reduzido: tudo aparece de uma vez, com o Byte já parado no centro. */
+:root[data-movimento='reduzido'] .tela-sobre *,
+:root[data-movimento='reduzido'] .tela-sobre::before {
+  animation-delay: 0s !important;
+}
+
+:root[data-contraste='alto'] .tela-sobre {
+  background: #000;
+}
+
+:root[data-contraste='alto'] .sobre-nomes li {
+  border-color: #fff;
+  background: #000;
 }
